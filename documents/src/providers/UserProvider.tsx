@@ -1,0 +1,46 @@
+/* eslint-disable react-refresh/only-export-components */
+import { getErrorMessage } from '@/components/common/ErrorBanner'
+import { useFrappeAuth } from 'frappe-react-sdk'
+import { createContext } from 'react'
+import type { FC, PropsWithChildren } from 'react'
+import { toast } from 'sonner'
+
+interface UserContextProps {
+    isLoading: boolean,
+    currentUser: string,
+    logout: () => Promise<void>,
+    updateCurrentUser: VoidFunction,
+}
+
+export const UserContext = createContext<UserContextProps>({
+    currentUser: '',
+    isLoading: false,
+    logout: () => Promise.resolve(),
+    updateCurrentUser: () => { },
+})
+
+export const UserProvider: FC<PropsWithChildren> = ({ children }) => {
+
+    const { logout, currentUser, updateCurrentUser, isLoading } = useFrappeAuth()
+
+    const handleLogout = async () => {
+        return logout()
+            .then(() => {
+                // Use window.location.replace for logout to ensure full reset
+                const baseName = import.meta.env.VITE_BASE_NAME
+                const loginPath = baseName ? `/${baseName}/login` : '/login'
+                window.location.replace(loginPath)
+            })
+            .catch((error) => {
+                toast.error('Failed to logout', {
+                    description: getErrorMessage(error)
+                })
+            })
+    }
+
+    return (
+        <UserContext.Provider value={{ isLoading, updateCurrentUser, logout: handleLogout, currentUser: currentUser ?? "" }}>
+            {children}
+        </UserContext.Provider>
+    )
+}

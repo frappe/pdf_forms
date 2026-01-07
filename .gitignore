@@ -5,3 +5,10 @@
 tags
 node_modules
 __pycache__
+
+dist/
+doc_mapper/public/documents
+doc_mapper/public/node_modules
+doc_mapper/public/documents.html
+
+*.env
