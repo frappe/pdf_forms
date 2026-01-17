@@ -1,5 +1,5 @@
 [project]
-name = "doc_mapper"
+name = "form_printer"
 authors = [
     { name = "Frappe Technologies Pvt. Ltd.", email = "contact@frappe.io"}
 ]

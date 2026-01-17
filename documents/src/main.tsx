@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 
 if (import.meta.env.DEV) {
-  fetch('/api/method/doc_mapper.www.documents.get_context_for_dev', {
+  fetch('/api/method/form_printer.www.documents.get_context_for_dev', {
     method: 'POST',
   })
     .then(response => response.json())

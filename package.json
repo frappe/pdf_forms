@@ -1,5 +1,5 @@
 {
-  "name": "doc_mapper",
+  "name": "form_printer",
   "version": "1.0.0",
   "description": "Frappe app to manage document mapping and printing",
   "main": "index.js",

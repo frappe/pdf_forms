@@ -2,13 +2,14 @@
 *.pyc
 *.egg-info
 *.swp
+*.vscode
 tags
 node_modules
 __pycache__
 
 dist/
-doc_mapper/public/documents
-doc_mapper/public/node_modules
-doc_mapper/public/documents.html
+form_printer/public/documents
+form_printer/public/node_modules
+form_printer/www/documents.html
 
 *.env

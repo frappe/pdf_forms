@@ -1,7 +1,7 @@
-app_name = "doc_mapper"
-app_title = "Doc Mapper"
+app_name = "form_printer"
+app_title = "Form Printer"
 app_publisher = "Frappe Technologies Pvt. Ltd."
-app_description = "Frappe app to manage document mapping and printing"
+app_description = "Frappe app to print forms"
 app_email = "contact@frappe.io"
 app_license = "gpl-3.0"
 
@@ -13,11 +13,11 @@ app_license = "gpl-3.0"
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
-# 		"name": "doc_mapper",
-# 		"logo": "/assets/doc_mapper/logo.png",
-# 		"title": "Doc Mapper",
-# 		"route": "/doc_mapper",
-# 		"has_permission": "doc_mapper.api.permission.has_app_permission"
+# 		"name": "form_printer",
+# 		"logo": "/assets/form_printer/logo.png",
+# 		"title": "Form Printer",
+# 		"route": "/form_printer",
+# 		"has_permission": "form_printer.api.permission.has_app_permission"
 # 	}
 # ]
 
@@ -25,15 +25,15 @@ app_license = "gpl-3.0"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/doc_mapper/css/doc_mapper.css"
-# app_include_js = "/assets/doc_mapper/js/doc_mapper.js"
+# app_include_css = "/assets/form_printer/css/form_printer.css"
+# app_include_js = "/assets/form_printer/js/form_printer.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/doc_mapper/css/doc_mapper.css"
-# web_include_js = "/assets/doc_mapper/js/doc_mapper.js"
+# web_include_css = "/assets/form_printer/css/form_printer.css"
+# web_include_js = "/assets/form_printer/js/form_printer.js"
 
 # include custom scss in every website theme (without file extension ".scss")
-# website_theme_scss = "doc_mapper/public/scss/website"
+# website_theme_scss = "form_printer/public/scss/website"
 
 # include js, css files in header of web form
 # webform_include_js = {"doctype": "public/js/doctype.js"}
@@ -51,7 +51,7 @@ app_license = "gpl-3.0"
 # Svg Icons
 # ------------------
 # include app icons in desk
-# app_include_icons = "doc_mapper/public/icons.svg"
+# app_include_icons = "form_printer/public/icons.svg"
 
 # Home Pages
 # ----------
@@ -75,43 +75,43 @@ app_license = "gpl-3.0"
 
 # add methods and filters to jinja environment
 # jinja = {
-# 	"methods": "doc_mapper.utils.jinja_methods",
-# 	"filters": "doc_mapper.utils.jinja_filters"
+# 	"methods": "form_printer.utils.jinja_methods",
+# 	"filters": "form_printer.utils.jinja_filters"
 # }
 
 # Installation
 # ------------
 
-# before_install = "doc_mapper.install.before_install"
-# after_install = "doc_mapper.install.after_install"
+# before_install = "form_printer.install.before_install"
+# after_install = "form_printer.install.after_install"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "doc_mapper.uninstall.before_uninstall"
-# after_uninstall = "doc_mapper.uninstall.after_uninstall"
+# before_uninstall = "form_printer.uninstall.before_uninstall"
+# after_uninstall = "form_printer.uninstall.after_uninstall"
 
 # Integration Setup
 # ------------------
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-# before_app_install = "doc_mapper.utils.before_app_install"
-# after_app_install = "doc_mapper.utils.after_app_install"
+# before_app_install = "form_printer.utils.before_app_install"
+# after_app_install = "form_printer.utils.after_app_install"
 
 # Integration Cleanup
 # -------------------
 # To clean up dependencies/integrations with other apps
 # Name of the app being uninstalled is passed as an argument
 
-# before_app_uninstall = "doc_mapper.utils.before_app_uninstall"
-# after_app_uninstall = "doc_mapper.utils.after_app_uninstall"
+# before_app_uninstall = "form_printer.utils.before_app_uninstall"
+# after_app_uninstall = "form_printer.utils.after_app_uninstall"
 
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
 
-# notification_config = "doc_mapper.notifications.get_notification_config"
+# notification_config = "form_printer.notifications.get_notification_config"
 
 # Permissions
 # -----------
@@ -150,39 +150,39 @@ app_license = "gpl-3.0"
 
 # scheduler_events = {
 # 	"all": [
-# 		"doc_mapper.tasks.all"
+# 		"form_printer.tasks.all"
 # 	],
 # 	"daily": [
-# 		"doc_mapper.tasks.daily"
+# 		"form_printer.tasks.daily"
 # 	],
 # 	"hourly": [
-# 		"doc_mapper.tasks.hourly"
+# 		"form_printer.tasks.hourly"
 # 	],
 # 	"weekly": [
-# 		"doc_mapper.tasks.weekly"
+# 		"form_printer.tasks.weekly"
 # 	],
 # 	"monthly": [
-# 		"doc_mapper.tasks.monthly"
+# 		"form_printer.tasks.monthly"
 # 	],
 # }
 
 # Testing
 # -------
 
-# before_tests = "doc_mapper.install.before_tests"
+# before_tests = "form_printer.install.before_tests"
 
 # Overriding Methods
 # ------------------------------
 #
 # override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "doc_mapper.event.get_events"
+# 	"frappe.desk.doctype.event.event.get_events": "form_printer.event.get_events"
 # }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "doc_mapper.task.get_dashboard_data"
+# 	"Task": "form_printer.task.get_dashboard_data"
 # }
 
 # exempt linked doctypes from being automatically cancelled
@@ -196,13 +196,13 @@ app_license = "gpl-3.0"
 
 # Request Events
 # ----------------
-# before_request = ["doc_mapper.utils.before_request"]
-# after_request = ["doc_mapper.utils.after_request"]
+# before_request = ["form_printer.utils.before_request"]
+# after_request = ["form_printer.utils.after_request"]
 
 # Job Events
 # ----------
-# before_job = ["doc_mapper.utils.before_job"]
-# after_job = ["doc_mapper.utils.after_job"]
+# before_job = ["form_printer.utils.before_job"]
+# after_job = ["form_printer.utils.after_job"]
 
 # User Data Protection
 # --------------------
@@ -232,7 +232,7 @@ app_license = "gpl-3.0"
 # --------------------------------
 
 # auth_hooks = [
-# 	"doc_mapper.auth.validate"
+# 	"form_printer.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.

@@ -8,7 +8,7 @@ on:
   pull_request:
 
 concurrency:
-  group: develop-doc_mapper-${{ github.event.number }}
+  group: develop-form_printer-${{ github.event.number }}
   cancel-in-progress: true
 
 jobs:
@@ -89,10 +89,10 @@ jobs:
       - name: Install
         working-directory: /home/runner/frappe-bench
         run: |
-          bench get-app doc_mapper $GITHUB_WORKSPACE
+          bench get-app form_printer $GITHUB_WORKSPACE
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
-          bench --site test_site install-app doc_mapper
+          bench --site test_site install-app form_printer
           bench build
         env:
           CI: 'Yes'
@@ -101,6 +101,6 @@ jobs:
         working-directory: /home/runner/frappe-bench
         run: |
           bench --site test_site set-config allow_tests true
-          bench --site test_site run-tests --app doc_mapper
+          bench --site test_site run-tests --app form_printer
         env:
           TYPE: server
