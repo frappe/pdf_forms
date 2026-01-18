@@ -1,0 +1,140 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:template_name",
+ "creation": "2026-01-17 16:32:48.461263",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "details_section",
+  "template_name",
+  "description",
+  "data_source",
+  "source",
+  "column_break_rbgh",
+  "file_name",
+  "file",
+  "file_extension",
+  "is_pdf_converted",
+  "is_encrypted",
+  "font",
+  "font_size",
+  "section_break_hxmz",
+  "prompts"
+ ],
+ "fields": [
+  {
+   "fieldname": "template_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Template Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "default": "DocType",
+   "fieldname": "data_source",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Data Source",
+   "options": "\nDocType\nCustom Data Source",
+   "reqd": 1
+  },
+  {
+   "description": "Source Can be DocType name or the Custom Data Source Name.",
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Source",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_rbgh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "file_name",
+   "fieldtype": "Data",
+   "label": "File Name"
+  },
+  {
+   "fieldname": "file",
+   "fieldtype": "Attach",
+   "label": "File"
+  },
+  {
+   "fieldname": "file_extension",
+   "fieldtype": "Data",
+   "label": "File Extension"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_pdf_converted",
+   "fieldtype": "Check",
+   "label": "Is PDF Converted"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_encrypted",
+   "fieldtype": "Check",
+   "label": "Is Encrypted"
+  },
+  {
+   "fieldname": "font",
+   "fieldtype": "Data",
+   "label": "Font"
+  },
+  {
+   "fieldname": "font_size",
+   "fieldtype": "Data",
+   "label": "Font Size"
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "section_break_hxmz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "prompts",
+   "fieldtype": "Table",
+   "label": "Prompts",
+   "options": "Form Template Prompts"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-17 23:34:12.225810",
+ "modified_by": "Administrator",
+ "module": "Form Printer",
+ "name": "Form Template",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
