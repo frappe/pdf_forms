@@ -1,0 +1,218 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-01-17 17:11:15.246990",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "id",
+  "value",
+  "column_break_jynv",
+  "form_template_image",
+  "form_template",
+  "source",
+  "page_index",
+  "points_section",
+  "x_point",
+  "height",
+  "annotation_type",
+  "field_label",
+  "field_value",
+  "xref",
+  "font",
+  "font_size",
+  "override_style",
+  "column_break_hjhf",
+  "y_point",
+  "width",
+  "value_type",
+  "field_name",
+  "field_type",
+  "formatter",
+  "is_prompt",
+  "is_default_jinja",
+  "default_value"
+ ],
+ "fields": [
+  {
+   "fieldname": "form_template_image",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Form Template Image",
+   "options": "Form Template Image",
+   "reqd": 1
+  },
+  {
+   "fieldname": "form_template",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Form Template",
+   "options": "Form Template",
+   "reqd": 1
+  },
+  {
+   "fieldname": "id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "page_index",
+   "fieldtype": "Int",
+   "label": "Page Index",
+   "reqd": 1
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Small Text",
+   "label": "Value",
+   "reqd": 1
+  },
+  {
+   "fieldname": "points_section",
+   "fieldtype": "Section Break",
+   "label": "Points"
+  },
+  {
+   "fieldname": "x_point",
+   "fieldtype": "Data",
+   "label": "X Point",
+   "reqd": 1
+  },
+  {
+   "fieldname": "y_point",
+   "fieldtype": "Data",
+   "label": "Y Point",
+   "reqd": 1
+  },
+  {
+   "fieldname": "width",
+   "fieldtype": "Data",
+   "label": "Width",
+   "reqd": 1
+  },
+  {
+   "fieldname": "height",
+   "fieldtype": "Data",
+   "label": "Height",
+   "reqd": 1
+  },
+  {
+   "fieldname": "annotation_type",
+   "fieldtype": "Select",
+   "label": "Annotation Type",
+   "options": "Auto\nManual"
+  },
+  {
+   "fieldname": "field_type",
+   "fieldtype": "Data",
+   "label": "Field Type"
+  },
+  {
+   "fieldname": "value_type",
+   "fieldtype": "Select",
+   "label": "Value Type",
+   "options": "Text\nField\nJinja\nPrompt"
+  },
+  {
+   "fieldname": "field_label",
+   "fieldtype": "Data",
+   "label": "Field Label"
+  },
+  {
+   "fieldname": "field_value",
+   "fieldtype": "Small Text",
+   "label": "Field Value"
+  },
+  {
+   "fieldname": "field_name",
+   "fieldtype": "Data",
+   "label": "Field Name"
+  },
+  {
+   "fieldname": "xref",
+   "fieldtype": "Data",
+   "label": "Xref"
+  },
+  {
+   "fieldname": "font",
+   "fieldtype": "Data",
+   "label": "Font"
+  },
+  {
+   "fieldname": "font_size",
+   "fieldtype": "Float",
+   "label": "Font Size"
+  },
+  {
+   "default": "0",
+   "fieldname": "override_style",
+   "fieldtype": "Check",
+   "label": "Override Style"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_prompt",
+   "fieldtype": "Check",
+   "label": "Is Prompt?"
+  },
+  {
+   "fieldname": "column_break_jynv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_hjhf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "formatter",
+   "fieldtype": "Select",
+   "label": "Formatter",
+   "options": "\nDate\nCurrency\nPhone\nNumber"
+  },
+  {
+   "description": "Default Value of the Template Field.",
+   "fieldname": "default_value",
+   "fieldtype": "Small Text",
+   "label": "Default Value"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default_jinja",
+   "fieldtype": "Check",
+   "label": "Is Default Jinja"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "label": "Source"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-17 23:38:19.335064",
+ "modified_by": "Administrator",
+ "module": "Form Printer",
+ "name": "Form Template Field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
