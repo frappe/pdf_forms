@@ -1,0 +1,105 @@
+import { useCallback, useEffect, useState } from 'react'
+import { useSWRConfig } from 'frappe-react-sdk'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
+import { RefreshCw, CheckCircle2 } from 'lucide-react'
+
+interface Props {
+    syncing: boolean,
+    forceUpdate: () => Promise<void>,
+    hasUnsavedChanges: boolean,
+}
+
+export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) => {
+
+    const [highlightSyncButton, setHighlightSyncButton] = useState(false)
+
+
+    const { mutate } = useSWRConfig()
+
+    const update = useCallback(() => {
+        forceUpdate()
+            .then(() => {
+                mutate('document_template_fields')
+                setHighlightSyncButton(false)
+                toast.success('Annotations Saved', {
+                    duration: 1000,
+                })
+            })
+            .catch((error) => {
+                toast.error('Error Saving Annotations', {
+                    duration: 1000,
+                })
+                console.error(error)
+            })
+    }, [forceUpdate, mutate])
+
+    useEffect(() => {
+        const alertUser = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault()
+                // alert('You have unsaved changes. Please save them before syncing.')
+                setHighlightSyncButton(true)
+                update()
+                e.returnValue = 'You have unsaved changes. Please save them before syncing.'
+            }
+        }
+        window.addEventListener('beforeunload', alertUser)
+        return () => {
+            window.removeEventListener('beforeunload', alertUser)
+        }
+    }, [hasUnsavedChanges, update])
+
+    return (
+        <div className="flex items-stretch">
+            {hasUnsavedChanges ? (
+                <motion.div
+                    style={{ height: '100%' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    data-testid='sync-button'
+                >
+                    <Button 
+                        className="rounded-none h-full" 
+                        size="sm" 
+                        onClick={update} 
+                        variant={highlightSyncButton ? 'default' : 'secondary'}
+                        title="Force Update"
+                    >
+                        <div className="flex items-center">
+                            <motion.div 
+                                animate={{ rotate: 360 }} 
+                                initial={{ rotate: 0 }} 
+                                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                            >
+                                <RefreshCw className="size-4" />
+                            </motion.div>
+                            <span className="ml-2">Sync</span>
+                        </div>
+                    </Button>
+                </motion.div>
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ height: '100%' }}
+                    data-testid='sync-button'
+                >
+                    <Button 
+                        size="sm" 
+                        variant="ghost"
+                        className="h-full rounded-none hover:bg-gray-100 active:bg-gray-100"
+                    >
+                        <div className="flex items-center text-gray-500">
+                            <CheckCircle2 className="size-4" />
+                            <span className="ml-2">Sync</span>
+                        </div>
+                    </Button>
+                </motion.div>
+            )}
+        </div>
+    )
+}

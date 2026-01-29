@@ -3,11 +3,14 @@ import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } 
 import { UserProvider } from '@/providers/UserProvider'
 import { Toaster } from 'sonner'
 import { useEffect } from 'react'
+import { ViewTemplate } from './pages/template/ViewTemplate'
+import { Dashboard } from './pages/dashboard/Dashboard'
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
 		<>
-			<Route path='/' element={<><h1>Documents</h1></>} />
+			<Route path='/' element={<Dashboard />} />
+			<Route path='template/:templateID' element={<ViewTemplate />} />
 		</>
 	), {
 	basename: import.meta.env.VITE_BASE_NAME ? `/${import.meta.env.VITE_BASE_NAME}` : '',

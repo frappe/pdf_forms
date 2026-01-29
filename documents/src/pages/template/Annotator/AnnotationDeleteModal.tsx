@@ -1,0 +1,91 @@
+import { useFrappePostCall } from 'frappe-react-sdk'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { Loader2 } from 'lucide-react'
+
+interface Props {
+    annotationID: string | null,
+    onClose: VoidFunction
+}
+
+export const AnnotationDeleteModal = ({ annotationID, onClose }: Props) => {
+
+    const { call, error, loading, reset } = useFrappePostCall('frappe.client.delete')
+
+    useEffect(() => {
+        reset()
+    }, [annotationID, reset])
+
+
+    const deleteAnnotation = () => {
+        if (annotationID) {
+            call({
+                doctype: 'Document Template Field',
+                name: annotationID
+            }).then(() => onClose())
+                .then(() => toast.success('Annotation deleted', {
+                    duration: 1000,
+                })).catch((error) => {
+                    toast.error('Error Deleting Annotation', {
+                        duration: 1000,
+                    })
+                    console.error(error)
+                })
+        }
+    }
+    return (
+        <AlertDialog open={annotationID !== null} onOpenChange={(open) => {
+            if (!open) {
+                onClose()
+            }
+        }}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Annotation</AlertDialogTitle>
+                </AlertDialogHeader>
+                <div className="space-y-4">
+                    {error && (
+                        <ErrorBanner 
+                            error={error} 
+                            overrideHeading="There was an error while deleting the annotation"
+                        />
+                    )}
+                    <AlertDialogDescription>
+                        Are you sure? This will delete the annotation.<br />
+                        You can't undo this action afterwards.
+                    </AlertDialogDescription>
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={loading}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={deleteAnnotation}
+                        disabled={loading}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 className="mr-2 size-4 animate-spin" />
+                                Deleting...
+                            </>
+                        ) : (
+                            'Delete'
+                        )}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    )
+}
