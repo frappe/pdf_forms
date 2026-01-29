@@ -1,0 +1,161 @@
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { web_url } from '@/config/socket';
+import type { SchemaField } from './Configurations';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { ChevronDown, Download } from 'lucide-react';
+
+const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ schema, source }) => {
+    const { templateID } = useParams<{ templateID: string }>();
+
+    const renderField = (field: SchemaField, fieldKey?: string, isRoot = false) => {
+        return (
+            <div
+                key={fieldKey}
+                className="py-2 border-b border-gray-200 last:border-b-0 max-h-[74vh] overflow-y-auto"
+            >
+                {/* Render properties recursively if they exist */}
+                {field.properties && field.schema_type !== 'object' && (
+                    <div className="ml-4 mt-2">
+                        <div className="flex flex-col gap-2">
+                            {Object.entries(field.properties).map(([subFieldKey, subField]) =>
+                                renderField(subField, subFieldKey)
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Root level object: show content directly, no accordion */}
+                {field.schema_type === 'object' && isRoot && (
+                    <>
+                        {field.properties && (
+                            <div className="flex flex-col gap-2 pl-0 py-2">
+                                {Object.entries(field.properties).map(([subFieldKey, subField]) =>
+                                    renderField(subField, subFieldKey)
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Nested object: use accordion */}
+                {field.schema_type === 'object' && !isRoot && (
+                    <CollapsibleSection
+                        trigger={<FieldRow field={field} fieldKey={fieldKey} />}
+                    >
+                        {field.properties && (
+                            <div className="flex flex-col gap-2 pl-4 py-4">
+                                {Object.entries(field.properties).map(([subFieldKey, subField]) =>
+                                    renderField(subField, subFieldKey)
+                                )}
+                            </div>
+                        )}
+                    </CollapsibleSection>
+                )}
+
+                {/* Only show accordion if field has items (and not root) */}
+                {field.items && field.items.schema_type === 'object' ? (
+                    isRoot ? (
+                        field.items.properties && (
+                            <div className="flex flex-col gap-2 pl-0 py-2">
+                                {Object.entries(field.items.properties).map(([itemFieldKey, itemField]) =>
+                                    renderField(itemField, itemFieldKey)
+                                )}
+                            </div>
+                        )
+                    ) : (
+                        <CollapsibleSection
+                            trigger={<FieldRow field={field} fieldKey={fieldKey} />}
+                        >
+                            {field.items.properties && (
+                                <div className="flex flex-col gap-2 pl-4 py-4">
+                                    {Object.entries(field.items.properties).map(([itemFieldKey, itemField]) =>
+                                        renderField(itemField, itemFieldKey)
+                                    )}
+                                </div>
+                            )}
+                        </CollapsibleSection>
+                    )
+                ) : field.items ? (
+                    <p className="text-sm text-muted-foreground">Items Type: {field.items.schema_type}</p>
+                ) : (
+                    !isRoot && field.schema_type !== 'object' && <FieldRow field={field} fieldKey={fieldKey} />
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    {source}
+                </h2>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    asChild
+                >
+                    <a
+                        href={`${web_url}/api/method/form_printer.form_printer.doctype.form_template.form_template.download_data_source_sheet?template_id=${templateID}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Download Data Source"
+                    >
+                        <Download className="size-4" />
+                    </a>
+                </Button>
+            </div>
+            <div>
+                {renderField(schema, undefined, true)}
+            </div>
+        </div>
+    );
+};
+
+export default SchemaFieldList;
+
+function CollapsibleSection({
+    trigger,
+    children,
+}: {
+    trigger: React.ReactNode;
+    children: React.ReactNode;
+}) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="border-0">
+            <button
+                type="button"
+                className="flex w-full items-center gap-2 p-0 text-left"
+                onClick={() => setOpen((o) => !o)}
+            >
+                <span className="flex-1">{trigger}</span>
+                <ChevronDown
+                    className={cn('size-4 shrink-0 transition-transform', open && 'rotate-180')}
+                />
+            </button>
+            {open && <div>{children}</div>}
+        </div>
+    );
+}
+
+const FieldRow: React.FC<{ field: SchemaField; fieldKey?: string }> = ({ field, fieldKey }) => {
+    return (
+        <div className="flex flex-col gap-0 px-2">
+            <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">
+                    {fieldKey ? `${field.description ?? ''} (${fieldKey})` : field.description}
+                </span>
+                {field.fieldtype && <Badge variant="secondary">{field.fieldtype}</Badge>}
+            </div>
+            {field.enum && (
+                <p className="text-sm text-muted-foreground">
+                    Option(s): {field.enum.join(', ')}
+                </p>
+            )}
+        </div>
+    );
+};

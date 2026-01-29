@@ -9,7 +9,6 @@ import fitz
 from collections import Counter
 import io
 from frappe.utils.file_manager import save_file
-import json
 
 
 
@@ -256,7 +255,7 @@ def get_form_template_prompts(form_template_id):
 	# 5. Return the list of prompts
 
 	# 1. Get the Form Template from the document
-	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template = frappe.get_cached_doc("Form Template", form_template_id)
 
 	# 2. Get All Form Template Fields which are prompts from the form template
 	prompts = form_template.prompts
@@ -275,3 +274,76 @@ def get_form_template_prompts(form_template_id):
 			prompt_fields.append(prompt_field)
 
 	return prompt_fields
+
+@frappe.whitelist()
+def get_form_template_meta(form_template_id):
+    # get the did_not_convert and is_encrypted from the Document Template Images and Document Template
+    form_template = frappe.db.get_value("Form Template",  {'template_name': form_template_id}, ['is_encrypted','is_pdf_converted'], as_dict=True)
+
+    return {
+        'is_encrypted': form_template.is_encrypted,
+        'is_pdf_converted': form_template.is_pdf_converted
+    }
+
+@frappe.whitelist()
+def get_fields_and_prompts_for_form_template(form_template_id):
+	# This method will return the fields and prompts metadata from the form template
+	# 1. Get the form template document
+	# 2. Get all the Prompt fields
+	# 3. Check if data_source is Doctype or Custom Data Source
+	# 4. If data_source is Doctype, then get the fields from the doctype
+	# 5. If data_source is Custom Data Source, then get the fields from the custom data source
+	# 6. Return the fields and prompts
+
+	# Lazy import to avoid circular import (form_template -> adapter; adapter must not import form_template)
+	from form_printer.api.adapter import get_json_schema_for_doctype, get_json_schema_from_custom_source
+
+	# 1. Get the Form Template from the document
+	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+
+	# 2. Get all the Prompt fields
+	prompts = get_prompt_fields(form_template.prompts)
+
+	# 3. Check if data_source is Doctype or Custom Data Source
+	if form_template.data_source == "DocType":
+		# 4. Get the fields from the doctype
+		fields = get_json_schema_for_doctype(form_template.source)
+	else:
+		# 5. Get the fields from the custom data source
+		fields = get_json_schema_from_custom_source(form_template.source)
+		
+	# 6. Return the fields and prompts
+	return {
+		"fields": fields,
+		"prompts": prompts,
+		"source": form_template.source
+	}
+
+def get_prompt_fields(prompts):
+    prompts_array = []
+    for prompt in prompts:
+        prompts_array.append(
+            {
+                "field_name": prompt.field_name,
+                "field_label": prompt.label,
+                "field_type": prompt.type,
+            }
+        )
+    return prompts_array
+
+@frappe.whitelist()
+def download_data_source_sheet(template_id: str):
+    """Frappe API to generate an Excel file from JSON Schema and trigger a download."""
+    # Lazy import to avoid circular import
+    from form_printer.api.adapter import generate_excel_from_json_schema
+
+    # Fetch data source
+    data_source = get_fields_and_prompts_for_form_template(template_id).get('fields')
+
+    # Generate the Excel file
+    xlsx_file = generate_excel_from_json_schema(data_source)
+
+    # Return the file as a Frappe response for direct download
+    frappe.response["filename"] = f"{template_id}.xlsx"
+    frappe.response["filecontent"] = xlsx_file.getvalue()
+    frappe.response["type"] = "download"

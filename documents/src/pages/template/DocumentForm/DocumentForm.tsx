@@ -1,0 +1,169 @@
+import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetCall, useFrappeGetDocList } from "frappe-react-sdk"
+import { useAnnotationFocus } from "../../../hooks/useAnnotationFocus"
+import { useMemo } from "react"
+import type { FormTemplateField } from "@/types/FormPrinter/FormTemplateField"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ErrorBanner from "@/components/ui/error-banner"
+import { Configurations } from "../Configuration/Configurations"
+import { Editor } from "@/components/common/Editor/Editor"
+
+interface DocumentFormProps {
+    templateID: string,
+}
+
+export const DocumentForm = ({ templateID }: DocumentFormProps) => {
+
+    /** Fetch fields */
+    const { data: fields, error, mutate } = useFrappeGetDocList<FormTemplateField>('Form Template Field', {
+        filters: [
+            ["form_template", "=", templateID]
+        ],
+        fields: ["name", "field_label", "field_value", "field_name", "field_type", "value_type", "annotation_type", 'override_style', 'font', 'font_size', 'is_prompt', 'formatter', 'xref', 'default_value', 'is_default_jinja'],
+        orderBy: {
+            field: "creation",
+            order: "asc"
+        },
+        limit: 1000
+    }, ['form_template_fields', templateID], {
+        revalidateOnFocus: false,
+        keepPreviousData: true,
+        revalidateIfStale: false
+    })
+
+    const { data, error: docError, mutate: docMutate } = useFrappeGetCall<{
+        message: {
+            font: string,
+            font_size: number
+        }
+    }>('frappe.client.get_value', {
+        doctype: 'Form Template',
+        filters: templateID,
+        fieldname: JSON.stringify(['font', 'font_size'])
+    }, ['font_data', templateID], {
+        revalidateOnFocus: false,
+        keepPreviousData: true,
+        revalidateIfStale: false
+    })
+
+    const mutateAll = () => {
+        docMutate()
+        return mutate()
+    }
+
+    const jsonValueTypes = useMemo(() => {
+        const valueTypes: Record<string, any> = {};
+
+        if (fields) {
+            fields.filter(field => field.value_type && ['Field', 'Prompt'].includes(field.value_type)).forEach(field => {
+                if (field.field_value) {
+                    const nestedFields = field.field_value.split('.');
+                    let nestedObject = valueTypes;
+
+                    nestedFields.forEach((nestedField, index) => {
+                        if (nestedField.includes('[')) {
+                            // Handle array notation
+                            const [fieldName, arrayIndex] = nestedField.split('[');
+                            const arrayIndexInt = parseInt(arrayIndex.replace(']', ''), 10);
+
+                            if (!nestedObject[fieldName]) {
+                                nestedObject[fieldName] = [];
+                            }
+                            if (index === nestedFields.length - 1) {
+                                nestedObject[fieldName][arrayIndexInt] = {
+                                    ...nestedObject[fieldName][arrayIndexInt],
+                                    [nestedFields[nestedFields.length - 1]]: ""
+                                };
+                            } else {
+                                if (!nestedObject[fieldName][arrayIndexInt]) {
+                                    nestedObject[fieldName][arrayIndexInt] = {};
+                                }
+                                nestedObject = nestedObject[fieldName][arrayIndexInt];
+                            }
+                        } else {
+                            // Handle object notation
+                            if (index === nestedFields.length - 1) {
+                                nestedObject[nestedField] = "";
+                            } else {
+                                if (!nestedObject[nestedField]) {
+                                    nestedObject[nestedField] = {};
+                                }
+                                nestedObject = nestedObject[nestedField];
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        return valueTypes;
+    }, [fields]);
+
+    useFrappeDocTypeEventListener('Form Template Field', () => {
+        mutate()
+    })
+
+    useFrappeEventListener('annotations_updated', (data) => {
+        if (data.form_template_id === templateID) {
+            mutate()
+        }
+    })
+
+
+    const { focusedAnnotation, onAnnotationClick } = useAnnotationFocus(templateID)
+
+    if (fields && fields.length === 0) {
+        return (
+            <div className="flex justify-center items-center m-4">
+                <Alert variant="warning">
+                    <AlertTitle>We did not find any fields.</AlertTitle>
+                    <AlertDescription>The system could not detect any fields, try manually creating a field.</AlertDescription>
+                </Alert>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex justify-center items-center m-4">
+                <ErrorBanner error={error} />
+            </div>
+        )
+    }
+    if (docError) {
+        return (
+            <div className="flex justify-center items-center m-4">
+                <ErrorBanner error={docError} />
+            </div>
+        )
+    }
+
+    if (!error && fields && fields.length > 0 && data?.message) return (
+        <div>
+            <Tabs defaultValue="map-fields" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="map-fields">Map Fields</TabsTrigger>
+                    <TabsTrigger value="metadata">Metadata</TabsTrigger>
+                    <TabsTrigger value="sample-data">Sample Data</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="map-fields" className="p-0 mt-2">
+                    {/* <FieldsTable data={{
+                        field: fields,
+                        font: data.message.font,
+                        font_size: data.message.font_size
+                    }} focusedAnnotation={focusedAnnotation} onClick={onAnnotationClick} mutate={mutateAll}
+                        templateID={templateID}
+                    /> */}
+                </TabsContent>
+                <TabsContent value="metadata" className="mt-2">
+                    <Configurations />
+                </TabsContent>
+                <TabsContent value="sample-data" className="mt-2">
+                    <Editor jsonValue={jsonValueTypes} templateID={templateID} />
+                </TabsContent>
+            </Tabs>
+        </div>
+    )
+    return null
+}
