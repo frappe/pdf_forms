@@ -5,8 +5,9 @@ import '@recogito/annotorious-openseadragon/dist/annotorious.min.css';
 import type { FormTemplateImage } from '@/types/FormPrinter/FormTemplateImage';
 import type { Annotation } from '@/types/Annotation';
 import { Button } from '@/components/ui/button';
+import { DocumentImageSettingModal } from './DocumentImageSettingModal';
 import { Badge } from '@/components/ui/badge';
-import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SplitSquareHorizontal } from 'lucide-react';
+import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SplitSquareHorizontal, Settings } from 'lucide-react';
 
 
 interface Props {
@@ -296,6 +297,16 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
         return count
     }, [annotations])
 
+    const [isOpen, setIsOpen] = useState(false);
+
+    const onOpen = useCallback(() => {
+        setIsOpen(true);
+    }, [setIsOpen])
+
+    const onClose = useCallback(() => {
+        setIsOpen(false);
+    }, [setIsOpen])
+
     return (
         <div className="w-full" {...props}>
             {showToolbar && (
@@ -390,6 +401,16 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                 className="relative pt-10 h-screen border border-gray-100 w-full"
                 style={annotatorImageStyles}
             >
+                <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    aria-label="Settings"
+                    onClick={onOpen}
+                    className="absolute right-2 top-11 z-50"
+                >
+                    <Settings className="size-4" />
+                </Button>
                 <div
                     id={id ? id : "openSeaDragon"}
                     style={{
@@ -398,10 +419,17 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     }}
                 >
                 </div>
-                <div className="absolute bottom-2 bg-black/80 text-white left-1 px-4 rounded-md shadow-md py-1">
+                <div className="absolute bottom-2 left-1 bg-black/80 px-4 py-1 text-white rounded-md shadow-md">
                     {NUMBER_OF_ANNOTATIONS}
                 </div>
             </div>
+            {images[currentPage]?.name && (
+                <DocumentImageSettingModal
+                    isOpen={isOpen}
+                    onClose={onClose}
+                    documentId={images[currentPage]?.name}
+                />
+            )}
         </div>
     )
 }
