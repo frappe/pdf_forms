@@ -18,7 +18,9 @@ if (import.meta.env.DEV) {
       //@ts-expect-error - frappe will be available
       frappe._messages = frappe.boot["__messages"];
       //@ts-expect-error - frappe will be available
-      frappe.model.sync(frappe.boot.docs);
+      if (frappe.boot?.docs) {
+        frappe.model.sync(frappe.boot.docs);
+      }
       createRoot(document.getElementById('root') as HTMLElement).render(
         <StrictMode>
           <App />
@@ -28,7 +30,9 @@ if (import.meta.env.DEV) {
     })
 } else {
   //@ts-expect-error - frappe will be available
-  frappe.model.sync(frappe.boot.docs);
+  if (window.frappe?.boot?.docs) {
+    frappe.model.sync(frappe.boot.docs);
+  }
   createRoot(document.getElementById('root') as HTMLElement).render(
     <StrictMode>
       <App />
