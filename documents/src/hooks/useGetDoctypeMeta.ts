@@ -53,7 +53,7 @@ export const useGetDoctypeMetaOnCall = () => {
                     frappe.model.add_to_locals(d)
                 })
 
-                return r.docs[0]
+                return r?.docs?.[0]
             }
         })
     }
