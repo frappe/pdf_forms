@@ -24,4 +24,12 @@ export interface FormTemplateImage{
 	image?: string
 	/**	Did Not Convert : Check	*/
 	did_not_convert?: 0 | 1
+	/**	Repeat Page : Check	*/
+	repeat_page?: 0 | 1
+	/**	Repeat After : Int	*/
+	repeat_after?: number
+	/**	Copies : Small Text	*/
+	copies?: string
+	/**	Base Index : Int	*/
+	base_index?: number
 }

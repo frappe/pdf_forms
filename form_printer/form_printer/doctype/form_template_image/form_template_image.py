@@ -14,11 +14,15 @@ class FormTemplateImage(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		base_index: DF.Int
+		copies: DF.SmallText | None
 		did_not_convert: DF.Check
 		form_template_id: DF.Link
 		height: DF.Int
 		image_file: DF.AttachImage | None
 		page_index: DF.Int
+		repeat_after: DF.Int
+		repeat_page: DF.Check
 		width: DF.Int
 	# end: auto-generated types
 	pass
