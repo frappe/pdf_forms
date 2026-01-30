@@ -1,6 +1,7 @@
-import { DependencyList, useRef } from "react"
+import type { DependencyList } from "react"
+import { useRef } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
-import { HotkeysEvent, Options } from "react-hotkeys-hook/dist/types"
+import type { HotkeysEvent, Options } from "react-hotkeys-hook/dist/types"
 
 const DEFAULT_OPTIONS: Options = {
     enabled: true,
