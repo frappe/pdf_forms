@@ -11,12 +11,14 @@ import { AnnotationDeleteModal } from './AnnotationDeleteModal'
 import { AnnotationSyncState } from './AnnotationSyncState'
 
 interface GetTemplateFieldResponse {
-    id: string,
+    name: string,
     value: string,
     source: string,
     page_index: number,
     form_template_image: string
     annotation_type: string,
+    field_name: string,
+    field_label: string,
 }
 // We only store annotation layout detail changes. Rest is combined from server data.
 export interface TemplateUnsavedAnnotation {
@@ -138,7 +140,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
 
         if (annotations) {
             annotations.message.forEach(a => {
-                if (a.id !== deleteAnnotationID) {
+                if (a.name !== deleteAnnotationID) {
                     if (!annotationPages[a.page_index]) {
                         annotationPages[a.page_index] = []
                     }
@@ -148,7 +150,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                         purpose: "tagging"
                     }
                     annotationPages[a.page_index].push({
-                        id: a.id,
+                        id: a.name,
                         "type": "Annotation",
                         "@context": "http://www.w3.org/ns/anno.jsonld",
                         body: [body],
@@ -214,7 +216,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
 
     const focusedAnnotationWithPageIndex = useMemo(() => {
         if (focusedAnnotation && annotations) {
-            const a = annotations?.message.find(a => a.id === focusedAnnotation)
+            const a = annotations?.message.find(a => a.name === focusedAnnotation)
             if (a) {
                 return {
                     annotation: focusedAnnotation,
@@ -224,6 +226,14 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
         }
         return undefined
     }, [focusedAnnotation, annotations])
+
+    const annotationLabels = useMemo(() => {
+        const m: Record<string, { field_label?: string; field_name?: string }> = {}
+        annotations?.message?.forEach((a) => {
+            m[a.name] = { field_label: a.field_label, field_name: a.field_name }
+        })
+        return m
+    }, [annotations])
 
     if (documentMeta && !documentMeta?.message.is_pdf_converted) {
         return (
@@ -249,6 +259,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                     onAnnotationClick={onAnnotationClick}
                     onAnnotationUpdate={addToAnnotationUpdateQueue}
                     annotations={parsedAnnotations}
+                    annotationLabels={annotationLabels}
                     id={`osd-form-template-${templateID}`}
                     setFocusedAnnotation={setFocusedAnnotation}
                     allowEdit={documentMeta?.message.is_encrypted ? false : true}

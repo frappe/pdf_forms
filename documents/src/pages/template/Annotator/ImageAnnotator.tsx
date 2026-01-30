@@ -10,6 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SplitSquareHorizontal, Settings } from 'lucide-react';
 
 
+interface AnnotationLabelMap {
+    field_label?: string;
+    field_name?: string;
+}
+
 interface Props {
     images: FormTemplateImage[],
     onAnnotationClick?: (annotationID: string | null) => void,
@@ -24,6 +29,7 @@ interface Props {
     setFocusedAnnotation?: (annotationID: string | null) => void,
     viewMode?: string,
     annotations?: Record<number, Annotation[]>,
+    annotationLabels?: Record<string, AnnotationLabelMap>,
     customButtons?: React.ReactNode,
     customHeader?: React.ReactNode,
     allowEdit?: boolean,
@@ -32,7 +38,13 @@ interface Props {
     id?: string
 }
 
-export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onDualView, viewMode, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, ...props }: Props) => {
+function getTooltipText(annotationId: string, labels?: Record<string, AnnotationLabelMap>): string | null {
+    const l = labels?.[annotationId]
+    if (!l) return null
+    return l.field_label?.trim() || l.field_name?.trim() || null
+}
+
+export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onDualView, viewMode, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, ...props }: Props) => {
 
     const [currentPage, setCurrentPage] = useState(0);
 
@@ -41,6 +53,12 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
     const [annotator, setAnnotator] = useState<any>(null);
 
     const [viewer, setViewer] = useState<OpenSeaDragon.Viewer | null>(null);
+
+    const TOOLTIP_HOVER_DELAY_MS = 200;
+
+    const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+    const mousePosRef = useRef({ x: 0, y: 0 });
+    const tooltipDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Init Annotorious when the component
     // mounts, and keep the current 'anno'
@@ -265,6 +283,58 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
         }
     }, [annotator, onAnnotationDelete])
 
+    useEffect(() => {
+        const onMouseEnter = (a: { id: string }) => {
+            if (tooltipDelayRef.current) {
+                clearTimeout(tooltipDelayRef.current)
+                tooltipDelayRef.current = null
+            }
+            const text = getTooltipText(a.id, annotationLabels)
+            if (text) {
+                tooltipDelayRef.current = setTimeout(() => {
+                    tooltipDelayRef.current = null
+                    setTooltip({
+                        text,
+                        x: mousePosRef.current.x,
+                        y: mousePosRef.current.y,
+                    })
+                }, TOOLTIP_HOVER_DELAY_MS)
+            }
+        }
+        const onMouseLeave = () => {
+            if (tooltipDelayRef.current) {
+                clearTimeout(tooltipDelayRef.current)
+                tooltipDelayRef.current = null
+            }
+            setTooltip(null)
+        }
+        if (annotator) {
+            annotator.on('mouseEnterAnnotation', onMouseEnter)
+            annotator.on('mouseLeaveAnnotation', onMouseLeave)
+        }
+        return () => {
+            if (tooltipDelayRef.current) {
+                clearTimeout(tooltipDelayRef.current)
+                tooltipDelayRef.current = null
+            }
+            if (annotator) {
+                annotator.off('mouseEnterAnnotation', onMouseEnter)
+                annotator.off('mouseLeaveAnnotation', onMouseLeave)
+            }
+        }
+    }, [annotator, annotationLabels])
+
+    useEffect(() => {
+        const containerId = id ?? 'openSeaDragon'
+        const el = document.getElementById(containerId)
+        if (!el) return
+        const onMouseMove = (e: MouseEvent) => {
+            mousePosRef.current = { x: e.clientX, y: e.clientY }
+            setTooltip((t) => (t ? { ...t, x: e.clientX, y: e.clientY } : null))
+        }
+        el.addEventListener('mousemove', onMouseMove)
+        return () => el.removeEventListener('mousemove', onMouseMove)
+    }, [viewer, id])
 
     useEffect(() => {
         if (annotationToFocus && viewer) {
@@ -419,6 +489,17 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     }}
                 >
                 </div>
+                {tooltip && (
+                    <div
+                        className="fixed z-9999 pointer-events-none px-2 py-1.5 text-sm text-white bg-gray-900 rounded shadow-lg max-w-[280px] truncate"
+                        style={{
+                            left: tooltip.x + 12,
+                            top: tooltip.y + 12,
+                        }}
+                    >
+                        {tooltip.text}
+                    </div>
+                )}
                 <div className="absolute bottom-2 left-1 bg-black/80 px-4 py-1 text-white rounded-md shadow-md">
                     {NUMBER_OF_ANNOTATIONS}
                 </div>

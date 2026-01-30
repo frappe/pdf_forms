@@ -56,8 +56,8 @@ def get_annotations(form_template_id):
         filters={
             'form_template': form_template_id
         },
-        fields=['id', 'value', 'source', 'page_index',
-                'form_template_image', 'annotation_type'],
+        fields=['name', 'value', 'source', 'page_index',
+                'form_template_image', 'annotation_type','field_label','field_name'],
         order_by='creation desc',
     )
 

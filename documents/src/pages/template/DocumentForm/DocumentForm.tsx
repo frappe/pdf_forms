@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ErrorBanner from "@/components/ui/error-banner"
 import { Configurations } from "../Configuration/Configurations"
 import { Editor } from "@/components/common/Editor/Editor"
+import { FieldsTable } from "./FieldsTable"
 
 interface DocumentFormProps {
     templateID: string,
@@ -148,13 +149,13 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                 </TabsList>
 
                 <TabsContent value="map-fields" className="p-0 mt-2">
-                    {/* <FieldsTable data={{
+                    <FieldsTable data={{
                         field: fields,
                         font: data.message.font,
                         font_size: data.message.font_size
                     }} focusedAnnotation={focusedAnnotation} onClick={onAnnotationClick} mutate={mutateAll}
                         templateID={templateID}
-                    /> */}
+                    />
                 </TabsContent>
                 <TabsContent value="metadata" className="mt-2">
                     <Configurations />

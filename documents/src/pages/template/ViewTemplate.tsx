@@ -1,8 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { Annotator } from './Annotator/Annotator'
 import { DocumentForm } from './DocumentForm/DocumentForm'
-// import { Annotator } from '@/components/features/DocumentViewer/Annotator'
-// import { DocumentForm } from '@/components/features/DocumentForm/DocumentForm'
 
 export const ViewTemplate = () => {
 
