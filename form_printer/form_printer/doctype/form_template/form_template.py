@@ -301,9 +301,6 @@ def get_fields_and_prompts_for_form_template(form_template_id):
 	# 1. Get the Form Template from the document
 	form_template = frappe.get_cached_doc("Form Template", form_template_id)
 
-	# 2. Get all the Prompt fields
-	prompts = get_prompt_fields(form_template.prompts)
-
 	# 3. Check if data_source is Doctype or Custom Data Source
 	if form_template.data_source == "DocType":
 		# 4. Get the fields from the doctype
@@ -315,21 +312,10 @@ def get_fields_and_prompts_for_form_template(form_template_id):
 	# 6. Return the fields and prompts
 	return {
 		"fields": fields,
-		"prompts": prompts,
+		"prompts": form_template.prompts,
 		"source": form_template.source
 	}
 
-def get_prompt_fields(prompts):
-    prompts_array = []
-    for prompt in prompts:
-        prompts_array.append(
-            {
-                "field_name": prompt.field_name,
-                "field_label": prompt.label,
-                "field_type": prompt.type,
-            }
-        )
-    return prompts_array
 
 @frappe.whitelist()
 def download_data_source_sheet(template_id: str):

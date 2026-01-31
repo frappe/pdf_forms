@@ -16,8 +16,8 @@ export interface FormTemplatePrompts{
 	label: string
 	/**	Type : Select	*/
 	type?: "Text" | "Checkbox" | "Radio"
-	/**	Question : Small Text	*/
-	question?: string
+	/**	Description : Small Text	*/
+	description?: string
 	/**	Mandatory : Check	*/
 	mandatory?: 0 | 1
 }

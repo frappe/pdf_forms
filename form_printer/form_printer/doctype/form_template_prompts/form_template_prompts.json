@@ -10,7 +10,7 @@
   "field_name",
   "label",
   "type",
-  "question",
+  "description",
   "mandatory"
  ],
  "fields": [
@@ -37,18 +37,18 @@
    "options": "Text\nCheckbox\nRadio"
   },
   {
-   "fieldname": "question",
-   "fieldtype": "Small Text",
-   "in_list_view": 1,
-   "label": "Question",
-   "mandatory_depends_on": "eval:doc.type === 'Prompt'"
-  },
-  {
    "default": "0",
    "fieldname": "mandatory",
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Mandatory",
+   "mandatory_depends_on": "eval:doc.type === 'Prompt'"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Description",
    "mandatory_depends_on": "eval:doc.type === 'Prompt'"
   }
  ],
@@ -56,7 +56,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-01-28 18:29:09.831677",
+ "modified": "2026-01-31 17:47:07.705593",
  "modified_by": "Administrator",
  "module": "Form Printer",
  "name": "Form Template Prompts",

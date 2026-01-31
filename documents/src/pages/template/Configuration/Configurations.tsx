@@ -5,16 +5,13 @@ import { useFrappeGetCall } from "frappe-react-sdk"
 import { useParams } from "react-router-dom"
 import SchemaFieldList from "./SchemaFieldList"
 import { Prompts } from "./Prompts"
+import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
 
 
 export interface ConfigData {
     source: string
     fields: SchemaField
-    prompts: {
-        field_name: string
-        field_label: string
-        field_type: 'Checkbox' | 'Radio' | 'Text'
-    }[]
+    prompts: FormTemplatePrompts[]
 }
 
 export interface SchemaField {
@@ -31,7 +28,7 @@ export const Configurations = () => {
 
     const { templateID } = useParams<{ templateID: string }>()
 
-    const { data, isLoading, error } = useFrappeGetCall<{ message: ConfigData }>('form_printer.form_printer.doctype.form_template.form_template.get_fields_and_prompts_for_form_template', {
+    const { data, isLoading, error, mutate } = useFrappeGetCall<{ message: ConfigData }>('form_printer.form_printer.doctype.form_template.form_template.get_fields_and_prompts_for_form_template', {
         form_template_id: templateID
     }, undefined, {
         revalidateOnFocus: false,
@@ -43,13 +40,13 @@ export const Configurations = () => {
         <div>
             {isLoading && <FullPageLoader />}
             {error && <ErrorBanner error={error} />}
-            {data && data.message && <ConfigContent data={data.message} />}
+            {data && data.message && templateID && <ConfigContent data={data.message} templateID={templateID} mutate={mutate} />}
         </div>
     )
 
 }
 
-export const ConfigContent = ({ data }: { data: ConfigData }) => {
+export const ConfigContent = ({ data, templateID, mutate }: { data: ConfigData; templateID: string; mutate: () => void }) => {
 
     return (
         <div className="flex flex-col gap-2 m-4 h-full">
@@ -62,7 +59,7 @@ export const ConfigContent = ({ data }: { data: ConfigData }) => {
                     <SchemaFieldList schema={data.fields} source={data.source}/>
                 </TabsContent>
                 <TabsContent value="prompts" className="p-0">
-                    <Prompts prompts={data.prompts} />
+                    <Prompts prompts={data.prompts} templateID={templateID} onRefresh={mutate} />
                 </TabsContent>
             </Tabs>
 
