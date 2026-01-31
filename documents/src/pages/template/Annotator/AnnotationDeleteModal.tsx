@@ -11,8 +11,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { ErrorBanner } from '@/components/common/ErrorBanner'
 import { Loader2 } from 'lucide-react'
+import ErrorBanner from '@/components/ui/error-banner'
 
 interface Props {
     annotationID: string | null,
@@ -58,7 +58,6 @@ export const AnnotationDeleteModal = ({ annotationID, onClose }: Props) => {
                     {error && (
                         <ErrorBanner 
                             error={error} 
-                            overrideHeading="There was an error while deleting the annotation"
                         />
                     )}
                     <AlertDialogDescription>
