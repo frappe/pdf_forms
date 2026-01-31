@@ -9,6 +9,7 @@ import type { Filter } from "frappe-react-sdk"
 import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 import ErrorBanner from "@/components/ui/error-banner"
 import { FormTemplateTable } from "./FormTemplateTable"
+import { AddFormTemplateDialog } from "./AddFormTemplateDialog"
 
 export const Dashboard = () => {
 
@@ -135,6 +136,8 @@ export const Dashboard = () => {
             <div className="flex-1 overflow-hidden flex flex-col">
                 {data && <FormTemplateTable data={data} count={count} currentCount={data.length} />}
             </div>
+
+            <AddFormTemplateDialog isOpen={isOpen} onClose={handleClose} />
 
             {/* Sticky Pagination */}
             <div className="sticky bottom-0 bg-background border-t px-6 py-3 flex items-center justify-between z-10">

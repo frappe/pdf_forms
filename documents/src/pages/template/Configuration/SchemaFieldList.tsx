@@ -5,7 +5,8 @@ import type { SchemaField } from './Configurations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ChevronDown, Download } from 'lucide-react';
+import { ChevronDown, Download, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
 const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ schema, source }) => {
     const { templateID } = useParams<{ templateID: string }>();
@@ -143,12 +144,39 @@ function CollapsibleSection({
 }
 
 const FieldRow: React.FC<{ field: SchemaField; fieldKey?: string }> = ({ field, fieldKey }) => {
+    const copyFieldName = () => {
+        if (fieldKey) {
+            void navigator.clipboard.writeText(fieldKey).then(() => {
+                toast.success('Copied to clipboard')
+            }).catch(() => {
+                toast.error('Failed to copy')
+            })
+        }
+    }
+
     return (
         <div className="flex flex-col gap-0 px-2">
             <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                    {fieldKey ? `${field.description ?? ''} (${fieldKey})` : field.description}
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                        {fieldKey ? `${field.description ?? ''} (${fieldKey})` : field.description}
+                    </span>
+                    {fieldKey && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                copyFieldName()
+                            }}
+                            aria-label="Copy field name"
+                        >
+                            <Copy className="size-3" />
+                        </Button>
+                    )}
+                </div>
                 {field.fieldtype && <Badge variant="secondary">{field.fieldtype}</Badge>}
             </div>
             {field.enum && (
