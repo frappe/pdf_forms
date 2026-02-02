@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { FormProvider, useFieldArray, useForm } from "react-hook-form"
+import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useFrappePostCall, useSWRConfig } from "frappe-react-sdk"
 import type { KeyedMutator } from 'swr'
 import { useBoolean } from "usehooks-ts"
@@ -26,30 +26,14 @@ import { AnnotationDeleteModal } from "@/pages/template/Annotator/AnnotationDele
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { FieldEditForm } from "./FieldEditForm"
+import { SpinnerLoader } from "@/components/common/FullPageLoader/SpinnerLoader"
+import ErrorBanner from "@/components/ui/error-banner"
 
-interface FieldEditModalProps {
-    index: number
-    isOpen: boolean
-    onClose: () => void
-    setIndex: (n: number | null) => void
-    totalLength: number
-}
-
-function FieldEditModal({ index, isOpen, onClose, setIndex, totalLength }: FieldEditModalProps) {
-    return (
-        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { setIndex(null); onClose() } }}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Edit field {index + 1} of {totalLength}</DialogTitle>
-                </DialogHeader>
-                <p className="text-sm text-muted-foreground">Field value editor placeholder. Wire your field edit form here.</p>
-            </DialogContent>
-        </Dialog>
-    )
-}
 
 interface FieldsListProps {
     data: {
@@ -96,7 +80,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
             font_size: data.font_size
         }
     })
-    const { handleSubmit, control, reset, register, getValues } = methods
+    const { handleSubmit, control, reset, getValues } = methods
 
     const { fields } = useFieldArray({
         control,
@@ -111,7 +95,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         return null
     }, [focusedAnnotation, data])
 
-    const { call } = useFrappePostCall('form_printer.form_printer.doctype.form_template_field.form_template_field.update_form_template_fields')
+    const { call, error, loading } = useFrappePostCall('form_printer.form_printer.doctype.form_template_field.form_template_field.update_form_template_fields')
 
     const onSubmit = (data: { fields?: typeof defaultFields; font: string; font_size: number }) => {
         if (!data?.fields) return
@@ -186,10 +170,6 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         onOpen()
     }
 
-    const onFieldClose = () => {
-        setIndex(null)
-        onClose()
-    }
 
     const copyToClipboard = () => {
         const formData = getValues()
@@ -304,8 +284,9 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                             >
                                 <Upload className="size-4" />
                             </Button>
-                            <Button type="submit" size="sm" ref={saveButtonRef}>
-                                Save
+                            <Button type="submit" size="sm" ref={saveButtonRef} disabled={loading}>
+                                {loading && <SpinnerLoader />}
+                                {loading ? 'Saving...' : 'Save'}
                             </Button>
                         </div>
                     </div>
@@ -326,7 +307,8 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                             }} />
                         </div>
                     </div>
-                    <div className="overflow-y-auto px-2" style={{ height: 'calc(100vh - 210px)' }}>
+                    {error && <ErrorBanner error={error} />}
+                    <div className="overflow-y-auto px-2" style={{ height: 'calc(100vh - 220px)' }}>
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/50 hover:bg-muted/50 sticky top-0 z-10">
@@ -394,14 +376,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                             </SelectFormField>
                                         </TableCell>
                                         <TableCell className="p-2">
-                                            <InputGroup className="h-8">
-                                                <InputGroupInput
-                                                    id={`field-value-${field.id}`}
-                                                    className="min-w-[200px] pointer-events-none read-only:bg-muted/30"
-                                                    readOnly
-                                                    {...register(`fields.${index}.field_value`)}
-                                                />
-                                            </InputGroup>
+                                            <FieldValueDisplay index={index} fieldId={field.id} />
                                         </TableCell>
                                         <TableCell className="p-2">
                                             <div className="flex items-center gap-1">
@@ -438,9 +413,60 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                         </Table>
                     </div>
                     <AnnotationDeleteModal annotationID={deleteAnnotationID} onClose={deleteAnnotationModalClose} />
+                    {index !== null && <FieldEditModal index={index} isOpen={isOpen} onClose={onClose} setIndex={setIndex} totalLength={fields.length} />}
                 </form>
-                <FieldEditModal index={index ?? 0} isOpen={isOpen} onClose={onFieldClose} setIndex={setIndex} totalLength={fields.length} />
             </FormProvider>
         </div>
+    )
+}
+
+interface FieldEditModalProps {
+    index: number
+    isOpen: boolean
+    onClose: () => void
+    setIndex: (n: number | null) => void
+    totalLength: number
+}
+
+const FieldValueDisplay = ({ index, fieldId }: { index: number; fieldId: string }) => {
+    const fieldValue = useWatch({ name: `fields.${index}.field_value` })
+
+    return (
+        <InputGroup className="h-8">
+            <InputGroupInput
+                id={`field-value-${fieldId}`}
+                className="min-w-[200px] pointer-events-none read-only:bg-muted/30"
+                readOnly
+                value={fieldValue ?? ''}
+            />
+        </InputGroup>
+    )
+}
+
+const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: FieldEditModalProps) => {
+    return (
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { setIndex(null); onClose() } }} modal={true}>
+            <DialogContent
+                className="min-w-2xl gap-6"
+                onInteractOutside={(e) => {
+                    // Allow Popover interactions
+                    const target = e.target as HTMLElement
+                    if (target.closest('[data-slot="popover-content"]')) {
+                        e.preventDefault()
+                    }
+                }}
+            >
+                <DialogHeader>
+                    <DialogTitle>Edit field {index + 1} of {totalLength}</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col max-h-[60vh] overflow-y-auto">
+                    <FieldEditForm index={index} />
+                </div>
+
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={onClose}>Close</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     )
 }
