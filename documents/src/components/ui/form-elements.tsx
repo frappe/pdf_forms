@@ -47,9 +47,10 @@ export const DataField = ({ name, rules, label, isRequired, formDescription, inp
 
 interface SelectFieldProps extends FormElementProps {
     children: React.ReactNode
+    placeholder?: string
 }
 
-export const SelectFormField = ({ name, rules, label, isRequired, formDescription, hideLabel, children, disabled, readOnly }: SelectFieldProps) => {
+export const SelectFormField = ({ name, rules, label, isRequired, formDescription, hideLabel, children, disabled, readOnly, placeholder }: SelectFieldProps) => {
 
     const { control } = useFormContext()
 
@@ -65,7 +66,7 @@ export const SelectFormField = ({ name, rules, label, isRequired, formDescriptio
                     <Select onValueChange={field.onChange} value={field.value} disabled={disabled || readOnly} aria-readonly={readOnly}>
                         <FormControl>
                             <SelectTrigger className="w-full">
-                                <SelectValue />
+                                <SelectValue placeholder={placeholder} />
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -165,7 +166,7 @@ export const CodeEditorFormField = ({
                             <FormCodeEditor
                                 name={name}
                                 value={field.value ?? ""}
-                                onChange={field.onChange}
+                                    onChange={(value) => field.onChange(value)}
                                 onBlur={() => field.onBlur()}
                                 readOnly={readOnly}
                                 {...restEditorProps}
