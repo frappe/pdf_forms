@@ -4,6 +4,27 @@ Frappe app to manage document mapping and printing
 
 ### Installation
 
+#### System Dependencies
+
+This app requires `poppler-utils` to be installed on your system (required by `pdf2image`):
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install poppler-utils
+```
+
+**macOS:**
+```bash
+brew install poppler
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum install poppler-utils
+```
+
+#### App Installation
+
 You can install this app using the [bench](https://github.com/frappe/bench) CLI:
 
 ```bash

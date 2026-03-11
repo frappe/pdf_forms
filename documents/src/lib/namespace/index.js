@@ -1,3 +1,3 @@
-import './namespace'
-import './sync'
-import './defaults'
+import "./namespace";
+import "./sync";
+import "./defaults";

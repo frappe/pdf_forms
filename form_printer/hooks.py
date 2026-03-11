@@ -243,4 +243,6 @@ export_python_type_annotations = True
 # }
 
 
-website_route_rules = [{'from_route': '/documents/<path:app_path>', 'to_route': 'documents'},]
+website_route_rules = [
+	{"from_route": "/documents/<path:app_path>", "to_route": "documents"},
+]
