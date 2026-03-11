@@ -21,15 +21,16 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
-import { Pencil, Trash2, Download, Upload, Search } from "lucide-react"
+import { Pencil, Trash2, Search, ChevronLeft, ChevronRight, X, Download, Upload } from "lucide-react"
 import { AnnotationDeleteModal } from "@/pages/template/Annotator/AnnotationDeleteModal"
 import {
     Dialog,
     DialogContent,
-    DialogFooter,
+    DialogClose,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { FieldEditForm } from "./FieldEditForm"
 import { SpinnerLoader } from "@/components/common/FullPageLoader/SpinnerLoader"
 import ErrorBanner from "@/components/ui/error-banner"
@@ -444,10 +445,23 @@ const FieldValueDisplay = ({ index, fieldId }: { index: number; fieldId: string 
 }
 
 const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: FieldEditModalProps) => {
+    const onNextClick = () => {
+        if (index < totalLength - 1) {
+            setIndex(index + 1)
+        }
+    }
+
+    const onPreviousClick = () => {
+        if (index > 0) {
+            setIndex(index - 1)
+        }
+    }
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { setIndex(null); onClose() } }} modal={true}>
             <DialogContent
                 className="min-w-2xl gap-6"
+                showCloseButton={false}
                 onInteractOutside={(e) => {
                     // Allow Popover interactions
                     const target = e.target as HTMLElement
@@ -457,16 +471,83 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
                 }}
             >
                 <DialogHeader>
-                    <DialogTitle>Edit field {index + 1} of {totalLength}</DialogTitle>
+                    <div className="flex items-center justify-between">
+                        <DialogTitle>Edit field {index + 1} of {totalLength}</DialogTitle>
+                        <div className="flex items-center gap-2">
+                            <NextPreviousButtons
+                                onNextClick={onNextClick}
+                                onPreviousClick={onPreviousClick}
+                                totalLength={totalLength}
+                                index={index}
+                            />
+                            <DialogClose asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-xs"
+                                    aria-label="Close"
+                                    onClick={onClose}
+                                >
+                                    <X className="size-4" />
+                                </Button>
+                            </DialogClose>
+                        </div>
+                    </div>
                 </DialogHeader>
                 <div className="flex flex-col max-h-[60vh] overflow-y-auto">
                     <FieldEditForm index={index} />
                 </div>
-
-                <DialogFooter>
-                    <Button type="button" variant="outline" onClick={onClose}>Close</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
+    )
+}
+
+interface NextPreviousButtonsProps {
+    onNextClick: () => void
+    onPreviousClick: () => void
+    totalLength: number
+    index: number
+}
+
+const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index }: NextPreviousButtonsProps) => {
+    return (
+        <TooltipProvider>
+            <div className="flex items-center gap-1">
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label="Previous Field"
+                            onClick={onPreviousClick}
+                            disabled={index === 0}
+                        >
+                            <ChevronLeft className="size-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Previous Field</p>
+                    </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label="Next Field"
+                            onClick={onNextClick}
+                            disabled={index === totalLength - 1}
+                        >
+                            <ChevronRight className="size-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Next Field</p>
+                    </TooltipContent>
+                </Tooltip>
+            </div>
+        </TooltipProvider>
     )
 }
