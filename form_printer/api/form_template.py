@@ -1,8 +1,10 @@
+from typing import Any
+
 import frappe
 
 
 @frappe.whitelist()
-def add_prompt_to_form_template(form_template_id, prompt):
+def add_prompt_to_form_template(form_template_id: str, prompt: dict[str, Any] | str) -> Any:
 	"""
 	This method will add a prompt to the form template
 	1. Get the Form Template from the document
@@ -21,7 +23,7 @@ def add_prompt_to_form_template(form_template_id, prompt):
 
 
 @frappe.whitelist()
-def remove_prompt_from_form_template(form_template_id, prompt):
+def remove_prompt_from_form_template(form_template_id: str, prompt: dict[str, Any] | str) -> Any:
 	"""
 	This method will remove a prompt from the form template
 	1. Get the Form Template from the document
@@ -48,7 +50,7 @@ def remove_prompt_from_form_template(form_template_id, prompt):
 
 
 @frappe.whitelist()
-def update_prompt_in_form_template(form_template_id, prompt):
+def update_prompt_in_form_template(form_template_id: str, prompt: dict[str, Any] | str) -> Any:
 	"""
 	This method will update a prompt in the form template
 	1. Get the Form Template from the document
