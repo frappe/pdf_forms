@@ -15,7 +15,8 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      matrix:
+        python-version: [3.10, 3.11]
     name: Server
 
     services:
@@ -41,8 +42,10 @@ jobs:
 
       - name: Find tests
         run: |
-          echo "Finding tests"
-          grep -rn "def test" > /dev/null
+          echo "Finding tests..."
+          find form_printer -name "test_*.py" -type f | head -10
+          echo "Test files found:"
+          find form_printer -name "test_*.py" -type f | wc -l
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -97,10 +100,12 @@ jobs:
         env:
           CI: 'Yes'
 
-      - name: Run Tests
+      - name: Run Unit Tests
         working-directory: /home/runner/frappe-bench
         run: |
           bench --site test_site set-config allow_tests true
-          bench --site test_site run-tests --app form_printer
+          echo "Running unit tests and sanity checks..."
+          bench --site test_site run-tests --app form_printer --verbose
         env:
           TYPE: server
+        continue-on-error: false
