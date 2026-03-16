@@ -95,7 +95,7 @@ export const Dashboard = () => {
             {/* Header */}
             <div className="flex items-center justify-between  py-4 border-b">
                 <h1 className="text-xl font-semibold">Form Template</h1>
-                <Button onClick={onOpen} className="bg-foreground text-background hover:bg-foreground/90">
+                <Button onClick={onOpen}>
                     <Plus className="size-4" />
                     Add Form Template
                 </Button>
@@ -140,7 +140,7 @@ export const Dashboard = () => {
             <AddFormTemplateDialog isOpen={isOpen} onClose={handleClose} />
 
             {/* Sticky Pagination */}
-            <div className="sticky bottom-0 bg-background border-t px-6 py-3 flex items-center justify-between z-10">
+            <div className="sticky bottom-0 bg-background border-t py-3 flex items-center justify-between z-10">
                 {/* Page Length Selector */}
                 <div className="flex items-center gap-0 border border-gray-200 rounded-md overflow-hidden">
                     {pageLengthOptions.map((option, index) => {

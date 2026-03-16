@@ -87,7 +87,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount }: FormTempla
                             <TableRow
                                 key={row.name}
                                 data-state={selectedRows.has(row.name) ? "selected" : undefined}
-                                className={`border-b ${index % 2 === 1 ? "bg-gray-50/40" : ""
+                                className={`border-b h-12 ${index % 2 === 1 ? "bg-gray-50/40" : ""
                                     }`}
                             >
                                 <TableCell className="px-4">
