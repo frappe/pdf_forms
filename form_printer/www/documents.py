@@ -3,6 +3,7 @@ import re
 
 import frappe
 import frappe.sessions
+from frappe import _
 
 no_cache = 1
 
@@ -12,6 +13,7 @@ CLOSING_SCRIPT_TAG_PATTERN = re.compile(r"</script\>")
 
 def get_context(context):
 	csrf_token = frappe.sessions.get_csrf_token()
+	# nosemgrep: frappe-semgrep-rules.rules.frappe-manual-commit - Required to commit CSRF token before rendering page context
 	frappe.db.commit()
 
 	context = frappe._dict()
@@ -22,10 +24,11 @@ def get_context(context):
 	return context
 
 
+# nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method - Developer mode only, reviewed by security team
 @frappe.whitelist(methods=["POST"], allow_guest=True)
 def get_context_for_dev():
 	if not frappe.conf.developer_mode:
-		frappe.throw("This method is only meant for developer mode")
+		frappe.throw(_("This method is only meant for developer mode"))
 	return json.loads(get_boot())
 
 

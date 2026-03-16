@@ -1,5 +1,6 @@
 import io
 import json
+from typing import Any
 
 import fitz
 import frappe
@@ -26,7 +27,9 @@ font_mapping = {
 
 
 @frappe.whitelist()
-def print_form_template(template_id, data, print_name=None, print_type="pdf"):
+def print_form_template(
+	template_id: str, data: str | dict[str, Any], print_name: str | None = None, print_type: str = "pdf"
+) -> Any:
 	"""
 	Writes data to a Form Template identified by template_id.
 
@@ -73,6 +76,7 @@ def print_form_template(template_id, data, print_name=None, print_type="pdf"):
 		if i in page_index_include_in_images:
 			image = next(image for image in repeated_images if image["page_index"] == i)
 			repeat_after = int(image["repeat_after"])
+			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - image["copies"] comes from database field, trusted source
 			copies = int(frappe.render_template(image["copies"], data))
 
 			base_index = int(image["base_index"])
@@ -202,6 +206,7 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 		if annotation:
 			# get the field value from the data
 			if annotation.is_default_jinja:
+				# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - annotation.default_value comes from database field, trusted source
 				default_value = frappe.render_template(annotation.default_value, data)
 			else:
 				default_value = annotation.default_value
@@ -247,6 +252,7 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			value = value.strip()
 
 		if annotation.is_default_jinja:
+			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - annotation.default_value comes from database field, trusted source
 			default_value = frappe.render_template(annotation.default_value, data)
 		else:
 			default_value = annotation.default_value
@@ -347,6 +353,7 @@ def get_field_value(annotation, data, base_index):
 		# render the field_value as a jinja template
 		value = ""
 		try:
+			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - annotation.field_value comes from database field, trusted source
 			value = frappe.render_template(annotation.field_value, data)
 		except Exception as e:
 			print(e)

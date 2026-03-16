@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from typing import Any
+
 import frappe
 from frappe.model.document import Document
 
@@ -53,7 +55,7 @@ class FormTemplateField(Document):
 
 
 @frappe.whitelist()
-def get_annotations(form_template_id):
+def get_annotations(form_template_id: str) -> list[dict[str, Any]]:
 	annotations = frappe.db.get_list(
 		"Form Template Field",
 		filters={"form_template": form_template_id},
@@ -74,7 +76,12 @@ def get_annotations(form_template_id):
 
 
 @frappe.whitelist(methods=["POST"])
-def update_form_template_fields(form_template_id, fields=None, font=None, font_size=None):
+def update_form_template_fields(
+	form_template_id: str,
+	fields: list[dict[str, Any]] | None = None,
+	font: str | None = None,
+	font_size: int | None = None,
+) -> None:
 	if fields is None:
 		fields = []
 	# 1. Update the document template fields only those are changed
@@ -113,7 +120,7 @@ def update_form_template_fields(form_template_id, fields=None, font=None, font_s
 
 
 @frappe.whitelist(methods=["POST"])
-def update_annotation(form_template_id, annotations):
+def update_annotation(form_template_id: str, annotations: list[dict[str, Any]]) -> str:
 	for annotation in annotations:
 		# check if annotation exists
 		annotation_exists = frappe.db.exists("Form Template Field", annotation["id"])
@@ -143,6 +150,12 @@ def update_annotation(form_template_id, annotations):
 				}
 			).insert()
 
-	frappe.publish_realtime("annotations_updated", {"form_template_id": form_template_id}, after_commit=True)
+	frappe.publish_realtime(
+		"annotations_updated",
+		{"form_template_id": form_template_id},
+		doctype="Form Template",
+		docname=form_template_id,
+		after_commit=True,
+	)
 
 	return "Success"
