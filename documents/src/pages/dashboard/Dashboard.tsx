@@ -134,7 +134,12 @@ export const Dashboard = () => {
 
             {error && <ErrorBanner error={error} />}
             <div className="flex-1 overflow-hidden flex flex-col">
-                {data && <FormTemplateTable data={data} count={count} currentCount={data.length} />}
+                <FormTemplateTable
+                    data={data ?? []}
+                    count={count}
+                    currentCount={data?.length ?? 0}
+                    isLoading={isLoading}
+                />
             </div>
 
             <AddFormTemplateDialog isOpen={isOpen} onClose={handleClose} />
