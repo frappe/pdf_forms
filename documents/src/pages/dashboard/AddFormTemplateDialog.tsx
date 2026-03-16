@@ -1,7 +1,5 @@
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
-import { useContext, useEffect, useState } from 'react'
-import type { FrappeConfig } from 'frappe-react-sdk'
-import { FrappeContext, useFrappeCreateDoc, useFrappeUpdateDoc } from 'frappe-react-sdk'
+import { useFrappeCreateDoc, useFrappeFileUpload, useFrappeUpdateDoc } from 'frappe-react-sdk'
 import { toast } from 'sonner'
 import {
     Dialog,
@@ -16,8 +14,6 @@ import { FileDropzone } from '@/components/ui/file-dropzone'
 import { DataField, LinkFormField, SmallTextField } from '@/components/ui/form-elements'
 import { FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form'
 import ErrorBanner from '@/components/ui/error-banner'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
 import FileUploadBanner from '@/components/common/FileUploadBanner'
 
 const EMPTY_FILES: File[] = []
@@ -46,31 +42,14 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
         },
     })
 
-    const { handleSubmit, control, reset, setValue } = methods
+    const { handleSubmit, control, reset } = methods
     const { createDoc, error: createDocError, loading: creatingDoc, reset: resetCreate } =
         useFrappeCreateDoc()
     const { updateDoc, error: updateDocError, loading: updatingDoc, reset: resetUpdate } =
         useFrappeUpdateDoc()
 
-    const { file: frappeFile } = useContext(FrappeContext) as FrappeConfig
-
-    const [isUploading, setIsUploading] = useState(false)
-    const [uploadProgress, setUploadProgress] = useState(0)
-    const [uploadError, setUploadError] = useState<string | null>(null)
-
+    const { upload, error: uploadError, loading: uploading, progress: uploadProgress, reset: resetUpload } = useFrappeFileUpload()
     const files = useWatch({ control, name: 'files', defaultValue: EMPTY_FILES }) ?? EMPTY_FILES
-
-    useEffect(() => {
-        if (files.length) {
-            setValue('template_name', files[0].name.split('.pdf')[0])
-        }
-    }, [files, setValue])
-
-    const resetUploadState = () => {
-        setUploadError(null)
-        setUploadProgress(0)
-        setIsUploading(false)
-    }
 
     const onSubmit = (data: FormTemplateFormProps) => {
         if (files.length === 0) return
@@ -84,9 +63,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
         })
             .then((d) => {
                 docname = d.name
-                setIsUploading(true)
-                setUploadProgress(0)
-                return frappeFile.uploadFile(
+                return upload(
                     files[0],
                     {
                         isPrivate: true,
@@ -94,26 +71,18 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                         docname: d.name,
                         fieldname: 'file',
                     },
-                    (_bytesUploaded, _totalBytes, progress) => {
-                        setUploadProgress(progress?.progress ?? 0)
-                    }
                 )
             })
             .then((r) => {
-                const fileUrl = r.data?.message?.file_url ?? ''
+                const fileUrl = r.file_url
                 return updateDoc('Form Template', docname, { file: fileUrl })
             })
             .then(() => {
-                setIsUploading(false)
-                setUploadProgress(0)
                 toast.success('Form template created successfully')
                 handleClose(true)
             })
-            .catch((err: unknown) => {
-                setIsUploading(false)
-                setUploadProgress(0)
-                const message = err instanceof Error ? err.message : 'Upload failed'
-                setUploadError(message)
+            .catch(() => {
+                toast.error('Failed to create form template')
             })
     }
 
@@ -121,24 +90,11 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
         reset()
         resetCreate()
         resetUpdate()
-        resetUploadState()
+        resetUpload()
         onClose(refresh)
     }
 
-    const isLoading = creatingDoc || isUploading || updatingDoc
-
-    if (isUploading) {
-        return (
-            <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-                <DialogContent className="sm:max-w-xl">
-                    <DialogHeader>
-                        <DialogTitle>Uploading PDF…</DialogTitle>
-                    </DialogHeader>
-                    <FileUploadBanner uploadProgress={uploadProgress} />
-                </DialogContent>
-            </Dialog>
-        )
-    }
+    const isLoading = creatingDoc || uploading || updatingDoc
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -154,7 +110,8 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                         </DialogHeader>
 
                         <div className="flex flex-col gap-4 py-6">
-                            <FormField
+                            {uploading && uploadProgress ? <FileUploadBanner uploadProgress={uploadProgress} />
+                                : <FormField
                                 control={control}
                                 name="files"
                                 rules={{ required: 'Please add a PDF file' }}
@@ -180,27 +137,8 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                         <FormMessage />
                                     </FormItem>
                                 )}
-                            />
-
-                            {createDocError?.httpStatus === 409 && (
-                                <ErrorBanner
-                                    error={createDocError}
-                                    title="A form template with this name already exists."
-                                />
-                            )}
-                            {uploadError && (
-                                <Alert variant="destructive">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>Error uploading file</AlertTitle>
-                                    <AlertDescription>{uploadError}</AlertDescription>
-                                </Alert>
-                            )}
-                            {updateDocError && (
-                                <ErrorBanner
-                                    error={updateDocError}
-                                    title="Error updating form template with file"
-                                />
-                            )}
+                                />}
+                            <ErrorBanner error={createDocError || updateDocError || uploadError} />
 
                             <FormTemplateFormFields />
                         </div>

@@ -11,6 +11,7 @@ type Props = {
 }
 
 const ErrorBanner = ({ error, title = _("There was an error.") }: Props) => {
+    if (!error) return null
 
     const errorMessage = getErrorMessage(error)
     return (
