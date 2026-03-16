@@ -344,14 +344,19 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     setFocusedAnnotation(null)
                 }
             } else {
+                // Go to the required page first and update currentPage immediately
                 viewer.goToPage(annotationToFocus.pageIndex);
                 setTimeout(() => {
                     setCurrentPage(annotationToFocus.pageIndex);
+                }, 0);
+
+                // After a small delay (to allow annotations to load), pan to the annotation
+                setTimeout(() => {
                     panToAnnotation(annotationToFocus.annotation);
                     if (setFocusedAnnotation) {
                         setFocusedAnnotation(null);
                     }
-                }, 500)
+                }, 500);
             }
         }
     }, [annotationToFocus, panToAnnotation, currentPage, viewer, setFocusedAnnotation])
@@ -378,9 +383,9 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
     }, [setIsOpen])
 
     return (
-        <div className="w-full" {...props}>
+        <div className="relative w-full" {...props}>
             {showToolbar && (
-                <div className="absolute top-0 left-0 right-0 flex flex-col gap-0">
+                <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto">
                     <div className="flex items-stretch gap-0 bg-gray-100 w-full shadow-sm justify-between rounded-t-lg">
                         <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200">
                             {viewMode !== "annotator" && onDualView && (

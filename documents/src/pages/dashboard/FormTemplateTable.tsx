@@ -12,14 +12,16 @@ import {
 import { FileText, Loader2 } from "lucide-react"
 import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 import { convertFrappeDateStringToTimeAgo } from "@/lib/dateConversions"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface FormTemplateTableProps {
     data: FormTemplate[]
     count?: number
     currentCount: number
+    isLoading?: boolean
 }
 
-export const FormTemplateTable = memo(({ data, count, currentCount }: FormTemplateTableProps) => {
+export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }: FormTemplateTableProps) => {
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
 
     const toggleRowSelection = (id: string) => {
@@ -47,9 +49,9 @@ export const FormTemplateTable = memo(({ data, count, currentCount }: FormTempla
     return (
         <div className="flex-1 overflow-auto pb-4">
             <Table>
-                <TableHeader>
-                    <TableRow className="bg-gray-100 border border-gray-100 rounded-md">
-                        <TableHead className="w-12 px-4">
+                <TableHeader className="rounded-md">
+                    <TableRow className="bg-gray-100 border-b-transparent">
+                        <TableHead className="w-12 px-4 rounded-l-md">
                             <Checkbox
                                 checked={isAllSelected}
                                 onCheckedChange={toggleSelectAll}
@@ -60,7 +62,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount }: FormTempla
                         <TableHead className="px-4 text-gray-700">Description</TableHead>
                         <TableHead className="px-4 text-gray-700">Status</TableHead>
                         <TableHead className="px-4 text-gray-700">Source</TableHead>
-                        <TableHead className="px-4 text-right text-gray-700">
+                        <TableHead className="px-4 text-right text-gray-700 rounded-r-md">
                             <div className="flex items-center justify-end gap-2">
                                 {count !== undefined && (
                                     <span className="text-xs font-normal text-gray-500">
@@ -73,7 +75,42 @@ export const FormTemplateTable = memo(({ data, count, currentCount }: FormTempla
                 </TableHeader>
 
                 <TableBody>
-                    {data.length === 0 ? (
+                    {isLoading && data.length === 0 ? (
+                        Array.from({ length: 8 }).map((_, index) => (
+                            <TableRow
+                                key={index}
+                                className={`border-b h-12 ${index % 2 === 1 ? "bg-gray-50/40" : ""}`}
+                            >
+                                <TableCell className="px-4">
+                                    <Checkbox disabled />
+                                </TableCell>
+
+                                <TableCell className="px-4">
+                                    <div className="flex items-start gap-2">
+                                        <FileText className="size-4 text-muted-foreground mt-1" />
+
+                                        <Skeleton className="h-4 w-52" />
+                                    </div>
+                                </TableCell>
+
+                                <TableCell className="px-4">
+                                    <Skeleton className="h-4 w-64" />
+                                </TableCell>
+
+                                <TableCell className="px-4">
+                                    <Skeleton className="h-5 w-20 rounded-full" />
+                                </TableCell>
+
+                                <TableCell className="px-4">
+                                    <Skeleton className="h-4 w-24" />
+                                </TableCell>
+
+                                <TableCell className="px-4 text-right">
+                                    <Skeleton className="h-4 w-16 ml-auto" />
+                                </TableCell>
+                            </TableRow>
+                        ))
+                    ) : data.length === 0 ? (
                         <TableRow>
                             <TableCell
                                 colSpan={6}
@@ -87,7 +124,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount }: FormTempla
                             <TableRow
                                 key={row.name}
                                 data-state={selectedRows.has(row.name) ? "selected" : undefined}
-                                className={`border-b ${index % 2 === 1 ? "bg-gray-50/40" : ""
+                                className={`border-b h-12 ${index % 2 === 1 ? "bg-gray-50/40" : ""
                                     }`}
                             >
                                 <TableCell className="px-4">
