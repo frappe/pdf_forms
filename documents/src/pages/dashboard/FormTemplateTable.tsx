@@ -50,8 +50,8 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
         <div className="flex-1 overflow-auto pb-4">
             <Table>
                 <TableHeader className="rounded-md">
-                    <TableRow className="bg-gray-100 border border-gray-100 rounded-md">
-                        <TableHead className="w-12 px-4">
+                    <TableRow className="bg-gray-100 border-b-transparent">
+                        <TableHead className="w-12 px-4 rounded-l-md">
                             <Checkbox
                                 checked={isAllSelected}
                                 onCheckedChange={toggleSelectAll}
@@ -62,7 +62,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                         <TableHead className="px-4 text-gray-700">Description</TableHead>
                         <TableHead className="px-4 text-gray-700">Status</TableHead>
                         <TableHead className="px-4 text-gray-700">Source</TableHead>
-                        <TableHead className="px-4 text-right text-gray-700">
+                        <TableHead className="px-4 text-right text-gray-700 rounded-r-md">
                             <div className="flex items-center justify-end gap-2">
                                 {count !== undefined && (
                                     <span className="text-xs font-normal text-gray-500">
