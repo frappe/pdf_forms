@@ -359,8 +359,7 @@ const SelectFields = ({
                             onChange={(value) => setFieldMap({ field: value })}
                             placeholder={`Select ${schemaField.description || 'field'}`}
                             isSearchable
-                            options={fieldOptions}
-                            key={name}
+                                options={fieldOptions}
                         />
                     </FormControl>
                 </FormItem>

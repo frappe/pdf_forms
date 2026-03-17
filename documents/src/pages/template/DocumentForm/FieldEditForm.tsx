@@ -56,7 +56,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 px-4">
             {error && <ErrorBanner error={error} />}
 
             <div className="grid grid-cols-2 gap-4">
@@ -110,13 +110,12 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
 
             {valueType === 'Field' && data?.message?.fields && (
                 <>
-                    <SelectFields schemaField={data.message.fields} name={`fields.${index}.field_value`} key={index} />
+                    <SelectFields schemaField={data.message.fields} name={`fields.${index}.field_value`} />
                     <DataField
                         name={`fields.${index}.field_value`}
                         label="Value"
                         readOnly
                         inputProps={{ placeholder: 'Selected field path will appear here' }}
-                        key={index}
                     />
                 </>
             )}
