@@ -310,20 +310,11 @@ const SelectFields = ({
     schemaField: SchemaField
     name: string
 }) => {
-    const [fieldMap, setFieldMap] = useState<FieldMap | null>(null)
     const { setValue, getValues } = useFormContext()
-
-    // Initialize fieldMap from form value on mount
-    useEffect(() => {
+    const [fieldMap, setFieldMap] = useState<FieldMap | null>(() => {
         const value = getValues(name)
-        if (value) {
-            const initialMap = generateFieldMap(value)
-            if (JSON.stringify(initialMap) !== JSON.stringify(fieldMap)) {
-                setFieldMap(initialMap)
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [name])
+        return value ? generateFieldMap(value) : null
+    })
 
     useEffect(() => {
         if (fieldMap) {

@@ -110,7 +110,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
 
             {valueType === 'Field' && data?.message?.fields && (
                 <>
-                    <SelectFields schemaField={data.message.fields} name={`fields.${index}.field_value`} />
+                    <SelectFields key={`fields.${index}.field_value`} schemaField={data.message.fields} name={`fields.${index}.field_value`} />
                     <DataField
                         name={`fields.${index}.field_value`}
                         label="Value"
