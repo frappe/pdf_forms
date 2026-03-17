@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import OpenSeaDragon from "openseadragon";
 import Annotorious from '@recogito/annotorious-openseadragon';
 import '@recogito/annotorious-openseadragon/dist/annotorious.min.css';
@@ -6,8 +7,7 @@ import type { FormTemplateImage } from '@/types/FormPrinter/FormTemplateImage';
 import type { Annotation } from '@/types/Annotation';
 import { Button } from '@/components/ui/button';
 import { DocumentImageSettingModal } from './DocumentImageSettingModal';
-import { Badge } from '@/components/ui/badge';
-import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, SplitSquareHorizontal, Settings } from 'lucide-react';
+import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Settings, ArrowLeft } from 'lucide-react';
 
 
 interface AnnotationLabelMap {
@@ -35,7 +35,10 @@ interface Props {
     allowEdit?: boolean,
     showToolbar?: boolean,
     annotatorImageStyles?: React.CSSProperties,
-    id?: string
+    id?: string,
+    /** If set, show a Back button beside Full Screen that links to this path (e.g. "/") */
+    backTo?: string,
+    backLabel?: string,
 }
 
 function getTooltipText(annotationId: string, labels?: Record<string, AnnotationLabelMap>): string | null {
@@ -44,7 +47,7 @@ function getTooltipText(annotationId: string, labels?: Record<string, Annotation
     return l.field_label?.trim() || l.field_name?.trim() || null
 }
 
-export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onDualView, viewMode, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, ...props }: Props) => {
+export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onDualView, viewMode, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', ...props }: Props) => {
 
     const [currentPage, setCurrentPage] = useState(0);
 
@@ -388,15 +391,11 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                 <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto">
                     <div className="flex items-stretch gap-0 bg-gray-100 w-full shadow-sm justify-between rounded-t-lg">
                         <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200">
-                            {viewMode !== "annotator" && onDualView && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label="Dual Windows"
-                                    onClick={onDualView}
-                                    className="rounded-none"
-                                >
-                                    <SplitSquareHorizontal className="size-4" />
+                            {backTo && (
+                                <Button variant="ghost" size="icon" aria-label={backLabel} title={backLabel} className="rounded-none" asChild>
+                                    <Link to={backTo}>
+                                        <ArrowLeft className="size-4" />
+                                    </Link>
                                 </Button>
                             )}
                             <Button
@@ -454,11 +453,6 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             >
                                 <ZoomOut className="size-4" />
                             </Button>
-                            <Badge 
-                                className={`mx-2 ${allowEdit ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}`}
-                            >
-                                {allowEdit ? 'Editing Mode' : 'Read Only'}
-                            </Badge>
                         </div>
                         {customButtons && (
                             <div className="flex items-stretch gap-0 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200">

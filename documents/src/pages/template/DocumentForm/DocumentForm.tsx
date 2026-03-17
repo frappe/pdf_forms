@@ -141,14 +141,14 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
 
     if (!error && fields && fields.length > 0 && data?.message) return (
         <div>
-            <Tabs defaultValue="map-fields" className="w-full">
+            <Tabs defaultValue="map-fields" className="w-full p-1">
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="map-fields">Map Fields</TabsTrigger>
                     <TabsTrigger value="metadata">Metadata</TabsTrigger>
                     <TabsTrigger value="sample-data">Sample Data</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="map-fields" className="p-0 mt-2">
+                <TabsContent value="map-fields" className="mt-2">
                     <FieldsTable data={{
                         field: fields,
                         font: data.message.font,

@@ -12,7 +12,7 @@ export const ViewTemplate = () => {
                 <div className="w-[45%] border-r">
                     <Annotator templateID={templateID} />
                 </div>
-                <div className="w-[55%] mt-10">
+                <div className="w-[55%]">
                     <DocumentForm templateID={templateID} />
                 </div>
             </div>

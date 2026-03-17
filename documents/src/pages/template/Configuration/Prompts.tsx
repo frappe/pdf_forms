@@ -74,7 +74,7 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                     </Button>
                 </div>
             )}
-            <div className="overflow-y-auto px-2 flex flex-col gap-2" style={{ height: 'calc(100vh - 230px)' }}>
+            <div className="overflow-y-auto px-2 flex flex-col gap-2" style={{ height: 'calc(100vh - 210px)' }}>
                 {prompts.map((prompt, index) => (
                     <div
                         key={prompt.name || index}

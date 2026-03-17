@@ -264,6 +264,8 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                     setFocusedAnnotation={setFocusedAnnotation}
                     allowEdit={documentMeta?.message.is_encrypted ? false : true}
                     onAnnotationDelete={setDeleteAnnotationID}
+                    backTo="/"
+                    backLabel="Back to dashboard"
                     customButtons={<>
                         <AnnotationSyncState
                             hasUnsavedChanges={unsavedAnnotations.length > 0}

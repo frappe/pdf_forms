@@ -56,7 +56,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
     }
 
     return (
-        <div className="flex flex-col gap-4 px-4">
+        <div className="flex flex-col gap-4">
             {error && <ErrorBanner error={error} />}
 
             <div className="grid grid-cols-2 gap-4">
