@@ -287,6 +287,7 @@ def get_form_template_prompts(form_template_id):
 	form_template_fields = frappe.get_all(
 		"Form Template Field",
 		filters=[["form_template", "=", form_template_id], ["value_type", "=", "Prompt"]],
+		fields=["name", "field_value"],
 	)
 
 	# Initialize the list of prompt fields
