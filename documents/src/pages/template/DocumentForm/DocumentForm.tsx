@@ -1,13 +1,12 @@
 import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetCall, useFrappeGetDocList } from "frappe-react-sdk"
 import { useAnnotationFocus } from "../../../hooks/useAnnotationFocus"
-import { useMemo } from "react"
 import type { FormTemplateField } from "@/types/FormPrinter/FormTemplateField"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ErrorBanner from "@/components/ui/error-banner"
 import { Configurations } from "../Configuration/Configurations"
-import { Editor } from "@/components/common/Editor/Editor"
 import { FieldsTable } from "./FieldsTable"
+import { Preview } from "./Preview"
 
 interface DocumentFormProps {
     templateID: string,
@@ -35,12 +34,13 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
     const { data, error: docError, mutate: docMutate } = useFrappeGetCall<{
         message: {
             font: string,
-            font_size: number
+            font_size: number,
+            source: string
         }
     }>('frappe.client.get_value', {
         doctype: 'Form Template',
         filters: templateID,
-        fieldname: JSON.stringify(['font', 'font_size'])
+        fieldname: JSON.stringify(['font', 'font_size', 'source'])
     }, ['font_data', templateID], {
         revalidateOnFocus: false,
         keepPreviousData: true,
@@ -51,54 +51,6 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
         docMutate()
         return mutate()
     }
-
-    const jsonValueTypes = useMemo(() => {
-        const valueTypes: Record<string, any> = {};
-
-        if (fields) {
-            fields.filter(field => field.value_type && ['Field', 'Prompt'].includes(field.value_type)).forEach(field => {
-                if (field.field_value) {
-                    const nestedFields = field.field_value.split('.');
-                    let nestedObject = valueTypes;
-
-                    nestedFields.forEach((nestedField, index) => {
-                        if (nestedField.includes('[')) {
-                            // Handle array notation
-                            const [fieldName, arrayIndex] = nestedField.split('[');
-                            const arrayIndexInt = parseInt(arrayIndex.replace(']', ''), 10);
-
-                            if (!nestedObject[fieldName]) {
-                                nestedObject[fieldName] = [];
-                            }
-                            if (index === nestedFields.length - 1) {
-                                nestedObject[fieldName][arrayIndexInt] = {
-                                    ...nestedObject[fieldName][arrayIndexInt],
-                                    [nestedFields[nestedFields.length - 1]]: ""
-                                };
-                            } else {
-                                if (!nestedObject[fieldName][arrayIndexInt]) {
-                                    nestedObject[fieldName][arrayIndexInt] = {};
-                                }
-                                nestedObject = nestedObject[fieldName][arrayIndexInt];
-                            }
-                        } else {
-                            // Handle object notation
-                            if (index === nestedFields.length - 1) {
-                                nestedObject[nestedField] = "";
-                            } else {
-                                if (!nestedObject[nestedField]) {
-                                    nestedObject[nestedField] = {};
-                                }
-                                nestedObject = nestedObject[nestedField];
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
-        return valueTypes;
-    }, [fields]);
 
     useFrappeDocTypeEventListener('Form Template Field', () => {
         mutate()
@@ -145,7 +97,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="map-fields">Map Fields</TabsTrigger>
                     <TabsTrigger value="metadata">Metadata</TabsTrigger>
-                    <TabsTrigger value="sample-data">Sample Data</TabsTrigger>
+                    <TabsTrigger value="preview">Preview</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="map-fields" className="mt-2">
@@ -160,8 +112,8 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                 <TabsContent value="metadata" className="mt-2">
                     <Configurations />
                 </TabsContent>
-                <TabsContent value="sample-data" className="mt-2">
-                    <Editor jsonValue={jsonValueTypes} templateID={templateID} />
+                <TabsContent value="preview" className="mt-2">
+                    <Preview templateID={templateID} source={data?.message?.source ?? ''} />
                 </TabsContent>
             </Tabs>
         </div>
