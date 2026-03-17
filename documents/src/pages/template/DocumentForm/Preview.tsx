@@ -66,19 +66,19 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
     }
 
     return (
-        <div className="flex flex-col gap-6">
-            {/* Document selection card */}
-            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-4">
+            {/* Document selection */}
+            <section className="px-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
                     <div className="flex flex-1 flex-col gap-2 min-w-0 sm:min-w-[240px] sm:max-w-xs">
                         <Label className="text-muted-foreground font-normal">
-                            Select document
+                            Select Document
                         </Label>
                         <LinkFieldCombobox
                             doctype={source}
                             value={selectedDocument ?? ""}
                             onChange={(value) => setSelectedDocument(value || null)}
-                            placeholder={`Choose ${source}…`}
+                            placeholder={`Select ${source}`}
                             buttonClassName="h-10 rounded-lg"
                         />
                     </div>
@@ -86,15 +86,16 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                         variant="default"
                         size="default"
                         disabled={!printData}
-                        asChild
-                        className="gap-2 h-10 shrink-0"
+                        className="h-10 shrink-0"
                         aria-label="Download PDF"
                     >
                         <a
                             href={getPrintUrl()}
+                            aria-disabled
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="Download PDF"
+                            className="flex items-center gap-2"
                         >
                             <Printer className="size-4" />
                             Download PDF
@@ -110,7 +111,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
 
             {/* Prompt fields used in mapping */}
             {prompts.length > 0 && (
-                <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <section className="px-5">
                     <h3 className="text-sm font-medium text-foreground mb-4">Prompt fields</h3>
                     <p className="text-xs text-muted-foreground mb-4">
                         These prompts are used in this template’s field mapping. Fill them to include in the printed PDF.
@@ -155,7 +156,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
             )}
 
             {/* Document data / empty state */}
-            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden min-h-[280px]">
+            <section className="overflow-hidden min-h-[280px]">
                 {documentData ? (
                     <Accordion type="single" collapsible defaultValue="document-data" className="w-full">
                         <AccordionItem value="document-data" className="border-0">
@@ -163,7 +164,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                                 Document data
                             </AccordionTrigger>
                             <AccordionContent className="px-0 pb-0 pt-0">
-                                <div className="border-t border-border">
+                                <div>
                                     <Editor
                                         jsonValue={documentData as Record<string, unknown>}
                                         templateID={templateID}
