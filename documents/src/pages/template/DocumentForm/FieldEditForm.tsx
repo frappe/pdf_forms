@@ -110,12 +110,13 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
 
             {valueType === 'Field' && data?.message?.fields && (
                 <>
-                    <SelectFields schemaField={data.message.fields} name={`fields.${index}.field_value`} />
+                    <SelectFields schemaField={data.message.fields} name={`fields.${index}.field_value`} key={index} />
                     <DataField
                         name={`fields.${index}.field_value`}
                         label="Value"
                         readOnly
                         inputProps={{ placeholder: 'Selected field path will appear here' }}
+                        key={index}
                     />
                 </>
             )}

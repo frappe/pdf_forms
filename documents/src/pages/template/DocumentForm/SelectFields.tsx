@@ -360,6 +360,7 @@ const SelectFields = ({
                             placeholder={`Select ${schemaField.description || 'field'}`}
                             isSearchable
                             options={fieldOptions}
+                            key={name}
                         />
                     </FormControl>
                 </FormItem>
