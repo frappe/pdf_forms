@@ -55,11 +55,6 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
         form_template_id: templateID
     }, ['form_template_annotations', templateID])
 
-    const { data: documentMeta } = useFrappeGetCall<{ message: { is_encrypted: boolean, is_pdf_converted: boolean } }>('form_printer.form_printer.doctype.form_template.form_template.get_form_template_meta', {
-        form_template_id: templateID
-    }, ['form_template_meta', templateID])
-
-
     const { mutate: globalMutate } = useSWRConfig()
 
     const addToAnnotationUpdateQueue = useCallback((annotation: Annotation, pageIndex: number) => {
@@ -235,21 +230,6 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
         return m
     }, [annotations])
 
-    if (documentMeta && !documentMeta?.message.is_pdf_converted) {
-        return (
-            <div className='flex flex-col items-center justify-center w-full h-full'>
-                <Alert variant='destructive'>
-                    <AlertCircle />
-                    <AlertTitle>
-                        The PDF has a very high resolution.
-                    </AlertTitle>
-                    <AlertDescription>
-                        We could not convert this PDF to a drawing file because it has a very high resolution. Please lower the resolution of the PDF and upload again.
-                    </AlertDescription>
-                </Alert>
-            </div>
-        )
-    }
     if (templateImages && templateImages.length) {
         return (
             <>
@@ -262,8 +242,13 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                     annotationLabels={annotationLabels}
                     id={`osd-form-template-${templateID}`}
                     setFocusedAnnotation={setFocusedAnnotation}
-                    allowEdit={documentMeta?.message.is_encrypted ? false : true}
                     onAnnotationDelete={setDeleteAnnotationID}
+                    backTo={
+                        import.meta.env.VITE_DESK_FORM_TEMPLATE_LIST_URL?.trim() ||
+                        `${String(import.meta.env.VITE_FRAPPE_PATH ?? '').replace(/\/$/, '')}/app/list/${encodeURIComponent('Form Template')}/List`
+                    }
+                    backLabel="Back to Desk"
+                    backToExternal
                     customButtons={<>
                         <AnnotationSyncState
                             hasUnsavedChanges={unsavedAnnotations.length > 0}

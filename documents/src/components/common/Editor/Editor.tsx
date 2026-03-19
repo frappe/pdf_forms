@@ -9,17 +9,18 @@ import { Button } from "@/components/ui/button"
 import { Copy, Printer } from "lucide-react"
 
 export interface EditorProps extends IAceEditorProps {
-    jsonValue: Record<string, string>
+    jsonValue: Record<string, unknown>
     templateID: string
+    readOnly?: boolean
 }
 
-export const Editor = ({ jsonValue, templateID, ...props }: EditorProps) => {
+export const Editor = ({ jsonValue, templateID, readOnly, ...props }: EditorProps) => {
     const [value, setValue] = useState<string>(() =>
         JSON.stringify(jsonValue, null, 2)
     )
 
     const onChange = (newValue: string) => {
-        setValue(newValue)
+        if (!readOnly) setValue(newValue)
     }
 
     // Merge new keys from jsonValue prop into editor value when prop changes (deferred to avoid sync setState in effect)
@@ -64,50 +65,53 @@ export const Editor = ({ jsonValue, templateID, ...props }: EditorProps) => {
                     name="MY_EDITOR"
                     value={value}
                     onChange={onChange}
+                    readOnly={readOnly}
                     fontSize={14}
                     showPrintMargin
                     showGutter
                     highlightActiveLine
                     editorProps={{ $blockScrolling: true }}
                     setOptions={{
-                        enableBasicAutocompletion: true,
-                        enableLiveAutocompletion: true,
-                        enableSnippets: true,
+                        enableBasicAutocompletion: !readOnly,
+                        enableLiveAutocompletion: !readOnly,
+                        enableSnippets: !readOnly,
                         showLineNumbers: true,
                         tabSize: 2,
                         useWorker: false,
                     }}
                     {...props}
                 />
-                <div className="absolute right-0 top-0 flex gap-2 p-1.5">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        type="button"
-                        onClick={onCopy}
-                        aria-label="Copy"
-                        className="gap-1.5"
-                    >
-                        <Copy className="size-4" />
-                        Copy
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="gap-1.5"
-                    >
-                        <a
-                            href={printUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="Print"
+                {!readOnly && (
+                    <div className="absolute right-0 top-0 flex gap-2 p-1.5">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            onClick={onCopy}
+                            aria-label="Copy"
+                            className="gap-1.5"
                         >
-                            <Printer className="size-4" />
-                            Print
-                        </a>
-                    </Button>
-                </div>
+                            <Copy className="size-4" />
+                            Copy
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="gap-1.5"
+                        >
+                            <a
+                                href={printUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Print"
+                            >
+                                <Printer className="size-4" />
+                                Print
+                            </a>
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     )

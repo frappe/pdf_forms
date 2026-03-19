@@ -15,7 +15,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
         return (
             <div
                 key={fieldKey}
-                className="py-2 border-b border-gray-200 last:border-b-0 max-h-[74vh] overflow-y-auto"
+                className="py-2 border-b border-gray-200 last:border-b-0 max-h-[80vh] overflow-y-auto"
             >
                 {/* Render properties recursively if they exist */}
                 {field.properties && field.schema_type !== 'object' && (

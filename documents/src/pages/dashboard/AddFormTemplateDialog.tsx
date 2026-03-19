@@ -115,7 +115,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                 control={control}
                                 name="files"
                                 rules={{ required: 'Please add a PDF file' }}
-                                render={({ field }) => (
+                                    render={({ field, fieldState }) => (
                                     <FormItem>
                                         <FormLabel>
                                             PDF File <span className="text-destructive">*</span>
@@ -132,6 +132,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                                 }
                                                 accept={{ 'application/pdf': ['.pdf'] }}
                                                 maxFiles={1}
+                                                className={fieldState.error ? 'border-destructive border' : undefined}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -175,7 +176,7 @@ const FormTemplateFormFields = ({ isEdit = false }: { isEdit?: boolean }) => {
                 isRequired
                 readOnly={isEdit}
                 rules={{ required: 'Template name is required', maxLength: { value: 100, message: 'Maximum 100 characters' } }}
-                inputProps={{ placeholder: 'Template Name' }}
+                inputProps={{ placeholder: 'eg: User Appointment Letter' }}
             />
 
             {/* <SelectFormField
@@ -193,6 +194,7 @@ const FormTemplateFormFields = ({ isEdit = false }: { isEdit?: boolean }) => {
                 name="source"
                 label="Source"
                 doctype="DocType"
+                placeholder='Select a source'
                 isRequired
                 readOnly={isEdit}
                 rules={{ required: 'Source is required' }}
@@ -201,7 +203,6 @@ const FormTemplateFormFields = ({ isEdit = false }: { isEdit?: boolean }) => {
             <SmallTextField
                 name="template_description"
                 label="Description"
-                inputProps={{ placeholder: 'Template description' }}
             />
         </div>
     )

@@ -228,7 +228,7 @@ const LinkFieldCombobox = ({
                         className={cn("w-full justify-between font-normal group",
                             readOnly ? "bg-muted" : ""
                             , buttonClassName)}>
-                        {linkTitle || placeholder}
+                        {linkTitle !== "DocType" ? linkTitle : placeholder || placeholder}
 
                         <div className="flex items-center gap-1">
                             {value && <a href={`/app/${slug(doctype)}/${value}`} target="_blank" className="group-hover:block hidden">

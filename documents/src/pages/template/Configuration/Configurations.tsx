@@ -49,7 +49,7 @@ export const Configurations = () => {
 export const ConfigContent = ({ data, templateID, mutate }: { data: ConfigData; templateID: string; mutate: () => void }) => {
 
     return (
-        <div className="flex flex-col gap-2 m-4 h-full">
+        <div className="flex flex-col gap-2 mx-4 h-full">
             <Tabs defaultValue="fields" className="w-full h-full">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="fields">Fields</TabsTrigger>

@@ -97,7 +97,7 @@ export const SettingPageModalContent = ({
                 <DialogHeader>
                     <DialogTitle>Settings</DialogTitle>
                 </DialogHeader>
-                <div className="flex flex-col gap-4 py-4 px-4">
+                <div className="flex flex-col gap-4 py-4">
                     {error && <ErrorBanner error={error} />}
                     <div className="flex flex-col gap-4">
                         <FormField

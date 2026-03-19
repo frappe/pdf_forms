@@ -259,9 +259,9 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                 <Checkbox
                                     checked={showUnmappedOnly}
                                     onCheckedChange={(checked) => setShowUnmappedOnly(checked === true)}
-                                    aria-label="Show unmapped only"
+                                    aria-label="Mapped only"
                                 />
-                                <span>Show unmapped only</span>
+                                <span>Mapped only</span>
                             </label>
                         </div>
                         <div className="flex items-center gap-2">
@@ -309,7 +309,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                         </div>
                     </div>
                     {error && <ErrorBanner error={error} />}
-                    <div className="overflow-y-auto px-2" style={{ height: 'calc(100vh - 220px)' }}>
+                    <div className="overflow-y-auto px-2" style={{ height: 'calc(100vh - 200px)' }}>
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/50 hover:bg-muted/50 sticky top-0 z-10">

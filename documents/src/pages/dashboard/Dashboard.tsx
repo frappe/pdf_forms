@@ -4,7 +4,7 @@ import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetDocL
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, EqualApproximately } from "lucide-react"
+import { Plus } from "lucide-react"
 import type { Filter } from "frappe-react-sdk"
 import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 import ErrorBanner from "@/components/ui/error-banner"
@@ -63,7 +63,7 @@ export const Dashboard = () => {
         filters: buildFilters()
     })
 
-    useFrappeEventListener('form_template_converted', (eventData) => {
+    useFrappeEventListener('form_template_process_completed', (eventData) => {
         if (data?.some(item => item.name === eventData.form_template_id)) {
             mutate();
         }
@@ -104,32 +104,22 @@ export const Dashboard = () => {
             {/* Filters */}
             <div className="flex items-center gap-3 ">
                 {/* ID Filter */}
-                <div className="relative flex-1 max-w-xs bg-gray-100 rounded-md">
                     <Input
                         type="text"
                         placeholder="ID"
                         value={idFilter}
                         onChange={(e) => setIdFilter(e.target.value)}
-                        className="bg-transparent border-0"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <EqualApproximately className="size-4 text-muted-foreground" />
-                    </div>
-                </div>
+                    className="max-w-xs bg-gray-50 rounded-md"
+                />
 
                 {/* Source Filter */}
-                <div className="relative flex-1 max-w-xs bg-gray-100 rounded-md">
                     <Input
                         type="text"
                         placeholder="Source"
                         value={sourceFilter}
                         onChange={(e) => setSourceFilter(e.target.value)}
-                        className="bg-transparent border-0"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <EqualApproximately className="size-4 text-muted-foreground" />
-                    </div>
-                </div>
+                    className="max-w-xs bg-gray-50 rounded-md"
+                />
             </div>
 
             {error && <ErrorBanner error={error} />}

@@ -35,4 +35,6 @@ export interface FormTemplate{
 	font_size?: string
 	/**	Prompts : Table - Form Template Prompts	*/
 	prompts?: FormTemplatePrompts[]
+	/**	Process Completed : Check	*/
+	process_completed?: 0 | 1
 }

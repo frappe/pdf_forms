@@ -13,9 +13,11 @@ type Props = {
     setFiles: Dispatch<SetStateAction<File[]>>
     accept?: Accept,
     maxFiles?: number,
+    /** Optional class for the root (e.g. border-destructive when validation fails) */
+    className?: string,
 }
 
-export const FileDropzone = ({ files, setFiles, accept, maxFiles }: Props) => {
+export const FileDropzone = ({ files, setFiles, accept, maxFiles, className }: Props) => {
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (maxFiles === 1) {
@@ -26,7 +28,13 @@ export const FileDropzone = ({ files, setFiles, accept, maxFiles }: Props) => {
     }, [setFiles, maxFiles])
     const { getRootProps, getInputProps } = useDropzone({ onDrop, accept, maxFiles })
     return (
-        <div {...getRootProps()} className='border border-border border-dashed p-4 rounded-sm bg-muted/20'>
+        <div
+            {...getRootProps()}
+            className={cn(
+                'border border-dashed p-4 rounded-sm bg-muted/20',
+                className ?? 'border-border'
+            )}
+        >
             <input {...getInputProps()} />
             {files.length === 0 ? <p className='text-sm text-muted-foreground text-center h-8 flex items-center justify-center'>{_("Drop some files here, or click to select files")}</p> : null}
             <div className='flex flex-col gap-4'>

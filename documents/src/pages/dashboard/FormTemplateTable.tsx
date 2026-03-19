@@ -137,30 +137,18 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                                 <TableCell className="px-4">
                                     <div className="flex items-start gap-2">
                                         <FileText className="size-4 text-muted-foreground mt-1" />
-                                        {row.is_pdf_converted === 1 ? (
-                                            <Link 
-                                                to={`/template/${row.name}`}
-                                                className="font-medium underline hover:text-primary"
-                                            >
-                                                {row.template_name || row.name}
-                                            </Link>
-                                        ) : (
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-gray-500 font-medium">
-                                                    {row.template_name || row.name}
-                                                </span>
-                                                <div className="flex items-center gap-2">
-                                                    <Loader2 className="size-3 text-blue-500 animate-spin" />
-                                                    <span className="text-gray-500 text-xs">Processing template...</span>
-                                                </div>
-                                            </div>
-                                        )}
+                                        <Link
+                                            to={`/template/${row.name}`}
+                                            className="font-medium underline hover:text-primary"
+                                        >
+                                            {row.template_name || row.name}
+                                        </Link>
                                     </div>
                                 </TableCell>
                                 <TableCell className="px-4">
-                                    {row.description 
-                                        ? (row.description.length > 50 
-                                            ? `${row.description.substring(0, 50)}...` 
+                                    {row.description
+                                        ? (row.description.length > 50
+                                            ? `${row.description.substring(0, 50)}...`
                                             : row.description)
                                         : "-"}
                                 </TableCell>
@@ -168,11 +156,20 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                                 <TableCell className="px-4">
                                     <span
                                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.is_pdf_converted
-                                                ? "bg-green-100 text-green-700"
-                                                : "bg-gray-200 text-gray-700"
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-gray-200 text-gray-700"
                                             }`}
                                     >
-                                        {row.is_pdf_converted ? "Converted" : "Pending"}
+                                        {row.is_pdf_converted ? (
+                                            "Converted"
+                                        ) : row.process_completed === 0 ? (
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 className="size-3 text-blue-500 animate-spin" />
+                                                <span className="text-gray-500 text-xs">Processing template...</span>
+                                            </div>
+                                        ) : row.process_completed === 1 && !row.is_pdf_converted ? (
+                                            "Conversion failed"
+                                        ) : null}
                                     </span>
                                 </TableCell>
 

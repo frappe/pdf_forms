@@ -34,6 +34,7 @@ class FormTemplate(Document):
 		font_size: DF.Data | None
 		is_encrypted: DF.Check
 		is_pdf_converted: DF.Check
+		process_completed: DF.Check
 		prompts: DF.Table[FormTemplatePrompts]
 		source: DF.Data
 		template_name: DF.Data
@@ -80,103 +81,112 @@ def convert_pdf_to_image(form_template_id):
 	# 5. create a Form Template Images document for each page
 	# 6. Get Form Fields Annotations and create Form Template Field for each field
 
-	# get the file path from the document
-	file = frappe.db.get_value("Form Template", form_template_id, "file")
+	try:
+		# get the file path from the document
+		file = frappe.db.get_value("Form Template", form_template_id, "file")
 
-	# convert the pdf to images
+		# convert the pdf to images
+		# create a temporary directory to store the images
+		with tempfile.TemporaryDirectory() as path:
+			images = convert_from_path(
+				frappe.get_site_path(file[1:]),
+				output_folder=path,
+				fmt="jpeg",
+			)
 
-	# create a temporary directory to store the images
-	with tempfile.TemporaryDirectory() as path:
-		images = convert_from_path(
-			frappe.get_site_path(file[1:]),
-			output_folder=path,
-			fmt="jpeg",
+		# open the pdf file in fitz
+		pdf_doc = fitz.open(frappe.get_site_path(file[1:]))
+
+		# set the font and font size counter to get most common font and font size
+		font_counter = Counter()
+		font_size_counter = Counter()
+
+		# loop through the images and create a Document Template Images document for each page
+		for i in range(len(images)):
+			# Save pages as images in the file system
+			did_not_convert = 0
+
+			width, height = images[i].size
+
+			# Save images by converting to bytes
+			img_byte_array = io.BytesIO()
+
+			images[i].save(img_byte_array, format="JPEG")
+
+			if width <= 1 and height <= 1:
+				did_not_convert = 1
+
+			doc = frappe.get_doc(
+				{
+					"doctype": "Form Template Image",
+					"page_index": i,
+					"width": width,
+					"height": height,
+					"form_template_id": form_template_id,
+				}
+			)
+			doc.insert()
+
+			# Upload images to the file system
+			f = save_file(
+				form_template_id + "_" + str(i) + ".jpeg",
+				img_byte_array.getvalue(),
+				"Form Template Image",
+				doc.name,
+				is_private=1,
+				df="image_file",
+			)
+
+			frappe.db.set_value(
+				"Form Template Image",
+				doc.name,
+				{"image_file": f.file_url, "did_not_convert": did_not_convert},
+			)
+
+			# current page
+			page = pdf_doc[i]
+
+			# Get the Form Fields Annotations
+			create_form_fields_annotations(page, doc, f.file_url, font_counter, font_size_counter)
+
+		# Determine the most common font and font size
+		default_font = font_counter.most_common(1)[0][0] if font_counter else "helvetica"
+		default_font_size = font_size_counter.most_common(1)[0][0] if font_size_counter else 12
+
+		font_names = fitz.Base14_fontdict.keys()
+		if default_font not in font_names:
+			default_font = "helvetica"
+
+		# Set the font and font size in the document and set is_pdf_converted to 1
+		form_template = frappe.get_doc("Form Template", form_template_id)
+
+		# Set the is_pdf_converted to 1
+		form_template.is_pdf_converted = 1
+		# Set the is_encrypted to the pdf document is encrypted
+		form_template.is_encrypted = pdf_doc.is_encrypted
+		# Set the font to the standard font
+		form_template.font = return_standard_font(default_font)
+		# Set the font size to the default font size
+		form_template.font_size = default_font_size
+		# Save the form template
+		form_template.save()
+		frappe.db.commit()
+
+	except Exception:
+		frappe.log_error(
+			title="Form Template conversion failed",
+			message=frappe.get_traceback(),
 		)
-
-	# open the pdf file in fitz
-	pdf_doc = fitz.open(frappe.get_site_path(file[1:]))
-
-	# set the font and font size counter to get most common font and font size
-	font_counter = Counter()
-	font_size_counter = Counter()
-
-	# loop through the images and create a Document Template Images document for each page
-	for i in range(len(images)):
-		# Save pages as images in the file system
-		did_not_convert = 0
-
-		width, height = images[i].size
-
-		# Save images by converting to bytes
-		img_byte_array = io.BytesIO()
-
-		images[i].save(img_byte_array, format="JPEG")
-
-		if width <= 1 and height <= 1:
-			did_not_convert = 1
-
-		doc = frappe.get_doc(
-			{
-				"doctype": "Form Template Image",
-				"page_index": i,
-				"width": width,
-				"height": height,
-				"form_template_id": form_template_id,
-			}
+		raise
+	finally:
+		# Mark the background process as completed for both success and failure paths.
+		frappe.db.set_value("Form Template", form_template_id, "process_completed", 1)
+		# Publish the form_template_converted event
+		frappe.publish_realtime(
+			"form_template_process_completed",
+			{"form_template_id": form_template_id},
+			after_commit=True,
 		)
-		doc.insert()
-
-		# Upload images to the file system
-		f = save_file(
-			form_template_id + "_" + str(i) + ".jpeg",
-			img_byte_array.getvalue(),
-			"Form Template Image",
-			doc.name,
-			is_private=1,
-			df="image_file",
-		)
-
-		frappe.db.set_value(
-			"Form Template Image", doc.name, {"image_file": f.file_url, "did_not_convert": did_not_convert}
-		)
-
-		# current page
-		page = pdf_doc[i]
-
-		# Get the Form Fields Annotations
-		create_form_fields_annotations(page, doc, f.file_url, font_counter, font_size_counter)
-
-	# Determine the most common font and font size
-	default_font = font_counter.most_common(1)[0][0] if font_counter else "helvetica"
-	default_font_size = font_size_counter.most_common(1)[0][0] if font_size_counter else 12
-
-	font_names = fitz.Base14_fontdict.keys()
-	if default_font not in font_names:
-		default_font = "helvetica"
-
-	# Set the font and font size in the document and set is_pdf_converted to 1
-	form_template = frappe.get_doc("Form Template", form_template_id)
-
-	# Set the is_pdf_converted to 1
-	form_template.is_pdf_converted = 1
-	# Set the is_encrypted to the pdf document is encrypted
-	form_template.is_encrypted = pdf_doc.is_encrypted
-	# Set the font to the standard font
-	form_template.font = return_standard_font(default_font)
-	# Set the font size to the default font size
-	form_template.font_size = default_font_size
-	# Save the form template
-	form_template.save()
-
-	# Publish the form_template_converted event
-	frappe.publish_realtime(
-		"form_template_converted",
-		{"form_template_id": form_template_id},
-		after_commit=True,
-	)
-
-	# Commit the changes to the database
-	frappe.db.commit()
 
 
 def create_form_fields_annotations(page, image_doc, image_url, font_counter, font_size_counter):
@@ -287,6 +297,7 @@ def get_form_template_prompts(form_template_id):
 	form_template_fields = frappe.get_all(
 		"Form Template Field",
 		filters=[["form_template", "=", form_template_id], ["value_type", "=", "Prompt"]],
+		fields=["name", "field_value"],
 	)
 
 	# Initialize the list of prompt fields
@@ -299,19 +310,6 @@ def get_form_template_prompts(form_template_id):
 			prompt_fields.append(prompt_field)
 
 	return prompt_fields
-
-
-@frappe.whitelist()
-def get_form_template_meta(form_template_id):
-	# get the did_not_convert and is_encrypted from the Document Template Images and Document Template
-	form_template = frappe.db.get_value(
-		"Form Template",
-		{"template_name": form_template_id},
-		["is_encrypted", "is_pdf_converted"],
-		as_dict=True,
-	)
-
-	return {"is_encrypted": form_template.is_encrypted, "is_pdf_converted": form_template.is_pdf_converted}
 
 
 @frappe.whitelist()

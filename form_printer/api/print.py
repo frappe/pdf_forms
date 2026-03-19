@@ -51,6 +51,11 @@ def print_form_template(
 	form_template, form_template_name, font, font_size = frappe.db.get_value(
 		"Form Template", template_id, ["file", "template_name", "font", "font_size"]
 	)
+	# ensure font_size is numeric for PyMuPDF widget formatting
+	try:
+		font_size = float(font_size) if font_size is not None else 12
+	except (TypeError, ValueError):
+		font_size = 12
 
 	# get the file path
 	file = frappe.get_site_path(form_template[1:])
@@ -223,12 +228,10 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 				if annotation.field_type == "Text":
 					# set the field value, font, font size
 					# if annotation have font or font size set it else set the font and font size from the document template
-
-					field.text_fontsize = (
-						annotation.font_size
-						if annotation.override_style and annotation.font_size > 0
-						else font_size
-					)
+					# ensure numeric types for PyMuPDF (it uses format code 'g' internally)
+					anno_fs = float(annotation.font_size) if annotation.font_size is not None else 0
+					tpl_fs = float(font_size) if font_size is not None else 12
+					field.text_fontsize = anno_fs if annotation.override_style and anno_fs > 0 else tpl_fs
 					text_font = annotation.font if annotation.font and annotation.font != "None" else font
 					font_name = fitz.Font(text_font).name
 					field.text_font = get_fontname(font_name)
@@ -278,9 +281,10 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			widget.rect = rect
 			widget.field_name = annotation.field_label
 			widget.field_label = annotation.field_label
-			widget.text_fontsize = (
-				annotation.font_size if annotation.override_style and annotation.font_size > 0 else font_size
-			)
+			# ensure numeric types for PyMuPDF (it uses format code 'g' internally)
+			anno_fs = float(annotation.font_size) if annotation.font_size is not None else 0
+			tpl_fs = float(font_size) if font_size is not None else 12
+			widget.text_fontsize = anno_fs if annotation.override_style and anno_fs > 0 else tpl_fs
 			text_font = annotation.font if annotation.font and annotation.font != "None" else font
 			font_name = fitz.Font(text_font).name
 			widget.text_font = get_fontname(font_name)
