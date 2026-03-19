@@ -39,6 +39,11 @@ interface Props {
     /** If set, show a Back button beside Full Screen that links to this path (e.g. "/") */
     backTo?: string,
     backLabel?: string,
+    /**
+     * Use full-page navigation (e.g. &lt;a href&gt;) instead of React Router.
+     * Required when leaving the documents SPA to Frappe Desk (basename would break &lt;Link to="/app/..."&gt;).
+     */
+    backToExternal?: boolean,
 }
 
 function getTooltipText(annotationId: string, labels?: Record<string, AnnotationLabelMap>): string | null {
@@ -47,7 +52,7 @@ function getTooltipText(annotationId: string, labels?: Record<string, Annotation
     return l.field_label?.trim() || l.field_name?.trim() || null
 }
 
-export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onDualView, viewMode, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', ...props }: Props) => {
+export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onDualView, viewMode, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, ...props }: Props) => {
 
     const [currentPage, setCurrentPage] = useState(0);
 
@@ -393,9 +398,15 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                         <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200">
                             {backTo && (
                                 <Button variant="ghost" size="icon" aria-label={backLabel} title={backLabel} className="rounded-none" asChild>
-                                    <Link to={backTo}>
-                                        <ArrowLeft className="size-4" />
-                                    </Link>
+                                    {backToExternal ? (
+                                        <a href={backTo}>
+                                            <ArrowLeft className="size-4" />
+                                        </a>
+                                    ) : (
+                                        <Link to={backTo}>
+                                            <ArrowLeft className="size-4" />
+                                        </Link>
+                                    )}
                                 </Button>
                             )}
                             <Button

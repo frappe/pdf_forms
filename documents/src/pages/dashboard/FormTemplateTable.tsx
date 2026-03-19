@@ -137,18 +137,12 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                                 <TableCell className="px-4">
                                     <div className="flex items-start gap-2">
                                         <FileText className="size-4 text-muted-foreground mt-1" />
-                                        {row.is_pdf_converted === 1 ? (
-                                            <Link
-                                                to={`/template/${row.name}`}
-                                                className="font-medium underline hover:text-primary"
-                                            >
-                                                {row.template_name || row.name}
-                                            </Link>
-                                        ) : (
-                                                <span className="text-gray-500 font-medium">
-                                                    {row.template_name || row.name}
-                                                </span>
-                                        )}
+                                        <Link
+                                            to={`/template/${row.name}`}
+                                            className="font-medium underline hover:text-primary"
+                                        >
+                                            {row.template_name || row.name}
+                                        </Link>
                                     </div>
                                 </TableCell>
                                 <TableCell className="px-4">
@@ -166,10 +160,16 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                                             : "bg-gray-200 text-gray-700"
                                             }`}
                                     >
-                                        {row.is_pdf_converted ? "Converted" : <div className="flex items-center gap-2">
-                                            <Loader2 className="size-3 text-blue-500 animate-spin" />
-                                            <span className="text-gray-500 text-xs">Processing template...</span>
-                                        </div>}
+                                        {row.is_pdf_converted ? (
+                                            "Converted"
+                                        ) : row.process_completed === 0 ? (
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 className="size-3 text-blue-500 animate-spin" />
+                                                <span className="text-gray-500 text-xs">Processing template...</span>
+                                            </div>
+                                        ) : row.process_completed === 1 && !row.is_pdf_converted ? (
+                                            "Conversion failed"
+                                        ) : null}
                                     </span>
                                 </TableCell>
 

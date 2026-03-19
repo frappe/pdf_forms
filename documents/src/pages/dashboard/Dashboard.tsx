@@ -63,7 +63,7 @@ export const Dashboard = () => {
         filters: buildFilters()
     })
 
-    useFrappeEventListener('form_template_converted', (eventData) => {
+    useFrappeEventListener('form_template_process_completed', (eventData) => {
         if (data?.some(item => item.name === eventData.form_template_id)) {
             mutate();
         }
