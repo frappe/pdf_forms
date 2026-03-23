@@ -43,12 +43,22 @@ def print_form_template(
 	    str: A success message indicating that the template has been written successfully.
 	"""
 
+	pdf_bytes = build_form_template_pdf(template_id=template_id, data=data, print_name=print_name)
+	template_name = frappe.db.get_value("Form Template", template_id, "template_name") or template_id
+	frappe.response["filename"] = print_name or f"{template_name}.pdf"
+	frappe.response["filecontent"] = pdf_bytes
+	frappe.response["type"] = "binary" if print_type == "binary" else "pdf"
+
+
+def build_form_template_pdf(
+	template_id: str, data: str | dict[str, Any], print_name: str | None = None
+) -> bytes:
 	# parse the data to json
 	if isinstance(data, str):
 		data = json.loads(data or "{}")
 
 	# get the template, template_name, font, font_size from the Document Template
-	form_template, form_template_name, font, font_size = frappe.db.get_value(
+	form_template, _form_template_name, font, font_size = frappe.db.get_value(
 		"Form Template", template_id, ["file", "template_name", "font", "font_size"]
 	)
 	# ensure font_size is numeric for PyMuPDF widget formatting
@@ -60,7 +70,7 @@ def print_form_template(
 	# get the file path
 	file = frappe.get_site_path(form_template[1:])
 
-	# open the pdf file
+    # open the pdf file
 	doc = fitz.open(file)
 
 	# Check the repeated images in the form template
@@ -128,17 +138,11 @@ def print_form_template(
 
 				if repeat_after_map.get(repeat_after):
 					repeat_after_map[repeat_after].append(
-						{
-							"copy_num": copy_num + 1,
-							"temp_doc": temp_doc,  # Store the temp_doc page
-						}
+						{"copy_num": copy_num + 1, "temp_doc": temp_doc}  # Store the temp_doc page
 					)
 				else:
 					repeat_after_map[repeat_after] = [
-						{
-							"copy_num": copy_num + 1,
-							"temp_doc": temp_doc,  # Store the temp_doc page
-						}
+						{"copy_num": copy_num + 1, "temp_doc": temp_doc}  # Store the temp_doc page
 					]
 
 	plus_index = 1
@@ -155,17 +159,9 @@ def print_form_template(
 
 			tempt_doc.close()
 
-	doc.save(print_name if print_name else form_template_name + ".pdf")
-	frappe.response["filename"] = print_name if print_name else form_template_name + ".pdf"
-
-	if print_type == "binary":
-		pdf_byte_array = io.BytesIO()
-		doc.save(pdf_byte_array, garbage=4, deflate=True)
-		frappe.response["filecontent"] = pdf_byte_array.getvalue()
-		frappe.response["type"] = "binary"
-	else:
-		frappe.response["filecontent"] = doc.write()
-		frappe.response["type"] = "pdf"
+	pdf_byte_array = io.BytesIO()
+	doc.save(pdf_byte_array, garbage=4, deflate=True)
+	return pdf_byte_array.getvalue()
 
 
 def fetch_repeated_document_template_images(template_id):

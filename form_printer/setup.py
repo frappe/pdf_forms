@@ -1,34 +1,25 @@
-import frappe
-from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+
 
 def after_install():
-    '''
-       After installation hook
-    '''
-    make_property_setter_for_print_format()
+	"""After installation hook."""
+	make_custom_fields_for_print_format()
 
 
-def make_property_setter_for_print_format():
-    '''
-        Make Property Setter for Print Format as pdf_generator to form printer
-    '''
-    property_setter = frappe.db.get_value("Property Setter", filters={ "doc_type": "Print Format", "field_name": "pdf_generator", "property": "options" })
-
-    if property_setter:
-        property_setter_doc = frappe.get_doc("Property Setter", property_setter)
-
-        if "form printer" not in property_setter_doc.value.split("\n"):
-            property_setter_doc.value += "\n" + "form printer"
-            property_setter_doc.save()
-    else:
-        options = frappe.get_meta("Print Format").get_field("pdf_generator").options
-        options += "\n" + "form printer"
-
-        make_property_setter(
-            "Print Format",
-            "pdf_generator",
-            "options",
-            options,
-            "Text",
-            validate_fields_for_doctype=False,
-        )
+def make_custom_fields_for_print_format():
+	"""Create Form Template backlink field on Print Format."""
+	custom_fields = {
+		"Print Format": [
+			{
+				"fieldname": "form_template",
+				"label": "Form Template",
+				"fieldtype": "Link",
+				"options": "Form Template",
+				"insert_after": "doc_type",
+				"read_only": 1,
+				"no_copy": 1,
+				"hidden": 1,
+			}
+		]
+	}
+	create_custom_fields(custom_fields, update=True)
