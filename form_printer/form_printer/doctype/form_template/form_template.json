@@ -11,6 +11,7 @@
   "description",
   "data_source",
   "source",
+  "print_format",
   "column_break_rbgh",
   "file_name",
   "file",
@@ -115,12 +116,19 @@
    "fieldname": "process_completed",
    "fieldtype": "Check",
    "label": "PDF Form Parsing Process Completed ?"
+  },
+  {
+   "fieldname": "print_format",
+   "fieldtype": "Link",
+   "label": "Print Format",
+   "options": "Print Format",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-19 12:37:26.923022",
+ "modified": "2026-03-23 15:27:01.936114",
  "modified_by": "Administrator",
  "module": "Form Printer",
  "name": "Form Template",

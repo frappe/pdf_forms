@@ -19,11 +19,8 @@ class FormTemplate(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
+		from form_printer.form_printer.doctype.form_template_prompts.form_template_prompts import FormTemplatePrompts
 		from frappe.types import DF
-
-		from form_printer.form_printer.doctype.form_template_prompts.form_template_prompts import (
-			FormTemplatePrompts,
-		)
 
 		data_source: DF.Literal["", "DocType", "Custom Data Source"]
 		description: DF.SmallText | None
@@ -34,11 +31,19 @@ class FormTemplate(Document):
 		font_size: DF.Data | None
 		is_encrypted: DF.Check
 		is_pdf_converted: DF.Check
+		print_format: DF.Link | None
 		process_completed: DF.Check
 		prompts: DF.Table[FormTemplatePrompts]
 		source: DF.Data
 		template_name: DF.Data
 	# end: auto-generated types
+
+	def before_insert(self):
+		'''
+		   Check if template_name Print Format exists
+		'''
+		if self.template_name and frappe.db.exists("Print Format", self.template_name):
+			frappe.throw("Print Format with the same name already exists, please use a different name")
 
 	def before_save(self):
 		# get filename and extension from the file path
@@ -66,10 +71,46 @@ class FormTemplate(Document):
 					form_template_id=self.name,
 				)
 
+		if self.is_pdf_converted and self.has_value_changed("is_pdf_converted"):
+			if not self.print_format:
+				self.create_print_format()
+
 	def get_form_template_prompts(self):
 		# This method will return all those Prompts which get used in mapping with the Form Template Fields
 		return get_form_template_prompts(self.name)
+	
+	def create_print_format(self):
+		# This method will create a print format for the form template
+		# 1. Create a print format document
+		# 2. Return the print format document
 
+		module = frappe.db.get_value("DocType", self.source, "module")
+		print_format = frappe.get_doc({
+			"doctype": "Print Format",
+			"name": self.template_name,
+			"print_format_name": self.template_name,
+			"print_format_for":"DocType",
+			"standard":"No",
+			"doc_type": self.source,
+			"module": module,
+			"pdf_generator": "form printer",
+		})
+		print_format.insert()
+
+		# Set the print format in the form template
+		self.db_set("print_format", print_format.name)
+	
+	def on_trash(self):
+		'''
+			Delete Form Template Field, Form Template Image and Print Format
+		'''
+		frappe.db.delete("Form Template Field", {
+			"form_template": self.name
+		})
+		frappe.db.delete("Form Template Image", {
+			"form_template_id": self.name
+		})
+		frappe.db.delete("Print Format", self.print_format)
 
 def convert_pdf_to_image(form_template_id):
 	# Trimming first letter since we want o remove '/' from the file path
