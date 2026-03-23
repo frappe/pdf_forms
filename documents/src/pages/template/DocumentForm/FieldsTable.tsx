@@ -34,6 +34,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { FieldEditForm } from "./FieldEditForm"
 import { SpinnerLoader } from "@/components/common/FullPageLoader/SpinnerLoader"
 import ErrorBanner from "@/components/ui/error-banner"
+import { useHotkeys } from "react-hotkeys-hook"
+import { CREATE_DEFAULT_OPTIONS } from "@/hooks/useReactHotKeys"
+import { getKeyboardMetaKeyString } from "@/lib/utils"
 
 
 interface FieldsListProps {
@@ -462,12 +465,8 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
             <DialogContent
                 className="min-w-2xl gap-6"
                 showCloseButton={false}
-                onInteractOutside={(e) => {
-                    // Allow Popover interactions
-                    const target = e.target as HTMLElement
-                    if (target.closest('[data-slot="popover-content"]')) {
-                        e.preventDefault()
-                    }
+                onOpenAutoFocus={(e) => {
+                    e.preventDefault()
                 }}
             >
                 <DialogHeader>
@@ -510,12 +509,40 @@ interface NextPreviousButtonsProps {
 }
 
 const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index }: NextPreviousButtonsProps) => {
+    const previousButtonRef = useRef<HTMLButtonElement | null>(null)
+    const nextButtonRef = useRef<HTMLButtonElement | null>(null)
+    useHotkeys(
+        ['meta+left', 'ctrl+left'],
+        (e) => {
+            e.preventDefault()
+            if (index > 0) {
+                previousButtonRef.current?.click()
+            }
+        },
+        CREATE_DEFAULT_OPTIONS,
+        [index]
+    )
+
+    useHotkeys(
+        ['meta+right', 'ctrl+right'],
+        (e) => {
+            e.preventDefault()
+            if (index < totalLength - 1) {
+                nextButtonRef.current?.click()
+            }
+        },
+        CREATE_DEFAULT_OPTIONS,
+        [index, totalLength]
+    )
+
     return (
         <TooltipProvider>
             <div className="flex items-center gap-1">
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
+                            ref={previousButtonRef}
+                            autoFocus={false}
                             type="button"
                             variant="ghost"
                             size="icon-xs"
@@ -527,12 +554,14 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Previous Field</p>
+                        <p>Previous Field ({getKeyboardMetaKeyString()} + ←)</p>
                     </TooltipContent>
                 </Tooltip>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
+                            ref={nextButtonRef}
+                            autoFocus={false}
                             type="button"
                             variant="ghost"
                             size="icon-xs"
@@ -544,7 +573,7 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Next Field</p>
+                        <p>Next Field ({getKeyboardMetaKeyString()} + →)</p>
                     </TooltipContent>
                 </Tooltip>
             </div>
