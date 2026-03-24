@@ -83,7 +83,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                         name={`fields.${index}.formatter`}
                         label="Formatter"
                         rules={{ required: false }}
-                        placeholder="Select Formatter"
+                        placeholder="Select formatter"
                     >
                         <SelectItem value="Date">Date</SelectItem>
                         <SelectItem value="Currency">Currency</SelectItem>
@@ -155,7 +155,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                 name={`fields.${index}.default_value`}
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Default Value</FormLabel>
+                        <FormLabel>Default value</FormLabel>
                         {isDefaultJinja ? (
                             <div className="relative min-h-[30vh]">
                                 <CodeEditorFormField
@@ -176,7 +176,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                 <InputGroup>
                                     <InputGroupInput
                                         {...field}
-                                        placeholder="Default Value"
+                                            placeholder="eg: 2019-09-08"
                                     />
                                 </InputGroup>
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2">
@@ -246,7 +246,7 @@ const ToggleDefaultValue = ({ index }: { index: number }) => {
     const isDefaultJinja = watch(`fields.${index}.is_default_jinja`)
 
     return (
-        <div className="flex border rounded-md overflow-hidden bg-white">
+        <div className="flex border rounded-r-md overflow-hidden bg-white">
             <Button
                 type="button"
                 variant={!isDefaultJinja ? 'secondary' : 'ghost'}

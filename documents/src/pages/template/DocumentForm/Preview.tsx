@@ -161,7 +161,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     <Accordion type="single" collapsible defaultValue="document-data" className="w-full">
                         <AccordionItem value="document-data" className="border-0">
                             <AccordionTrigger className="px-5 py-4 text-sm font-medium hover:no-underline hover:bg-muted/50 data-[state=open]:border-b data-[state=open]:border-border">
-                                Document data
+                                Document Data
                             </AccordionTrigger>
                             <AccordionContent className="px-0 pb-0 pt-0">
                                 <div>
