@@ -242,7 +242,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
     }, [fields, searchQuery, showUnmappedOnly])
 
     return (
-        <div className="flex flex-col gap-2 px-2">
+        <div className="flex flex-col gap-2">
             <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
                     <div className="flex items-center justify-between gap-2 w-full px-2">

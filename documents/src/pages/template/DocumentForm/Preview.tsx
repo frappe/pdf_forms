@@ -68,7 +68,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
     return (
         <div className="flex flex-col gap-4">
             {/* Document selection */}
-            <section className="px-5">
+            <section className="px-2">
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
                     <div className="flex flex-1 flex-col gap-2 min-w-0 sm:min-w-[240px] sm:max-w-xs">
                         <Label className="text-muted-foreground font-normal">
