@@ -4,7 +4,7 @@ import type { FormTemplateField } from "@/types/FormPrinter/FormTemplateField"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ErrorBanner from "@/components/ui/error-banner"
-import { Configurations } from "../Configuration/Configurations"
+import { Configurations, PromptsContent } from "../Configuration/Configurations"
 import { FieldsTable } from "./FieldsTable"
 import { Preview } from "./Preview"
 
@@ -94,9 +94,10 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
     if (!error && fields && fields.length > 0 && data?.message) return (
         <div>
             <Tabs defaultValue="map-fields" className="w-full p-1 px-2">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="map-fields">Map Fields</TabsTrigger>
-                    <TabsTrigger value="metadata">Metadata</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="map-fields">Mapiing Fields</TabsTrigger>
+                    <TabsTrigger value="fields">Fields</TabsTrigger>
+                    <TabsTrigger value="prompts">Prompts</TabsTrigger>
                     <TabsTrigger value="preview">Preview</TabsTrigger>
                 </TabsList>
 
@@ -109,8 +110,11 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                         templateID={templateID}
                     />
                 </TabsContent>
-                <TabsContent value="metadata" className="mt-2">
+                <TabsContent value="fields" className="mt-2">
                     <Configurations />
+                </TabsContent>
+                <TabsContent value="prompts" className="mt-2">
+                    <PromptsContent />
                 </TabsContent>
                 <TabsContent value="preview" className="mt-2">
                     <Preview templateID={templateID} source={data?.message?.source ?? ''} />
