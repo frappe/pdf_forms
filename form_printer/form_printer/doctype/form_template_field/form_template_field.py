@@ -84,10 +84,10 @@ def update_form_template_fields(
 ) -> None:
 	if fields is None:
 		fields = []
-	# 1. Update the document template fields only those are changed
-	# 2. Update the font and font size for the document template
+	# 1. Update the form template fields only those are changed
+	# 2. Update the font and font size for the form template
 
-	# update the font and font size for the document template
+	# update the font and font size for the form template
 	if font or font_size:
 		frappe.db.set_value("Form Template", form_template_id, {"font": font, "font_size": font_size})
 

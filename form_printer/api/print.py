@@ -43,12 +43,22 @@ def print_form_template(
 	    str: A success message indicating that the template has been written successfully.
 	"""
 
+	pdf_bytes = build_form_template_pdf(template_id=template_id, data=data, print_name=print_name)
+	template_name = frappe.db.get_value("Form Template", template_id, "template_name") or template_id
+	frappe.response["filename"] = print_name or f"{template_name}.pdf"
+	frappe.response["filecontent"] = pdf_bytes
+	frappe.response["type"] = "binary" if print_type == "binary" else "pdf"
+
+
+def build_form_template_pdf(
+	template_id: str, data: str | dict[str, Any], print_name: str | None = None
+) -> bytes:
 	# parse the data to json
 	if isinstance(data, str):
 		data = json.loads(data or "{}")
 
-	# get the template, template_name, font, font_size from the Document Template
-	form_template, form_template_name, font, font_size = frappe.db.get_value(
+	# get the template, template_name, font, font_size from the Form Template
+	form_template, _form_template_name, font, font_size = frappe.db.get_value(
 		"Form Template", template_id, ["file", "template_name", "font", "font_size"]
 	)
 	# ensure font_size is numeric for PyMuPDF widget formatting
@@ -128,17 +138,11 @@ def print_form_template(
 
 				if repeat_after_map.get(repeat_after):
 					repeat_after_map[repeat_after].append(
-						{
-							"copy_num": copy_num + 1,
-							"temp_doc": temp_doc,  # Store the temp_doc page
-						}
+						{"copy_num": copy_num + 1, "temp_doc": temp_doc}  # Store the temp_doc page
 					)
 				else:
 					repeat_after_map[repeat_after] = [
-						{
-							"copy_num": copy_num + 1,
-							"temp_doc": temp_doc,  # Store the temp_doc page
-						}
+						{"copy_num": copy_num + 1, "temp_doc": temp_doc}  # Store the temp_doc page
 					]
 
 	plus_index = 1
@@ -155,17 +159,9 @@ def print_form_template(
 
 			tempt_doc.close()
 
-	doc.save(print_name if print_name else form_template_name + ".pdf")
-	frappe.response["filename"] = print_name if print_name else form_template_name + ".pdf"
-
-	if print_type == "binary":
-		pdf_byte_array = io.BytesIO()
-		doc.save(pdf_byte_array, garbage=4, deflate=True)
-		frappe.response["filecontent"] = pdf_byte_array.getvalue()
-		frappe.response["type"] = "binary"
-	else:
-		frappe.response["filecontent"] = doc.write()
-		frappe.response["type"] = "pdf"
+	pdf_byte_array = io.BytesIO()
+	doc.save(pdf_byte_array, garbage=4, deflate=True)
+	return pdf_byte_array.getvalue()
 
 
 def fetch_repeated_document_template_images(template_id):
@@ -227,7 +223,7 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 				# update the field value according to the field type
 				if annotation.field_type == "Text":
 					# set the field value, font, font size
-					# if annotation have font or font size set it else set the font and font size from the document template
+					# if annotation have font or font size set it else set the font and font size from the form template
 					# ensure numeric types for PyMuPDF (it uses format code 'g' internally)
 					anno_fs = float(annotation.font_size) if annotation.font_size is not None else 0
 					tpl_fs = float(font_size) if font_size is not None else 12

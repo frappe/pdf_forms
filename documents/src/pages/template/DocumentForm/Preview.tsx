@@ -68,7 +68,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
     return (
         <div className="flex flex-col gap-4">
             {/* Document selection */}
-            <section className="px-5">
+            <section className="px-2">
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
                     <div className="flex flex-1 flex-col gap-2 min-w-0 sm:min-w-[240px] sm:max-w-xs">
                         <Label className="text-muted-foreground font-normal">
@@ -161,7 +161,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     <Accordion type="single" collapsible defaultValue="document-data" className="w-full">
                         <AccordionItem value="document-data" className="border-0">
                             <AccordionTrigger className="px-5 py-4 text-sm font-medium hover:no-underline hover:bg-muted/50 data-[state=open]:border-b data-[state=open]:border-border">
-                                Document data
+                                Document Data
                             </AccordionTrigger>
                             <AccordionContent className="px-0 pb-0 pt-0">
                                 <div>
