@@ -39,7 +39,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
     const [unsavedAnnotations, setUnsavedAnnotations] = useState<TemplateUnsavedAnnotation[]>([])
     const { call, loading } = useFrappePostCall<void>('form_printer.form_printer.doctype.form_template_field.form_template_field.update_annotation')
 
-    /** Fetch document template images */
+    /** Fetch form template images */
     const { data: templateImages, error } = useFrappeGetDocList<FormTemplateImage>('Form Template Image', {
         filters: [
             ["form_template_id", "=", templateID]

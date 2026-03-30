@@ -31,7 +31,7 @@ export const AnnotationDeleteModal = ({ annotationID, onClose }: Props) => {
     const deleteAnnotation = () => {
         if (annotationID) {
             call({
-                doctype: 'Document Template Field',
+                doctype: 'Form Template Field',
                 name: annotationID
             }).then(() => onClose())
                 .then(() => toast.success('Annotation deleted', {
