@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from urllib.parse import urlencode
+import json
 
 import frappe
 from frappe.translate import print_language
@@ -31,6 +32,20 @@ def _get_form_template_id(print_format_name: str | None) -> str | None:
 	)
 
 
+def _parse_prompt_data(prompt_data):
+	if not prompt_data:
+		return {}
+	if isinstance(prompt_data, dict):
+		return prompt_data
+	if isinstance(prompt_data, str):
+		try:
+			parsed = json.loads(prompt_data)
+			return parsed if isinstance(parsed, dict) else {}
+		except (TypeError, ValueError):
+			return {}
+	return {}
+
+
 @frappe.whitelist(allow_guest=True)
 def download_pdf(
 	doctype: str,
@@ -41,6 +56,7 @@ def download_pdf(
 	language: str | None = None,
 	letterhead: str | None = None,
 	pdf_generator: str | None = None,
+	prompt_data=None,
 ):
 	template_id = _get_form_template_id(format)
 	if not template_id:
@@ -57,11 +73,12 @@ def download_pdf(
 
 	doc = doc or frappe.get_doc(doctype, name)
 	validate_print_permission(doc)
+	parsed_prompt_data = _parse_prompt_data(prompt_data)
 
 	with print_language(language):
 		pdf_file = build_form_template_pdf(
 			template_id=template_id,
-			data=doc.as_dict(),
+			data={**doc.as_dict(), **parsed_prompt_data},
 			print_name=f"{name}.pdf",
 		)
 
@@ -80,6 +97,7 @@ def get_html_and_style(
 	trigger_print: bool = False,
 	style: str | None = None,
 	settings: str | None = None,
+	prompt_data=None,
 ) -> dict[str, str | None]:
 	template_id = _get_form_template_id(print_format)
 	if not template_id:
@@ -99,11 +117,19 @@ def get_html_and_style(
 	else:
 		document = frappe.get_doc(frappe.parse_json(doc), check_permission=True)
 
+	pdf_params = {
+		"doctype": document.doctype,
+		"name": document.name,
+		"format": print_format,
+	}
+	if prompt_data:
+		pdf_params["prompt_data"] = (
+			prompt_data if isinstance(prompt_data, str) else frappe.as_json(prompt_data)
+		)
+
 	params = urlencode(
 		{
-			"doctype": document.doctype,
-			"name": document.name,
-			"format": print_format,
+			**pdf_params
 		}
 	)
 	html = (
