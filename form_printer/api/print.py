@@ -70,7 +70,7 @@ def build_form_template_pdf(
 	# get the file path
 	file = frappe.get_site_path(form_template[1:])
 
-    # open the pdf file
+	# open the pdf file
 	doc = fitz.open(file)
 
 	# Check the repeated images in the form template

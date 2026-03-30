@@ -26,7 +26,7 @@ app_license = "gpl-3.0"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/form_printer/css/form_printer.css"
-# app_include_js = "/assets/form_printer/js/form_printer.js"
+app_include_js = "/assets/form_printer/js/print_button_visibility.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/form_printer/css/form_printer.css"
@@ -83,7 +83,7 @@ doctype_list_js = {"Form Template": "form_printer/doctype/form_template/form_tem
 # ------------
 
 # before_install = "form_printer.install.before_install"
-# after_install = "form_printer.install.after_install"
+after_install = "form_printer.setup.after_install"
 
 # Uninstallation
 # ------------
@@ -177,6 +177,10 @@ doctype_list_js = {"Form Template": "form_printer/doctype/form_template/form_tem
 # override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "form_printer.event.get_events"
 # }
+override_whitelisted_methods = {
+	"frappe.utils.print_format.download_pdf": "form_printer.api.print_format.download_pdf",
+	"frappe.www.printview.get_html_and_style": "form_printer.api.print_format.get_html_and_style",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
