@@ -57,7 +57,7 @@ def build_form_template_pdf(
 	if isinstance(data, str):
 		data = json.loads(data or "{}")
 
-	# get the template, template_name, font, font_size from the Document Template
+	# get the template, template_name, font, font_size from the Form Template
 	form_template, _form_template_name, font, font_size = frappe.db.get_value(
 		"Form Template", template_id, ["file", "template_name", "font", "font_size"]
 	)
@@ -223,7 +223,7 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 				# update the field value according to the field type
 				if annotation.field_type == "Text":
 					# set the field value, font, font size
-					# if annotation have font or font size set it else set the font and font size from the document template
+					# if annotation have font or font size set it else set the font and font size from the form template
 					# ensure numeric types for PyMuPDF (it uses format code 'g' internally)
 					anno_fs = float(annotation.font_size) if annotation.font_size is not None else 0
 					tpl_fs = float(font_size) if font_size is not None else 12

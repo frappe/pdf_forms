@@ -144,7 +144,7 @@ def convert_pdf_to_image(form_template_id):
 		font_counter = Counter()
 		font_size_counter = Counter()
 
-		# loop through the images and create a Document Template Images document for each page
+		# loop through the images and create a Form Template Images document for each page
 		for i in range(len(images)):
 			# Save pages as images in the file system
 			did_not_convert = 0
