@@ -2,9 +2,9 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import ErrorBanner from '@/components/ui/error-banner'
 import { useAnnotationFocus } from '@/hooks/useAnnotationFocus'
 import type { Annotation, AnnotationBodyElement } from '@/types/Annotation'
+import type { FormTemplate } from '@/types/FormPrinter/FormTemplate'
 import type { FormTemplateImage } from '@/types/FormPrinter/FormTemplateImage'
-import { useFrappeGetCall, useFrappeGetDocList, useFrappePostCall, useSWRConfig } from 'frappe-react-sdk'
-import { AlertCircle } from 'lucide-react'
+import { useFrappeGetCall, useFrappeGetDoc, useFrappePostCall, useSWRConfig } from 'frappe-react-sdk'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ImageAnnotator } from './ImageAnnotator'
 import { AnnotationDeleteModal } from './AnnotationDeleteModal'
@@ -40,16 +40,11 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
     const { call, loading } = useFrappePostCall<void>('form_printer.form_printer.doctype.form_template_field.form_template_field.update_annotation')
 
     /** Fetch form template images */
-    const { data: templateImages, error } = useFrappeGetDocList<FormTemplateImage>('Form Template Image', {
-        filters: [
-            ["form_template_id", "=", templateID]
-        ],
-        fields: ["name", "page_index", "image_file"],
-        orderBy: {
-            field: "page_index",
-            order: "asc"
-        }
-    }, ['form_template_image', templateID],)
+    const { data: formTemplate, error } = useFrappeGetDoc<FormTemplate>('Form Template', templateID)
+    const templateImages = useMemo<FormTemplateImage[]>(
+        () => [...(formTemplate?.form_template_image ?? [])].sort((a, b) => a.page_index - b.page_index),
+        [formTemplate?.form_template_image]
+    )
 
     const { data: annotations, mutate } = useFrappeGetCall<{ message: GetTemplateFieldResponse[] }>('form_printer.form_printer.doctype.form_template_field.form_template_field.get_annotations', {
         form_template_id: templateID
@@ -60,7 +55,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
     const addToAnnotationUpdateQueue = useCallback((annotation: Annotation, pageIndex: number) => {
 
         const annotationObject = {
-            form_template_image: templateImages?.[pageIndex]?.name ?? '',
+            form_template_image: templateImages?.[pageIndex]?.id ?? '',
             source: annotation.target.source,
             id: annotation.id,
             form_template_id: templateID,
@@ -97,7 +92,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
 
         const uploadToDatabase = async () => {
             return call({
-                'document_template_id': templateID,
+                'form_template_id': templateID,
                 'annotations': unsavedAnnotations
             })
                 .then(() => {
@@ -255,7 +250,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                             forceUpdate={uploadToDatabase}
                             syncing={loading} />
                     </>} />
-                <AnnotationDeleteModal annotationID={deleteAnnotationID} onClose={deleteAnnotationModalClose} />
+                <AnnotationDeleteModal annotationID={deleteAnnotationID} templateID={templateID} onClose={deleteAnnotationModalClose} />
             </>
         )
     }

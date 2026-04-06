@@ -21,6 +21,12 @@ class FormTemplate(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from form_printer.form_printer.doctype.form_template_field.form_template_field import (
+			FormTemplateField,
+		)
+		from form_printer.form_printer.doctype.form_template_image.form_template_image import (
+			FormTemplateImage,
+		)
 		from form_printer.form_printer.doctype.form_template_prompts.form_template_prompts import (
 			FormTemplatePrompts,
 		)
@@ -32,6 +38,8 @@ class FormTemplate(Document):
 		file_name: DF.Data | None
 		font: DF.Data | None
 		font_size: DF.Data | None
+		form_template_field: DF.Table[FormTemplateField]
+		form_template_image: DF.Table[FormTemplateImage]
 		is_encrypted: DF.Check
 		is_pdf_converted: DF.Check
 		print_format: DF.Link | None
@@ -109,8 +117,6 @@ class FormTemplate(Document):
 		"""
 		Delete Form Template Field, Form Template Image and Print Format
 		"""
-		frappe.db.delete("Form Template Field", {"form_template": self.name})
-		frappe.db.delete("Form Template Image", {"form_template_id": self.name})
 		frappe.db.delete("Print Format", self.print_format)
 
 
@@ -125,8 +131,13 @@ def convert_pdf_to_image(form_template_id):
 	# 6. Get Form Fields Annotations and create Form Template Field for each field
 
 	try:
+		form_template = frappe.get_doc("Form Template", form_template_id)
+		# Reset previously generated rows before re-processing the source PDF.
+		form_template.set("form_template_image", [])
+		form_template.set("form_template_field", [])
+
 		# get the file path from the document
-		file = frappe.db.get_value("Form Template", form_template_id, "file")
+		file = form_template.file
 
 		# convert the pdf to images
 		# create a temporary directory to store the images
@@ -159,38 +170,34 @@ def convert_pdf_to_image(form_template_id):
 			if width <= 1 and height <= 1:
 				did_not_convert = 1
 
-			doc = frappe.get_doc(
+			image_row = form_template.append(
+				"form_template_image",
 				{
-					"doctype": "Form Template Image",
+					"id": frappe.generate_hash(length=10),
 					"page_index": i,
 					"width": width,
 					"height": height,
-					"form_template_id": form_template_id,
-				}
+				},
 			)
-			doc.insert()
 
 			# Upload images to the file system
 			f = save_file(
 				form_template_id + "_" + str(i) + ".jpeg",
 				img_byte_array.getvalue(),
-				"Form Template Image",
-				doc.name,
+				"Form Template",
+				form_template_id,
 				is_private=1,
-				df="image_file",
 			)
-
-			frappe.db.set_value(
-				"Form Template Image",
-				doc.name,
-				{"image_file": f.file_url, "did_not_convert": did_not_convert},
-			)
+			image_row.image_file = f.file_url
+			image_row.did_not_convert = did_not_convert
 
 			# current page
 			page = pdf_doc[i]
 
 			# Get the Form Fields Annotations
-			create_form_fields_annotations(page, doc, f.file_url, font_counter, font_size_counter)
+			create_form_fields_annotations(
+				page, image_row, f.file_url, font_counter, font_size_counter, form_template
+			)
 
 		# Determine the most common font and font size
 		default_font = font_counter.most_common(1)[0][0] if font_counter else "helvetica"
@@ -201,8 +208,6 @@ def convert_pdf_to_image(form_template_id):
 			default_font = "helvetica"
 
 		# Set the font and font size in the document and set is_pdf_converted to 1
-		form_template = frappe.get_doc("Form Template", form_template_id)
-
 		# Set the is_pdf_converted to 1
 		form_template.is_pdf_converted = 1
 		# Set the is_encrypted to the pdf document is encrypted
@@ -232,7 +237,7 @@ def convert_pdf_to_image(form_template_id):
 		)
 
 
-def create_form_fields_annotations(page, image_doc, image_url, font_counter, font_size_counter):
+def create_form_fields_annotations(page, image_doc, image_url, font_counter, font_size_counter, parent_doc):
 	# 1. Get the Metadata from the page
 	# 2. Fetch the All Widgets (Mostly Form Fields) from the page
 	# 3. Loop through the widgets and create a Form Template Field for each field
@@ -254,15 +259,18 @@ def create_form_fields_annotations(page, image_doc, image_url, font_counter, fon
 		x, y, w, h = ratio * rect.x0, ratio * rect.y0, ratio * rect.width, ratio * rect.height
 
 		# Create a Form Template Field document
-		field_doc = frappe.get_doc(
+		parent_doc.append(
+			"form_template_field",
 			{
-				"doctype": "Form Template Field",
-				"form_template_image": image_doc.name,
-				"form_template": image_doc.form_template_id,
 				"id": frappe.generate_hash(length=10),
+				"form_template_image": image_doc.id,
 				"source": frappe.get_site_path(image_url[1:]),
 				"value": f"xywh=pixel:{x},{y},{w},{h}",
 				"page_index": image_doc.page_index,
+				"x_point": str(x),
+				"y_point": str(y),
+				"width": str(w),
+				"height": str(h),
 				"annotation_type": "Auto",
 				"value_type": "Field",
 				"field_name": field.field_name,
@@ -270,10 +278,8 @@ def create_form_fields_annotations(page, image_doc, image_url, font_counter, fon
 				"xref": field.xref,
 				"field_value": "",
 				"field_type": field.field_type_string,
-			}
+			},
 		)
-
-		field_doc.insert()
 
 
 # function to return the standard font
@@ -337,18 +343,16 @@ def get_form_template_prompts(form_template_id):
 	prompts = form_template.prompts
 
 	# Get all the Form Template Fields which are prompts from the form template
-	form_template_fields = frappe.get_all(
-		"Form Template Field",
-		filters=[["form_template", "=", form_template_id], ["value_type", "=", "Prompt"]],
-		fields=["name", "field_value"],
-	)
+	form_template_fields = [
+		field for field in form_template.form_template_field if field.value_type == "Prompt"
+	]
 
 	# Initialize the list of prompt fields
 	prompt_fields = []
 
 	# Loop through the Prompts and Form Template fields to check if the field_value is equal to the prompt_field_name
 	for field in form_template_fields:
-		prompt_field = next((obj for obj in prompts if obj.field_name == field["field_value"]), None)
+		prompt_field = next((obj for obj in prompts if obj.field_name == field.field_value), None)
 		if prompt_field:
 			prompt_fields.append(prompt_field)
 

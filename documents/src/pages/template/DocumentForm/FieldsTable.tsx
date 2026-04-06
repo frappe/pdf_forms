@@ -262,9 +262,9 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                 <Checkbox
                                     checked={showUnmappedOnly}
                                     onCheckedChange={(checked) => setShowUnmappedOnly(checked === true)}
-                                    aria-label="Mapped only"
+                                    aria-label="Unmapped only"
                                 />
-                                <span>Mapped only</span>
+                                <span>Unmapped only</span>
                             </label>
                         </div>
                         <div className="flex items-center gap-2">
@@ -416,7 +416,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                             </TableBody>
                         </Table>
                     </div>
-                    <AnnotationDeleteModal annotationID={deleteAnnotationID} onClose={deleteAnnotationModalClose} />
+                    <AnnotationDeleteModal annotationID={deleteAnnotationID} templateID={templateID} onClose={deleteAnnotationModalClose} />
                     {index !== null && <FieldEditModal index={index} isOpen={isOpen} onClose={onClose} setIndex={setIndex} totalLength={fields.length} />}
                 </form>
             </FormProvider>

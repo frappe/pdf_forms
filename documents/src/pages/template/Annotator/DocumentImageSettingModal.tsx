@@ -1,4 +1,4 @@
-import { useFrappeGetDoc, useFrappeUpdateDoc } from "frappe-react-sdk"
+import { useFrappePostCall } from "frappe-react-sdk"
 import { FormProvider, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import type { FormTemplateImage } from "@/types/FormPrinter/FormTemplateImage"
@@ -24,23 +24,17 @@ import { Button } from "@/components/ui/button"
 interface Props {
     isOpen: boolean
     onClose: () => void
-    documentId: string
+    image: FormTemplateImage | null
+    onUpdated?: () => void
 }
 
-export const DocumentImageSettingModal = ({ isOpen, onClose, documentId }: Props) => {
-    const { data, error, isLoading, mutate } = useFrappeGetDoc<FormTemplateImage>(
-        "Form Template Image",
-        documentId,
-        isOpen && documentId ? undefined : null
-    )
-
+export const DocumentImageSettingModal = ({ isOpen, onClose, image, onUpdated }: Props) => {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-xl sm:max-w-xl" showCloseButton={!isLoading}>
-                {isLoading && <FullPageLoader />}
-                {error && <ErrorBanner error={error} />}
-                {data && (
-                    <SettingPageModalContent data={data} onClose={onClose} mutate={mutate} />
+            <DialogContent className="max-w-xl sm:max-w-xl">
+                {!image && <FullPageLoader />}
+                {image && (
+                    <SettingPageModalContent data={image} onClose={onClose} onUpdated={onUpdated} />
                 )}
             </DialogContent>
         </Dialog>
@@ -57,13 +51,13 @@ interface SettingFields {
 interface SettingPageModalContentProps {
     data: FormTemplateImage
     onClose: () => void
-    mutate: () => void
+    onUpdated?: () => void
 }
 
 export const SettingPageModalContent = ({
     data,
     onClose,
-    mutate,
+    onUpdated,
 }: SettingPageModalContentProps) => {
     const methods = useForm<SettingFields>({
         defaultValues: {
@@ -74,19 +68,34 @@ export const SettingPageModalContent = ({
         },
     })
 
-    const { updateDoc, error, loading } = useFrappeUpdateDoc()
+    const { call, error, loading } = useFrappePostCall(
+        "form_printer.form_printer.doctype.form_template_image.form_template_image.update_image_settings"
+    )
 
     const onSubmit = (value: SettingFields) => {
-        updateDoc("Form Template Image", data.name, {
+        if (!data.parent) {
+            toast.error("Unable to update settings: missing form template id")
+            return
+        }
+
+        call({
+            form_template_id: data.parent,
+            form_template_image: data.name,
             repeat_page: value.repeat_page ? 1 : 0,
             repeat_after: value.repeat_after,
             copies: value.copies,
             base_index: value.base_index,
-        }).then(() => {
-            toast.success("Settings Updated", { duration: 2000 })
-            mutate()
-            onClose()
         })
+            .then(() => {
+                toast.success("Settings Updated", { duration: 2000 })
+                onUpdated?.()
+                onClose()
+            })
+            .catch((submitError: { message?: string }) => {
+                toast.error("Failed to update settings", {
+                    description: submitError?.message,
+                })
+            })
     }
 
     const repeatPage = useWatch({ control: methods.control, name: "repeat_page" })

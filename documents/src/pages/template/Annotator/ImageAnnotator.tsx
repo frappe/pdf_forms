@@ -514,11 +514,11 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     {NUMBER_OF_ANNOTATIONS}
                 </div>
             </div>
-            {images[currentPage]?.name && (
+            {images[currentPage] && (
                 <DocumentImageSettingModal
                     isOpen={isOpen}
                     onClose={onClose}
-                    documentId={images[currentPage]?.name}
+                    image={images[currentPage]}
                 />
             )}
         </div>

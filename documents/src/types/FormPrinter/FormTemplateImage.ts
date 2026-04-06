@@ -10,8 +10,8 @@ export interface FormTemplateImage{
 	parentfield?: string
 	parenttype?: string
 	idx?: number
-	/**	Form Template ID : Link - Form Template	*/
-	form_template_id: string
+	/**	ID : Data	*/
+	id: string
 	/**	Page Index : Int	*/
 	page_index: number
 	/**	Image File : Attach Image	*/

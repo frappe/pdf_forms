@@ -80,7 +80,10 @@
 			view.__form_printer_prompts = [];
 		}
 
-		if (!Array.isArray(view.__form_printer_prompts) || view.__form_printer_prompts.length === 0) {
+		if (
+			!Array.isArray(view.__form_printer_prompts) ||
+			view.__form_printer_prompts.length === 0
+		) {
 			view.__form_printer_prompts = await fetchTemplatePrompts(printFormat.form_template);
 		}
 
@@ -151,12 +154,16 @@
 			ensurePromptData(this)
 				.then((canProceed) => {
 					if (!canProceed) {
-						callback({ html: this.get_no_preview_html ? this.get_no_preview_html() : "" });
+						callback({
+							html: this.get_no_preview_html ? this.get_no_preview_html() : "",
+						});
 						return;
 					}
 
 					if (printFormat.raw_printing) {
-						callback({ html: this.get_no_preview_html ? this.get_no_preview_html() : "" });
+						callback({
+							html: this.get_no_preview_html ? this.get_no_preview_html() : "",
+						});
 						return;
 					}
 

@@ -24,8 +24,7 @@ class FormTemplateField(Document):
 		field_value: DF.SmallText | None
 		font: DF.Data | None
 		font_size: DF.Float
-		form_template: DF.Link
-		form_template_image: DF.Link
+		form_template_image: DF.Data
 		formatter: DF.Literal["", "Date", "Currency", "Phone", "Number"]
 		height: DF.Data
 		id: DF.Data
@@ -33,6 +32,9 @@ class FormTemplateField(Document):
 		is_prompt: DF.Check
 		override_style: DF.Check
 		page_index: DF.Int
+		parent: DF.Data
+		parentfield: DF.Data
+		parenttype: DF.Data
 		source: DF.Data | None
 		value: DF.SmallText
 		value_type: DF.Literal["Text", "Field", "Jinja", "Prompt"]
@@ -40,8 +42,8 @@ class FormTemplateField(Document):
 		x_point: DF.Data
 		xref: DF.Data | None
 		y_point: DF.Data
-
 	# end: auto-generated types
+
 	def before_save(self):
 		# get the dimensions of the annotation from value field and set x_point, y_point, width and height
 		self.get_dimensions()
@@ -54,25 +56,31 @@ class FormTemplateField(Document):
 		self.height = xywh[3]
 
 
+def _extract_dimensions(value: str) -> tuple[str, str, str, str]:
+	xywh = value.split("=")[1].split(":")[1].split(",")
+	return xywh[0], xywh[1], xywh[2], xywh[3]
+
+
 @frappe.whitelist()
 def get_annotations(form_template_id: str) -> list[dict[str, Any]]:
-	annotations = frappe.db.get_list(
-		"Form Template Field",
-		filters={"form_template": form_template_id},
-		fields=[
-			"name",
-			"value",
-			"source",
-			"page_index",
-			"form_template_image",
-			"annotation_type",
-			"field_label",
-			"field_name",
-		],
-		order_by="creation desc",
-	)
-
-	return annotations
+	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+	return [
+		{
+			"name": row.name,
+			"value": row.value,
+			"source": row.source,
+			"page_index": row.page_index,
+			"form_template_image": row.form_template_image,
+			"annotation_type": row.annotation_type,
+			"field_label": row.field_label,
+			"field_name": row.field_name,
+		}
+		for row in sorted(
+			form_template.form_template_field,
+			key=lambda r: r.creation or "",
+			reverse=True,
+		)
+	]
 
 
 @frappe.whitelist(methods=["POST"])
@@ -91,8 +99,15 @@ def update_form_template_fields(
 	if font or font_size:
 		frappe.db.set_value("Form Template", form_template_id, {"font": font, "font_size": font_size})
 
+	form_template = frappe.get_doc("Form Template", form_template_id)
+	has_updates = False
 	for field in fields:
-		existing_field = frappe.get_doc("Form Template Field", field["name"])
+		existing_field = next(
+			(row for row in form_template.form_template_field if row.name == field["name"]),
+			None,
+		)
+		if not existing_field:
+			continue
 		doc_fields = [
 			"value_type",
 			"field_value",
@@ -115,40 +130,75 @@ def update_form_template_fields(
 			for f in doc_fields:
 				if field.get(f) is not None:
 					setattr(existing_field, f, field.get(f))
+			has_updates = True
 
-		existing_field.save()
+	if has_updates:
+		form_template.save()
 
 
 @frappe.whitelist(methods=["POST"])
 def update_annotation(form_template_id: str, annotations: list[dict[str, Any]]) -> str:
+	form_template = frappe.get_doc("Form Template", form_template_id)
 	for annotation in annotations:
-		# check if annotation exists
-		annotation_exists = frappe.db.exists("Form Template Field", annotation["id"])
+		existing_row = next(
+			(row for row in form_template.form_template_field if row.name == annotation["id"]),
+			None,
+		)
 
-		if annotation_exists:
-			# update the annotation
-			doc = frappe.get_doc("Form Template Field", annotation["id"])
-			doc.value = annotation["value"]
-			doc.source = annotation["source"]
-			doc.page_index = annotation["page_index"]
-			doc.form_template_image = annotation["form_template_image"]
-
-			doc.save()
+		if existing_row:
+			existing_row.value = annotation["value"]
+			existing_row.source = annotation["source"]
+			existing_row.page_index = annotation["page_index"]
+			existing_row.form_template_image = annotation["form_template_image"]
+			x_point, y_point, width, height = _extract_dimensions(annotation["value"])
+			existing_row.x_point = x_point
+			existing_row.y_point = y_point
+			existing_row.width = width
+			existing_row.height = height
 		else:
-			# create a new annotation
-			frappe.get_doc(
+			x_point, y_point, width, height = _extract_dimensions(annotation["value"])
+			form_template.append(
+				"form_template_field",
 				{
-					"doctype": "Form Template Field",
-					"id": annotation["id"],
+					"id": frappe.generate_hash(length=10),
 					"value": annotation["value"],
 					"source": annotation["source"],
 					"page_index": annotation["page_index"],
-					"form_template": form_template_id,
+					"x_point": x_point,
+					"y_point": y_point,
+					"width": width,
+					"height": height,
 					"form_template_image": annotation["form_template_image"],
 					"annotation_type": "Manual",
 					"value_type": "Text",
-				}
-			).insert()
+				},
+			)
+
+	form_template.save()
+
+	frappe.publish_realtime(
+		"annotations_updated",
+		{"form_template_id": form_template_id},
+		doctype="Form Template",
+		docname=form_template_id,
+		after_commit=True,
+	)
+
+	return "Success"
+
+
+@frappe.whitelist(methods=["POST"])
+def delete_annotation(form_template_id: str, annotation_id: str) -> str:
+	form_template = frappe.get_doc("Form Template", form_template_id)
+	row_index = next(
+		(index for index, row in enumerate(form_template.form_template_field) if row.name == annotation_id),
+		-1,
+	)
+	if row_index == -1:
+		return "Not Found"
+
+	form_template.form_template_field.pop(row_index)
+	form_template.save()
 
 	frappe.publish_realtime(
 		"annotations_updated",

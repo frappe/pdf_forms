@@ -16,12 +16,13 @@ import ErrorBanner from '@/components/ui/error-banner'
 
 interface Props {
     annotationID: string | null,
+    templateID: string,
     onClose: VoidFunction
 }
 
-export const AnnotationDeleteModal = ({ annotationID, onClose }: Props) => {
+export const AnnotationDeleteModal = ({ annotationID, templateID, onClose }: Props) => {
 
-    const { call, error, loading, reset } = useFrappePostCall('frappe.client.delete')
+    const { call, error, loading, reset } = useFrappePostCall('form_printer.form_printer.doctype.form_template_field.form_template_field.delete_annotation')
 
     useEffect(() => {
         reset()
@@ -31,8 +32,8 @@ export const AnnotationDeleteModal = ({ annotationID, onClose }: Props) => {
     const deleteAnnotation = () => {
         if (annotationID) {
             call({
-                doctype: 'Form Template Field',
-                name: annotationID
+                form_template_id: templateID,
+                annotation_id: annotationID,
             }).then(() => onClose())
                 .then(() => toast.success('Annotation deleted', {
                     duration: 1000,
