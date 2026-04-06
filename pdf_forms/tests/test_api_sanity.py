@@ -30,14 +30,14 @@ class TestAPISanity(FrappeTestCase):
 
 	def test_get_annotations(self):
 		"""Test get_annotations API returns list"""
-		from form_printer.form_printer.doctype.form_template_field.form_template_field import get_annotations
+		from pdf_forms.pdf_forms.doctype.form_template_field.form_template_field import get_annotations
 
 		result = get_annotations(self.form_template.name)
 		self.assertIsInstance(result, list)
 
 	def test_add_prompt_to_form_template(self):
 		"""Test adding a prompt to form template"""
-		from form_printer.api.form_template import add_prompt_to_form_template
+		from pdf_forms.api.form_template import add_prompt_to_form_template
 
 		prompt = {
 			"field_name": "test_field",
@@ -54,7 +54,7 @@ class TestAPISanity(FrappeTestCase):
 
 	def test_update_prompt_in_form_template(self):
 		"""Test updating a prompt in form template"""
-		from form_printer.api.form_template import add_prompt_to_form_template, update_prompt_in_form_template
+		from pdf_forms.api.form_template import add_prompt_to_form_template, update_prompt_in_form_template
 
 		# First add a prompt
 		prompt = {
@@ -77,7 +77,7 @@ class TestAPISanity(FrappeTestCase):
 
 	def test_remove_prompt_from_form_template(self):
 		"""Test removing a prompt from form template"""
-		from form_printer.api.form_template import (
+		from pdf_forms.api.form_template import (
 			add_prompt_to_form_template,
 			remove_prompt_from_form_template,
 		)
@@ -97,7 +97,7 @@ class TestAPISanity(FrappeTestCase):
 
 	def test_update_form_template_fields(self):
 		"""Test updating form template fields"""
-		from form_printer.form_printer.doctype.form_template_field.form_template_field import (
+		from pdf_forms.pdf_forms.doctype.form_template_field.form_template_field import (
 			update_form_template_fields,
 		)
 

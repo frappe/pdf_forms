@@ -8,8 +8,8 @@ node_modules
 __pycache__
 
 dist/
-form_printer/public/documents
-form_printer/public/node_modules
-form_printer/www/documents.html
+pdf_forms/public/documents
+pdf_forms/public/node_modules
+pdf_forms/www/documents.html
 
 *.env

@@ -8,7 +8,7 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        files: "form_printer.*"
+        files: "pdf_forms.*"
         exclude: ".*json$|.*txt$|.*csv|.*md|.*svg"
       - id: check-merge-conflict
       - id: check-ast
@@ -44,11 +44,11 @@ repos:
         # Ignore any files that might contain jinja / bundles
         exclude: |
             (?x)^(
-                form_printer/public/dist/.*|
+                pdf_forms/public/dist/.*|
                 .*node_modules.*|
                 .*boilerplate.*|
-                form_printer/templates/includes/.*|
-                form_printer/public/js/lib/.*
+                pdf_forms/templates/includes/.*|
+                pdf_forms/public/js/lib/.*
             )$
 
 
@@ -61,12 +61,12 @@ repos:
         # Ignore any files that might contain jinja / bundles
         exclude: |
             (?x)^(
-                form_printer/public/dist/.*|
+                pdf_forms/public/dist/.*|
                 cypress/.*|
                 .*node_modules.*|
                 .*boilerplate.*|
-                form_printer/templates/includes/.*|
-                form_printer/public/js/lib/.*
+                pdf_forms/templates/includes/.*|
+                pdf_forms/public/js/lib/.*
             )$
 
 ci:
