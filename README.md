@@ -1,6 +1,6 @@
-### Doc Mapper
+### PDF Forms
 
-Frappe app to manage document mapping and printing
+Frappe app to manage document mapping and printing of pdf forms
 
 ### Installation
 
