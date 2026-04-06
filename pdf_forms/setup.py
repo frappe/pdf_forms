@@ -22,4 +22,6 @@ def make_custom_fields_for_print_format():
 			}
 		]
 	}
-	create_custom_fields(custom_fields, update=True)
+	# Avoid validating all existing Print Format fields on save, which can fail
+	# due to unrelated customizations from other installed apps.
+	create_custom_fields(custom_fields, update=True, ignore_validate=True)
