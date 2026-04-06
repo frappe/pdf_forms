@@ -9,7 +9,6 @@
   "value",
   "column_break_jynv",
   "form_template_image",
-  "form_template",
   "source",
   "page_index",
   "points_section",
@@ -36,18 +35,10 @@
  "fields": [
   {
    "fieldname": "form_template_image",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Form Template Image",
    "options": "Form Template Image",
-   "reqd": 1
-  },
-  {
-   "fieldname": "form_template",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Form Template",
-   "options": "Form Template",
    "reqd": 1
   },
   {
@@ -191,26 +182,14 @@
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
+ "istable": 1,
  "links": [],
- "modified": "2026-01-17 23:38:19.335064",
+ "modified": "2026-03-31 10:55:07.501064",
  "modified_by": "Administrator",
  "module": "Form Printer",
  "name": "Form Template Field",
  "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
+ "permissions": [],
  "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",

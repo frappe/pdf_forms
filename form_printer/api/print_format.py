@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from urllib.parse import urlencode
 import json
+from urllib.parse import urlencode
 
 import frappe
 from frappe.translate import print_language
-from frappe.www.printview import get_print_style, validate_print_permission
-from frappe.www.printview import get_html_and_style as frappe_get_html_and_style
 from frappe.utils.print_format import download_pdf as frappe_download_pdf
+from frappe.www.printview import get_html_and_style as frappe_get_html_and_style
+from frappe.www.printview import get_print_style, validate_print_permission
 
 from form_printer.api.print import build_form_template_pdf
 
@@ -127,11 +127,7 @@ def get_html_and_style(
 			prompt_data if isinstance(prompt_data, str) else frappe.as_json(prompt_data)
 		)
 
-	params = urlencode(
-		{
-			**pdf_params
-		}
-	)
+	params = urlencode({**pdf_params})
 	html = (
 		f'<div class="text-muted"">'
 		f'<object data="/api/method/frappe.utils.print_format.download_pdf?{params}" '

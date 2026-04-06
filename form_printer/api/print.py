@@ -165,32 +165,43 @@ def build_form_template_pdf(
 
 
 def fetch_repeated_document_template_images(template_id):
-	return frappe.get_all(
-		"Form Template Image",
-		filters={"form_template_id": template_id, "repeat_page": 1},
-		fields=["name", "page_index", "repeat_after", "copies", "base_index"],
-		order_by="page_index asc",
+	form_template = frappe.get_cached_doc("Form Template", template_id)
+	rows = [row for row in form_template.form_template_image if row.repeat_page]
+	return sorted(
+		[
+			{
+				"name": row.name,
+				"id": row.id,
+				"page_index": row.page_index,
+				"repeat_after": row.repeat_after,
+				"copies": row.copies,
+				"base_index": row.base_index,
+			}
+			for row in rows
+		],
+		key=lambda row: row["page_index"],
 	)
 
 
 def annotate_form_template(page, i, template_id, data, font, font_size, base_index=0, xref_map=None):
 	if xref_map is None:
 		xref_map = {}
-	auto_annotations = frappe.get_list(
-		"Form Template Field",
-		filters={"form_template": template_id, "page_index": i, "annotation_type": "Auto"},
-		fields="*",
-	)
+	form_template = frappe.get_cached_doc("Form Template", template_id)
+	auto_annotations = [
+		row
+		for row in form_template.form_template_field
+		if row.page_index == i and row.annotation_type == "Auto"
+	]
 
 	# loop through the auto annotations and add the text to the page
 	annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_index, xref_map)
 
 	# loop through the manual annotations and add the text to the page
-	manual_annotations = frappe.get_list(
-		"Form Template Field",
-		filters={"form_template": template_id, "page_index": i, "annotation_type": "Manual"},
-		fields="*",
-	)
+	manual_annotations = [
+		row
+		for row in form_template.form_template_field
+		if row.page_index == i and row.annotation_type == "Manual"
+	]
 
 	annotatate_manual_fields(page, manual_annotations, data, font, font_size, base_index)
 
@@ -244,6 +255,17 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 
 
 def annotatate_manual_fields(page, manual_annotations, data, font, font_size, base_index=0):
+	image_width_by_id = {}
+	for annotation in manual_annotations:
+		if annotation.form_template_image and annotation.form_template_image not in image_width_by_id:
+			row = frappe.db.get_value(
+				"Form Template Image",
+				{"parent": annotation.parent, "id": annotation.form_template_image},
+				["width"],
+				as_dict=True,
+			)
+			image_width_by_id[annotation.form_template_image] = row.width if row else None
+
 	for annotation in manual_annotations:
 		value = get_field_value(annotation, data, base_index)
 
@@ -261,7 +283,7 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 		if value is not None:
 			page_width, height = page.mediabox_size
 
-			width = frappe.get_value("Form Template Image", annotation.form_template_image, "width")
+			width = image_width_by_id.get(annotation.form_template_image)
 			ratio = width / page_width if width and width > 0 else 1
 
 			fields = page.widgets()

@@ -22,6 +22,8 @@
   "font_size",
   "process_completed",
   "section_break_hxmz",
+  "form_template_image",
+  "form_template_field",
   "prompts"
  ],
  "fields": [
@@ -123,12 +125,24 @@
    "label": "Print Format",
    "options": "Print Format",
    "read_only": 1
+  },
+  {
+   "fieldname": "form_template_image",
+   "fieldtype": "Table",
+   "label": "Form Template Image",
+   "options": "Form Template Image"
+  },
+  {
+   "fieldname": "form_template_field",
+   "fieldtype": "Table",
+   "label": "Form Template Field",
+   "options": "Form Template Field"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-23 15:27:01.936114",
+ "modified": "2026-03-31 10:58:54.450524",
  "modified_by": "Administrator",
  "module": "Form Printer",
  "name": "Form Template",

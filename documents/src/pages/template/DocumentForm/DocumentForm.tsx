@@ -1,6 +1,7 @@
-import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetCall, useFrappeGetDocList } from "frappe-react-sdk"
+import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetDoc } from "frappe-react-sdk"
 import { useAnnotationFocus } from "../../../hooks/useAnnotationFocus"
 import type { FormTemplateField } from "@/types/FormPrinter/FormTemplateField"
+import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ErrorBanner from "@/components/ui/error-banner"
@@ -14,50 +15,40 @@ interface DocumentFormProps {
 
 export const DocumentForm = ({ templateID }: DocumentFormProps) => {
 
-    /** Fetch fields */
-    const { data: fields, error, mutate } = useFrappeGetDocList<FormTemplateField>('Form Template Field', {
-        filters: [
-            ["form_template", "=", templateID]
-        ],
-        fields: ["name", "field_label", "field_value", "field_name", "field_type", "value_type", "annotation_type", 'override_style', 'font', 'font_size', 'is_prompt', 'formatter', 'xref', 'default_value', 'is_default_jinja'],
-        orderBy: {
-            field: "creation",
-            order: "asc"
-        },
-        limit: 1000
-    }, ['form_template_fields', templateID], {
+    const { data: formTemplate, error, mutate } = useFrappeGetDoc<FormTemplate>('Form Template', templateID, undefined, {
         revalidateOnFocus: false,
         keepPreviousData: true,
         revalidateIfStale: false
     })
 
-    const { data, error: docError, mutate: docMutate } = useFrappeGetCall<{
-        message: {
-            font: string,
-            font_size: number,
-            source: string
-        }
-    }>('frappe.client.get_value', {
-        doctype: 'Form Template',
-        filters: templateID,
-        fieldname: JSON.stringify(['font', 'font_size', 'source'])
-    }, ['font_data', templateID], {
-        revalidateOnFocus: false,
-        keepPreviousData: true,
-        revalidateIfStale: false
-    })
+    const fields: FormTemplateField[] = [...(formTemplate?.form_template_field ?? [])].sort((a, b) =>
+        (a.creation ?? "").localeCompare(b.creation ?? "")
+    )
 
     const mutateAll = () => {
-        docMutate()
-        return mutate()
+        return mutate().then(() => fields)
     }
 
-    useFrappeDocTypeEventListener('Form Template Field', () => {
-        mutate()
+    useFrappeDocTypeEventListener('Form Template', (data) => {
+        if (data?.name === templateID) {
+            mutate()
+        }
+    })
+
+    useFrappeEventListener('form_template_process_completed', (data) => {
+        if (data.form_template_id === templateID) {
+            mutate()
+        }
     })
 
     useFrappeEventListener('annotations_updated', (data) => {
         if (data.form_template_id === templateID) {
+            mutate()
+        }
+    })
+
+    useFrappeEventListener('doc_update', (data) => {
+        if (data.doctype === 'Form Template' && data.name === templateID) {
             mutate()
         }
     })
@@ -83,15 +74,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
             </div>
         )
     }
-    if (docError) {
-        return (
-            <div className="flex justify-center items-center m-4">
-                <ErrorBanner error={docError} />
-            </div>
-        )
-    }
-
-    if (!error && fields && fields.length > 0 && data?.message) return (
+    if (!error && fields && fields.length > 0 && formTemplate) return (
         <div>
             <Tabs defaultValue="map-fields" className="w-full p-1 px-2">
                 <TabsList className="grid w-full grid-cols-4">
@@ -104,8 +87,8 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                 <TabsContent value="map-fields" className="mt-2">
                     <FieldsTable data={{
                         field: fields,
-                        font: data.message.font,
-                        font_size: data.message.font_size
+                        font: formTemplate.font ?? 'helvetica',
+                        font_size: Number(formTemplate.font_size ?? 12)
                     }} focusedAnnotation={focusedAnnotation} onClick={onAnnotationClick} mutate={mutateAll}
                         templateID={templateID}
                     />
@@ -117,7 +100,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                     <PromptsContent />
                 </TabsContent>
                 <TabsContent value="preview" className="mt-2">
-                    <Preview templateID={templateID} source={data?.message?.source ?? ''} />
+                    <Preview templateID={templateID} source={formTemplate.source ?? ''} />
                 </TabsContent>
             </Tabs>
         </div>

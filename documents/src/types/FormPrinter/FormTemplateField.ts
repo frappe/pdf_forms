@@ -14,10 +14,8 @@ export interface FormTemplateField{
 	id: string
 	/**	Value : Small Text	*/
 	value: string
-	/**	Form Template Image : Link - Form Template Image	*/
+	/**	Form Template Image : Data	*/
 	form_template_image: string
-	/**	Form Template : Link - Form Template	*/
-	form_template: string
 	/**	Source : Data	*/
 	source?: string
 	/**	Page Index : Int	*/
