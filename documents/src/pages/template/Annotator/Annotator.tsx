@@ -37,7 +37,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
 
     //Queue to maintain annotation changes
     const [unsavedAnnotations, setUnsavedAnnotations] = useState<TemplateUnsavedAnnotation[]>([])
-    const { call, loading } = useFrappePostCall<void>('form_printer.form_printer.doctype.form_template_field.form_template_field.update_annotation')
+    const { call, loading } = useFrappePostCall<void>('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.update_annotation')
 
     /** Fetch form template images */
     const { data: formTemplate, error } = useFrappeGetDoc<FormTemplate>('Form Template', templateID)
@@ -46,7 +46,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
         [formTemplate?.form_template_image]
     )
 
-    const { data: annotations, mutate } = useFrappeGetCall<{ message: GetTemplateFieldResponse[] }>('form_printer.form_printer.doctype.form_template_field.form_template_field.get_annotations', {
+    const { data: annotations, mutate } = useFrappeGetCall<{ message: GetTemplateFieldResponse[] }>('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.get_annotations', {
         form_template_id: templateID
     }, ['form_template_annotations', templateID])
 

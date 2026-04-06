@@ -30,7 +30,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
     const [promptValues, setPromptValues] = useState<PromptValues>({})
 
     const { data: promptsData } = useFrappeGetCall<{ message: FormTemplatePrompts[] }>(
-        "form_printer.form_printer.doctype.form_template.form_template.get_form_template_prompts",
+        "pdf_forms.pdf_forms.doctype.form_template.form_template.get_form_template_prompts",
         { form_template_id: templateID },
         ["preview_prompts", templateID],
         { revalidateOnFocus: false }
@@ -62,7 +62,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
 
     const getPrintUrl = () => {
         if (!printData) return "#"
-        return `${web_url}/api/method/form_printer.api.print.print_form_template?template_id=${encodeURIComponent(templateID)}&data=${encodeURIComponent(JSON.stringify(printData))}&print_name=${encodeURIComponent(String(selectedDocument ?? "Print"))}.pdf`
+        return `${web_url}/api/method/pdf_forms.api.print.print_form_template?template_id=${encodeURIComponent(templateID)}&data=${encodeURIComponent(JSON.stringify(printData))}&print_name=${encodeURIComponent(String(selectedDocument ?? "Print"))}.pdf`
     }
 
     return (

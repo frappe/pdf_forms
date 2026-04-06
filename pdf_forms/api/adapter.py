@@ -154,9 +154,9 @@ def get_custom_data_source_api(source):
 		# Fetch all app's hooks
 		app_hooks = frappe.get_hooks(app_name=app_name)
 
-		# look for the hook with the name 'form_printer_data_source'
-		if "form_printer_data_source" in app_hooks:
-			data = app_hooks.get("form_printer_data_source")
+		# look for the hook with the name 'pdf_forms_data_source'
+		if "pdf_forms_data_source" in app_hooks:
+			data = app_hooks.get("pdf_forms_data_source")
 			for key, value in data.items():
 				if key == source:
 					found = True

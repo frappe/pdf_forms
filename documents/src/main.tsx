@@ -5,7 +5,7 @@ import App from './App.tsx';
 import './lib/namespace';
 
 if (import.meta.env.DEV) {
-  fetch('/api/method/form_printer.www.documents.get_context_for_dev', {
+  fetch('/api/method/pdf_forms.www.pdf_forms.get_context_for_dev', {
     method: 'POST',
   })
     .then(response => response.json())

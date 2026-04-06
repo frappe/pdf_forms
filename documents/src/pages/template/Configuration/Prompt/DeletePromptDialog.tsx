@@ -6,7 +6,7 @@ import { useFrappePostCall } from "frappe-react-sdk"
 import { toast } from "sonner"
 
 export const DeletePromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateID }: { isOpen: boolean, onClose: () => void, prompt: FormTemplatePrompts, onRefresh: () => void, templateID: string }) => {
-    const { call, loading, error } = useFrappePostCall('form_printer.api.form_template.remove_prompt_from_form_template')
+    const { call, loading, error } = useFrappePostCall('pdf_forms.api.form_template.remove_prompt_from_form_template')
     const onSubmit = () => {
         call({
             form_template_id: templateID,

@@ -4,7 +4,7 @@
 frappe.listview_settings["Form Template"] = {
 	get_form_link(doc) {
 		// Redirect to documents app template view instead of standard form
-		return "/documents/template/" + encodeURIComponent(doc.name);
+		return "/pdf_forms/template/" + encodeURIComponent(doc.name);
 	},
 	primary_action() {
 		let d;

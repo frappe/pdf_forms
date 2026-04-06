@@ -17,7 +17,7 @@ export default defineConfig({
 		}
 	},
 	build: {
-		outDir: '../form_printer/public/documents',
+		outDir: '../pdf_forms/public/documents',
 		emptyOutDir: true,
 		target: 'es2015',
 	},

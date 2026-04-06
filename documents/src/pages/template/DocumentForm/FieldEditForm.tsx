@@ -37,7 +37,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
     const shouldFetch = (valueType === 'Field' || valueType === 'Prompt') && templateID
 
     const { data, error } = useFrappeGetCall<{ message: ConfigData }>(
-        'form_printer.form_printer.doctype.form_template.form_template.get_fields_and_prompts_for_form_template',
+        'pdf_forms.pdf_forms.doctype.form_template.form_template.get_fields_and_prompts_for_form_template',
         {
             form_template_id: templateID,
         },

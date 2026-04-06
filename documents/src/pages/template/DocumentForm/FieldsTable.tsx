@@ -99,7 +99,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         return null
     }, [focusedAnnotation, data])
 
-    const { call, error, loading } = useFrappePostCall('form_printer.form_printer.doctype.form_template_field.form_template_field.update_form_template_fields')
+    const { call, error, loading } = useFrappePostCall('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.update_form_template_fields')
 
     const onSubmit = (data: { fields?: typeof defaultFields; font: string; font_size: number }) => {
         if (!data?.fields) return

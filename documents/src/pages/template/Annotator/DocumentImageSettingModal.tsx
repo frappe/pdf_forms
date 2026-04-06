@@ -69,7 +69,7 @@ export const SettingPageModalContent = ({
     })
 
     const { call, error, loading } = useFrappePostCall(
-        "form_printer.form_printer.doctype.form_template_image.form_template_image.update_image_settings"
+        "pdf_forms.pdf_forms.doctype.form_template_image.form_template_image.update_image_settings"
     )
 
     const onSubmit = (value: SettingFields) => {

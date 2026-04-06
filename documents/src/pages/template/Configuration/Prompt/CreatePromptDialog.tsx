@@ -17,7 +17,7 @@ export const CreatePromptDialog = ({ isOpen, onClose, templateID, onRefresh }: {
         },
     })
 
-    const {call, loading, error} = useFrappePostCall('form_printer.api.form_template.add_prompt_to_form_template')
+    const { call, loading, error } = useFrappePostCall('pdf_forms.api.form_template.add_prompt_to_form_template')
 
 
     const onSubmit = (data: FormTemplatePrompts) => {

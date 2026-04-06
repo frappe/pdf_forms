@@ -100,7 +100,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
                     asChild
                 >
                     <a
-                        href={`${web_url}/api/method/form_printer.form_printer.doctype.form_template.form_template.download_data_source_sheet?template_id=${templateID}`}
+                        href={`${web_url}/api/method/pdf_forms.pdf_forms.doctype.form_template.form_template.download_data_source_sheet?template_id=${templateID}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Download Data Source"

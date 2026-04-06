@@ -21,13 +21,13 @@ class FormTemplate(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from form_printer.form_printer.doctype.form_template_field.form_template_field import (
+		from pdf_forms.pdf_forms.doctype.form_template_field.form_template_field import (
 			FormTemplateField,
 		)
-		from form_printer.form_printer.doctype.form_template_image.form_template_image import (
+		from pdf_forms.pdf_forms.doctype.form_template_image.form_template_image import (
 			FormTemplateImage,
 		)
-		from form_printer.form_printer.doctype.form_template_prompts.form_template_prompts import (
+		from pdf_forms.pdf_forms.doctype.form_template_prompts.form_template_prompts import (
 			FormTemplatePrompts,
 		)
 
@@ -370,7 +370,7 @@ def get_fields_and_prompts_for_form_template(form_template_id):
 	# 6. Return the fields and prompts
 
 	# Lazy import to avoid circular import (form_template -> adapter; adapter must not import form_template)
-	from form_printer.api.adapter import get_json_schema_for_doctype, get_json_schema_from_custom_source
+	from pdf_forms.api.adapter import get_json_schema_for_doctype, get_json_schema_from_custom_source
 
 	# 1. Get the Form Template from the document
 	form_template = frappe.get_cached_doc("Form Template", form_template_id)
@@ -391,7 +391,7 @@ def get_fields_and_prompts_for_form_template(form_template_id):
 def download_data_source_sheet(template_id: str):
 	"""Frappe API to generate an Excel file from JSON Schema and trigger a download."""
 	# Lazy import to avoid circular import
-	from form_printer.api.adapter import generate_excel_from_json_schema
+	from pdf_forms.api.adapter import generate_excel_from_json_schema
 
 	# Fetch data source
 	data_source = get_fields_and_prompts_for_form_template(template_id).get("fields")

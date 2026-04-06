@@ -8,7 +8,7 @@ on:
   pull_request:
 
 concurrency:
-  group: develop-form_printer-${{ github.event.number }}
+  group: develop-pdf_forms-${{ github.event.number }}
   cancel-in-progress: true
 
 jobs:
@@ -43,9 +43,9 @@ jobs:
       - name: Find tests
         run: |
           echo "Finding tests..."
-          find form_printer -name "test_*.py" -type f | head -10
+          find pdf_forms -name "test_*.py" -type f | head -10
           echo "Test files found:"
-          find form_printer -name "test_*.py" -type f | wc -l
+          find pdf_forms -name "test_*.py" -type f | wc -l
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -92,10 +92,10 @@ jobs:
       - name: Install
         working-directory: /home/runner/frappe-bench
         run: |
-          bench get-app form_printer $GITHUB_WORKSPACE
+          bench get-app pdf_forms $GITHUB_WORKSPACE
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
-          bench --site test_site install-app form_printer
+          bench --site test_site install-app pdf_forms
           bench build
         env:
           CI: 'Yes'
@@ -105,7 +105,7 @@ jobs:
         run: |
           bench --site test_site set-config allow_tests true
           echo "Running unit tests and sanity checks..."
-          bench --site test_site run-tests --app form_printer --verbose
+          bench --site test_site run-tests --app pdf_forms --verbose
         env:
           TYPE: server
         continue-on-error: false

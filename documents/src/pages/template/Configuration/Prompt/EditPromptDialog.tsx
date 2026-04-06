@@ -12,7 +12,7 @@ export const EditPromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateI
         defaultValues: prompt,
     })
 
-    const { call, loading, error } = useFrappePostCall('form_printer.api.form_template.update_prompt_in_form_template')
+    const { call, loading, error } = useFrappePostCall('pdf_forms.api.form_template.update_prompt_in_form_template')
 
     const onSubmit = (data: FormTemplatePrompts) => {
         call({

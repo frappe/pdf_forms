@@ -3,9 +3,9 @@
 	let patchTimer = null;
 
 	const getPromptDataQuery = (view) => {
-		if (!view?.__form_printer_prompt_data) return "";
+		if (!view?.__pdf_forms_prompt_data) return "";
 		try {
-			const encoded = encodeURIComponent(JSON.stringify(view.__form_printer_prompt_data));
+			const encoded = encodeURIComponent(JSON.stringify(view.__pdf_forms_prompt_data));
 			return `&prompt_data=${encoded}`;
 		} catch (e) {
 			return "";
@@ -22,7 +22,7 @@
 	const fetchTemplatePrompts = async (templateID) => {
 		if (!templateID) return [];
 		const response = await frappe.call({
-			method: "form_printer.form_printer.doctype.form_template.form_template.get_form_template_prompts",
+			method: "pdf_forms.pdf_forms.doctype.form_template.form_template.get_form_template_prompts",
 			args: { form_template_id: templateID },
 		});
 		return Array.isArray(response?.message) ? response.message : [];
@@ -67,39 +67,39 @@
 	const ensurePromptData = async (view, force = false) => {
 		const printFormat = view.get_print_format ? view.get_print_format() : null;
 		if (!isFormTemplateFormat(printFormat)) {
-			view.__form_printer_prompt_data = null;
-			view.__form_printer_prompt_cache_key = null;
-			view.__form_printer_prompts = [];
+			view.__pdf_forms_prompt_data = null;
+			view.__pdf_forms_prompt_cache_key = null;
+			view.__pdf_forms_prompts = [];
 			return true;
 		}
 
 		const cacheKey = `${printFormat.name || ""}:${printFormat.form_template || ""}`;
-		if (view.__form_printer_prompt_cache_key !== cacheKey) {
-			view.__form_printer_prompt_cache_key = cacheKey;
-			view.__form_printer_prompt_data = null;
-			view.__form_printer_prompts = [];
+		if (view.__pdf_forms_prompt_cache_key !== cacheKey) {
+			view.__pdf_forms_prompt_cache_key = cacheKey;
+			view.__pdf_forms_prompt_data = null;
+			view.__pdf_forms_prompts = [];
 		}
 
 		if (
-			!Array.isArray(view.__form_printer_prompts) ||
-			view.__form_printer_prompts.length === 0
+			!Array.isArray(view.__pdf_forms_prompts) ||
+			view.__pdf_forms_prompts.length === 0
 		) {
-			view.__form_printer_prompts = await fetchTemplatePrompts(printFormat.form_template);
+			view.__pdf_forms_prompts = await fetchTemplatePrompts(printFormat.form_template);
 		}
 
-		const prompts = view.__form_printer_prompts || [];
+		const prompts = view.__pdf_forms_prompts || [];
 		if (!prompts.length) {
-			view.__form_printer_prompt_data = null;
+			view.__pdf_forms_prompt_data = null;
 			return true;
 		}
 
-		if (!force && view.__form_printer_prompt_data) {
+		if (!force && view.__pdf_forms_prompt_data) {
 			return true;
 		}
 
-		const values = await openPromptDialog(prompts, view.__form_printer_prompt_data || {});
+		const values = await openPromptDialog(prompts, view.__pdf_forms_prompt_data || {});
 		if (!values) return false;
-		view.__form_printer_prompt_data = values;
+		view.__pdf_forms_prompt_data = values;
 		return true;
 	};
 
@@ -126,7 +126,7 @@
 
 	const patchPrintView = () => {
 		const PrintView = frappe?.ui?.form?.PrintView;
-		if (!PrintView || PrintView.prototype.__form_printer_button_patch_applied) {
+		if (!PrintView || PrintView.prototype.__pdf_forms_button_patch_applied) {
 			return;
 		}
 
@@ -142,7 +142,7 @@
 			return result;
 		};
 
-		PrintView.prototype.__form_printer_button_patch_applied = true;
+		PrintView.prototype.__pdf_forms_button_patch_applied = true;
 
 		const originalGetPrintHtml = PrintView.prototype.get_print_html;
 		PrintView.prototype.get_print_html = function (callback) {
@@ -179,8 +179,8 @@
 							letterhead: this.get_letterhead(),
 							settings: this.additional_settings,
 							_lang: this.lang_code,
-							prompt_data: this.__form_printer_prompt_data
-								? JSON.stringify(this.__form_printer_prompt_data)
+							prompt_data: this.__pdf_forms_prompt_data
+								? JSON.stringify(this.__pdf_forms_prompt_data)
 								: null,
 						},
 						callback: function (r) {

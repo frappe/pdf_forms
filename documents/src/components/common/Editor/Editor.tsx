@@ -51,7 +51,7 @@ export const Editor = ({ jsonValue, templateID, readOnly, ...props }: EditorProp
         })
     }
 
-    const printUrl = `${web_url}/api/method/form_printer.api.print.print_form_template?template_id=${templateID}&data=${encodeURIComponent(value)}&print_name=Print ${encodeURIComponent(templateID)}`
+    const printUrl = `${web_url}/api/method/pdf_forms.api.print.print_form_template?template_id=${templateID}&data=${encodeURIComponent(value)}&print_name=Print ${encodeURIComponent(templateID)}`
 
     return (
         <div className="flex flex-col gap-4">

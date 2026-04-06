@@ -22,7 +22,7 @@ interface Props {
 
 export const AnnotationDeleteModal = ({ annotationID, templateID, onClose }: Props) => {
 
-    const { call, error, loading, reset } = useFrappePostCall('form_printer.form_printer.doctype.form_template_field.form_template_field.delete_annotation')
+    const { call, error, loading, reset } = useFrappePostCall('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.delete_annotation')
 
     useEffect(() => {
         reset()

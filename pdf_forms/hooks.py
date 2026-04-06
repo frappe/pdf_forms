@@ -1,7 +1,7 @@
-app_name = "form_printer"
-app_title = "Form Printer"
+app_name = "pdf_forms"
+app_title = "PDF Forms"
 app_publisher = "Frappe Technologies Pvt. Ltd."
-app_description = "Frappe app to print forms"
+app_description = "Frappe app to manage PDF forms"
 app_email = "contact@frappe.io"
 app_license = "gpl-3.0"
 
@@ -13,11 +13,11 @@ app_license = "gpl-3.0"
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
-# 		"name": "form_printer",
-# 		"logo": "/assets/form_printer/logo.png",
-# 		"title": "Form Printer",
-# 		"route": "/form_printer",
-# 		"has_permission": "form_printer.api.permission.has_app_permission"
+# 		"name": "pdf_forms",
+# 		"logo": "/assets/pdf_forms/logo.png",
+# 		"title": "PDF Forms",
+# 		"route": "/pdf_forms",
+# 		"has_permission": "pdf_forms.api.permission.has_app_permission"
 # 	}
 # ]
 
@@ -25,15 +25,15 @@ app_license = "gpl-3.0"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/form_printer/css/form_printer.css"
-app_include_js = "/assets/form_printer/js/print_button_visibility.js"
+# app_include_css = "/assets/pdf_forms/css/pdf_forms.css"
+app_include_js = "/assets/pdf_forms/js/print_button_visibility.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/form_printer/css/form_printer.css"
-# web_include_js = "/assets/form_printer/js/form_printer.js"
+# web_include_css = "/assets/pdf_forms/css/pdf_forms.css"
+# web_include_js = "/assets/pdf_forms/js/pdf_forms.js"
 
 # include custom scss in every website theme (without file extension ".scss")
-# website_theme_scss = "form_printer/public/scss/website"
+# website_theme_scss = "pdf_forms/public/scss/website"
 
 # include js, css files in header of web form
 # webform_include_js = {"doctype": "public/js/doctype.js"}
@@ -44,14 +44,14 @@ app_include_js = "/assets/form_printer/js/print_button_visibility.js"
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-doctype_list_js = {"Form Template": "form_printer/doctype/form_template/form_template_list.js"}
+doctype_list_js = {"Form Template": "pdf_forms/doctype/form_template/form_template_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
 # Svg Icons
 # ------------------
 # include app icons in desk
-# app_include_icons = "form_printer/public/icons.svg"
+# app_include_icons = "pdf_forms/public/icons.svg"
 
 # Home Pages
 # ----------
@@ -75,43 +75,43 @@ doctype_list_js = {"Form Template": "form_printer/doctype/form_template/form_tem
 
 # add methods and filters to jinja environment
 # jinja = {
-# 	"methods": "form_printer.utils.jinja_methods",
-# 	"filters": "form_printer.utils.jinja_filters"
+# 	"methods": "pdf_forms.utils.jinja_methods",
+# 	"filters": "pdf_forms.utils.jinja_filters"
 # }
 
 # Installation
 # ------------
 
-# before_install = "form_printer.install.before_install"
-after_install = "form_printer.setup.after_install"
+# before_install = "pdf_forms.install.before_install"
+after_install = "pdf_forms.setup.after_install"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "form_printer.uninstall.before_uninstall"
-# after_uninstall = "form_printer.uninstall.after_uninstall"
+# before_uninstall = "pdf_forms.uninstall.before_uninstall"
+# after_uninstall = "pdf_forms.uninstall.after_uninstall"
 
 # Integration Setup
 # ------------------
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-# before_app_install = "form_printer.utils.before_app_install"
-# after_app_install = "form_printer.utils.after_app_install"
+# before_app_install = "pdf_forms.utils.before_app_install"
+# after_app_install = "pdf_forms.utils.after_app_install"
 
 # Integration Cleanup
 # -------------------
 # To clean up dependencies/integrations with other apps
 # Name of the app being uninstalled is passed as an argument
 
-# before_app_uninstall = "form_printer.utils.before_app_uninstall"
-# after_app_uninstall = "form_printer.utils.after_app_uninstall"
+# before_app_uninstall = "pdf_forms.utils.before_app_uninstall"
+# after_app_uninstall = "pdf_forms.utils.after_app_uninstall"
 
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
 
-# notification_config = "form_printer.notifications.get_notification_config"
+# notification_config = "pdf_forms.notifications.get_notification_config"
 
 # Permissions
 # -----------
@@ -150,43 +150,43 @@ after_install = "form_printer.setup.after_install"
 
 # scheduler_events = {
 # 	"all": [
-# 		"form_printer.tasks.all"
+# 		"pdf_forms.tasks.all"
 # 	],
 # 	"daily": [
-# 		"form_printer.tasks.daily"
+# 		"pdf_forms.tasks.daily"
 # 	],
 # 	"hourly": [
-# 		"form_printer.tasks.hourly"
+# 		"pdf_forms.tasks.hourly"
 # 	],
 # 	"weekly": [
-# 		"form_printer.tasks.weekly"
+# 		"pdf_forms.tasks.weekly"
 # 	],
 # 	"monthly": [
-# 		"form_printer.tasks.monthly"
+# 		"pdf_forms.tasks.monthly"
 # 	],
 # }
 
 # Testing
 # -------
 
-# before_tests = "form_printer.install.before_tests"
+# before_tests = "pdf_forms.install.before_tests"
 
 # Overriding Methods
 # ------------------------------
 #
 # override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "form_printer.event.get_events"
+# 	"frappe.desk.doctype.event.event.get_events": "pdf_forms.event.get_events"
 # }
 override_whitelisted_methods = {
-	"frappe.utils.print_format.download_pdf": "form_printer.api.print_format.download_pdf",
-	"frappe.www.printview.get_html_and_style": "form_printer.api.print_format.get_html_and_style",
+	"frappe.utils.print_format.download_pdf": "pdf_forms.api.print_format.download_pdf",
+	"frappe.www.printview.get_html_and_style": "pdf_forms.api.print_format.get_html_and_style",
 }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "form_printer.task.get_dashboard_data"
+# 	"Task": "pdf_forms.task.get_dashboard_data"
 # }
 
 # exempt linked doctypes from being automatically cancelled
@@ -200,13 +200,13 @@ override_whitelisted_methods = {
 
 # Request Events
 # ----------------
-# before_request = ["form_printer.utils.before_request"]
-# after_request = ["form_printer.utils.after_request"]
+# before_request = ["pdf_forms.utils.before_request"]
+# after_request = ["pdf_forms.utils.after_request"]
 
 # Job Events
 # ----------
-# before_job = ["form_printer.utils.before_job"]
-# after_job = ["form_printer.utils.after_job"]
+# before_job = ["pdf_forms.utils.before_job"]
+# after_job = ["pdf_forms.utils.after_job"]
 
 # User Data Protection
 # --------------------
@@ -236,7 +236,7 @@ override_whitelisted_methods = {
 # --------------------------------
 
 # auth_hooks = [
-# 	"form_printer.auth.validate"
+# 	"pdf_forms.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.
@@ -248,5 +248,6 @@ export_python_type_annotations = True
 
 
 website_route_rules = [
-	{"from_route": "/documents/<path:app_path>", "to_route": "documents"},
+	{"from_route": "/pdf_forms", "to_route": "pdf_forms"},
+	{"from_route": "/pdf_forms/<path:app_path>", "to_route": "pdf_forms"},
 ]

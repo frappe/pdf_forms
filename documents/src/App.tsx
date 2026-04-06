@@ -41,7 +41,7 @@ function App() {
 				return
 			}
 			// Redirect to Frappe login page
-			window.location.href = '/login?redirect-to=/documents'
+			window.location.href = '/login?redirect-to=/pdf_forms'
 			return
 		}
 	}, [])

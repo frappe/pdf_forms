@@ -9,7 +9,7 @@ from frappe.utils.print_format import download_pdf as frappe_download_pdf
 from frappe.www.printview import get_html_and_style as frappe_get_html_and_style
 from frappe.www.printview import get_print_style, validate_print_permission
 
-from form_printer.api.print import build_form_template_pdf
+from pdf_forms.api.print import build_form_template_pdf
 
 
 def _is_print_designer_format(print_format_doc) -> bool:

@@ -5,7 +5,7 @@ from typing import Any
 import fitz
 import frappe
 
-from form_printer.utils.jinja import format_currency, format_date, format_number, format_phone
+from pdf_forms.utils.jinja import format_currency, format_date, format_number, format_phone
 
 # Mapping of font names to standard font names
 font_mapping = {

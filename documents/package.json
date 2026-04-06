@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/assets/form_printer/documents/ && yarn copy-html-entry",
+    "build": "vite build --base=/assets/pdf_forms/documents/ && yarn copy-html-entry",
     "lint": "eslint .",
     "preview": "vite preview",
-    "copy-html-entry": "cp ../form_printer/public/documents/index.html ../form_printer/www/documents.html"
+    "copy-html-entry": "cp ../pdf_forms/public/documents/index.html ../pdf_forms/www/documents.html"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

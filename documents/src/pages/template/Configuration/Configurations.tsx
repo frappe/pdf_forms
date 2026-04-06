@@ -27,7 +27,7 @@ export const Configurations = () => {
 
     const { templateID } = useParams<{ templateID: string }>()
 
-    const { data, isLoading, error } = useFrappeGetCall<{ message: ConfigData }>('form_printer.form_printer.doctype.form_template.form_template.get_fields_and_prompts_for_form_template', {
+    const { data, isLoading, error } = useFrappeGetCall<{ message: ConfigData }>('pdf_forms.pdf_forms.doctype.form_template.form_template.get_fields_and_prompts_for_form_template', {
         form_template_id: templateID
     }, undefined, {
         revalidateOnFocus: false,
@@ -57,7 +57,7 @@ export const ConfigContent = ({ data }: { data: ConfigData }) => {
 export const PromptsContent = () => {
     const { templateID } = useParams<{ templateID: string }>()
 
-    const { data, isLoading, error, mutate } = useFrappeGetCall<{ message: ConfigData }>('form_printer.form_printer.doctype.form_template.form_template.get_fields_and_prompts_for_form_template', {
+    const { data, isLoading, error, mutate } = useFrappeGetCall<{ message: ConfigData }>('pdf_forms.pdf_forms.doctype.form_template.form_template.get_fields_and_prompts_for_form_template', {
         form_template_id: templateID
     }, undefined, {
         revalidateOnFocus: false,
