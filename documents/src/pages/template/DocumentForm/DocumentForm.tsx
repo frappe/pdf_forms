@@ -15,7 +15,7 @@ interface DocumentFormProps {
 
 export const DocumentForm = ({ templateID }: DocumentFormProps) => {
 
-    const { data: formTemplate, error, mutate } = useFrappeGetDoc<FormTemplate>('Form Template', templateID, undefined, {
+    const { data: formTemplate, error, mutate, isLoading } = useFrappeGetDoc<FormTemplate>('Form Template', templateID, undefined, {
         revalidateOnFocus: false,
         keepPreviousData: true,
         revalidateIfStale: false
@@ -56,7 +56,26 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
 
     const { focusedAnnotation, onAnnotationClick } = useAnnotationFocus(templateID)
 
-    if (fields && fields.length === 0) {
+    if (error) {
+        return (
+            <div className="flex justify-center items-center m-4">
+                <ErrorBanner error={error} />
+            </div>
+        )
+    }
+
+    if (isLoading && !formTemplate) {
+        return (
+            <div className="flex justify-center items-center m-4">
+                <Alert>
+                    <AlertTitle>Loading template...</AlertTitle>
+                    <AlertDescription>Fetching fields and configuration.</AlertDescription>
+                </Alert>
+            </div>
+        )
+    }
+
+    if (formTemplate && fields.length === 0) {
         return (
             <div className="flex justify-center items-center m-4">
                 <Alert variant="warning">
@@ -66,15 +85,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
             </div>
         )
     }
-
-    if (error) {
-        return (
-            <div className="flex justify-center items-center m-4">
-                <ErrorBanner error={error} />
-            </div>
-        )
-    }
-    if (!error && fields && fields.length > 0 && formTemplate) return (
+    if (!error && formTemplate && fields.length > 0) return (
         <div>
             <Tabs defaultValue="map-fields" className="w-full p-1 px-2">
                 <TabsList className="grid w-full grid-cols-4">

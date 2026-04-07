@@ -128,10 +128,15 @@ def get_html_and_style(
 		)
 
 	params = urlencode({**pdf_params})
+	pdf_url = f"/api/method/frappe.utils.print_format.download_pdf?{params}"
 	html = (
-		f'<div class="text-muted"">'
-		f'<object data="/api/method/frappe.utils.print_format.download_pdf?{params}" '
+		f'<div class="text-muted">'
+		f'<object data="{pdf_url}" '
 		f'type="application/pdf" style="width:100%;height:86vh;border:none;">'
-		f'<p><a href="/api/method/frappe.utils.print_format.download_pdf?{params}" target="_blank">'
+		f'<p><a href="{pdf_url}" target="_blank" rel="noopener noreferrer">'
+		"Open PDF in a new tab"
+		"</a></p>"
+		"</object>"
+		"</div>"
 	)
 	return {"html": html, "style": get_print_style(style=style, print_format=None)}

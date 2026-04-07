@@ -336,7 +336,8 @@ def get_annotation(field_name, annotations, xref, xref_map):
 	# get the annotation for the field from the auto_annotations list which matches the field_name and xref
 	annotation = None
 	for a in annotations:
-		a_xref = xref_map.get(a.xref) if xref_map.get(str(a.xref)) else a.xref
+		mapped_xref = xref_map.get(str(a.xref), xref_map.get(a.xref))
+		a_xref = mapped_xref if mapped_xref is not None else a.xref
 		if a.field_name == field_name and int(a_xref) == int(xref):
 			annotation = a
 			break
