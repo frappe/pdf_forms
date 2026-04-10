@@ -154,7 +154,7 @@ def build_form_template_pdf(
 			try:
 				doc.insert_pdf(tempt_doc, from_page=0, to_page=0, start_at=key + plus_index)
 			except TypeError as e:
-				print(f"Error inserting PDF: {e}")
+				frappe.log_error(f"Error inserting PDF: {e}")
 			plus_index += 1
 
 			tempt_doc.close()
@@ -379,7 +379,7 @@ def get_field_value(annotation, data, base_index):
 			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - annotation.field_value comes from database field, trusted source
 			value = frappe.render_template(annotation.field_value, data)
 		except Exception as e:
-			print(e)
+			frappe.log_error(f"Error rendering Jinja template: {e}")
 
 		return value if value is not None else ""
 

@@ -80,10 +80,7 @@
 			view.__pdf_forms_prompts = [];
 		}
 
-		if (
-			!Array.isArray(view.__pdf_forms_prompts) ||
-			view.__pdf_forms_prompts.length === 0
-		) {
+		if (!Array.isArray(view.__pdf_forms_prompts) || view.__pdf_forms_prompts.length === 0) {
 			view.__pdf_forms_prompts = await fetchTemplatePrompts(printFormat.form_template);
 		}
 

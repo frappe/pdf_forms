@@ -21,12 +21,8 @@ class FormTemplate(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from pdf_forms.pdf_forms.doctype.form_template_field.form_template_field import (
-			FormTemplateField,
-		)
-		from pdf_forms.pdf_forms.doctype.form_template_image.form_template_image import (
-			FormTemplateImage,
-		)
+		from pdf_forms.pdf_forms.doctype.form_template_field.form_template_field import FormTemplateField
+		from pdf_forms.pdf_forms.doctype.form_template_image.form_template_image import FormTemplateImage
 		from pdf_forms.pdf_forms.doctype.form_template_prompts.form_template_prompts import (
 			FormTemplatePrompts,
 		)
@@ -117,7 +113,8 @@ class FormTemplate(Document):
 		"""
 		Delete Form Template Field, Form Template Image and Print Format
 		"""
-		frappe.db.delete("Print Format", self.print_format)
+		if self.print_format:
+			frappe.delete_doc("Print Format", self.print_format)
 
 
 def convert_pdf_to_image(form_template_id):

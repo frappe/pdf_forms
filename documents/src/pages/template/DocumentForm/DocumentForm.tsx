@@ -89,7 +89,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
         <div>
             <Tabs defaultValue="map-fields" className="w-full p-1 px-2">
                 <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="map-fields">Mapiing Fields</TabsTrigger>
+                    <TabsTrigger value="map-fields">Mapping Fields</TabsTrigger>
                     <TabsTrigger value="fields">Fields</TabsTrigger>
                     <TabsTrigger value="prompts">Prompts</TabsTrigger>
                     <TabsTrigger value="preview">Preview</TabsTrigger>

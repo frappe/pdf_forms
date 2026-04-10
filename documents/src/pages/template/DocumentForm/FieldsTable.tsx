@@ -182,17 +182,63 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         })
     }
 
-    const pasteToClipboard = () => {
-        navigator.clipboard.readText().then((text) => {
-            const data = JSON.parse(text)
-            importDataToForm(data)
-        }).then(() => {
-            toast.success("Field data pasted from clipboard")
-        })
+    type FormFieldRow = { name: string; field_name?: string; [key: string]: unknown }
+    type ClipboardImportData = { fields: FormFieldRow[]; font?: string; font_size?: number }
+
+    const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+        typeof value === "object" && value !== null
+
+    const isValidFormFieldRow = (value: unknown): value is FormFieldRow => {
+        if (!isObjectRecord(value)) return false
+        if (typeof value.name !== "string") return false
+        if ("field_name" in value && value.field_name !== undefined && typeof value.field_name !== "string") return false
+        return true
     }
 
-    type FormFieldRow = { name: string; field_name?: string;[key: string]: unknown }
-    const importDataToForm = (data: { fields: FormFieldRow[]; font?: string; font_size?: number }) => {
+    const parseClipboardImportData = (text: string): ClipboardImportData => {
+        const parsed: unknown = JSON.parse(text)
+        if (!isObjectRecord(parsed)) {
+            throw new Error("Clipboard content must be a JSON object.")
+        }
+        if (!Array.isArray(parsed.fields) || !parsed.fields.every(isValidFormFieldRow)) {
+            throw new Error("Expected `fields` to be an array of valid field objects.")
+        }
+        if ("font" in parsed && parsed.font !== undefined && typeof parsed.font !== "string") {
+            throw new Error("Optional `font` must be a string.")
+        }
+        if ("font_size" in parsed && parsed.font_size !== undefined && typeof parsed.font_size !== "number") {
+            throw new Error("Optional `font_size` must be a number.")
+        }
+
+        return {
+            fields: parsed.fields,
+            font: parsed.font as string | undefined,
+            font_size: parsed.font_size as number | undefined,
+        }
+    }
+
+    const pasteToClipboard = async () => {
+        try {
+            const text = await navigator.clipboard.readText()
+            if (!text.trim()) {
+                toast.error("Clipboard is empty", {
+                    description: "Copy field mapping JSON and try importing again.",
+                })
+                return
+            }
+
+            const data = parseClipboardImportData(text)
+            importDataToForm(data)
+            toast.success("Field data pasted from clipboard")
+        } catch (error) {
+            const description = error instanceof Error
+                ? `${error.message} Please copy a valid exported mapping and retry.`
+                : "Please copy a valid exported mapping and retry."
+            toast.error("Could not import field data", { description })
+        }
+    }
+
+    const importDataToForm = (data: ClipboardImportData) => {
         const formData = getValues();
         const formFields = formData.fields;
         const newFields = data.fields;
@@ -470,7 +516,7 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
                 }}
             >
                 <DialogHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between px-2">
                         <DialogTitle>Edit field {index + 1} of {totalLength}</DialogTitle>
                         <div className="flex items-center gap-2">
                             <NextPreviousButtons
@@ -493,7 +539,7 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
                         </div>
                     </div>
                 </DialogHeader>
-                <div className="flex flex-col max-h-[60vh] overflow-y-auto">
+                <div className="flex flex-col max-h-[60vh] overflow-y-auto px-2">
                     <FieldEditForm index={index} />
                 </div>
             </DialogContent>

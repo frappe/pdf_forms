@@ -82,25 +82,37 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                             buttonClassName="h-10 rounded-lg"
                         />
                     </div>
-                    <Button
-                        variant="default"
-                        size="default"
-                        disabled={!printData}
-                        className="h-10 shrink-0"
-                        aria-label="Download PDF"
-                    >
-                        <a
-                            href={getPrintUrl()}
-                            aria-disabled
-                            target="_blank"
-                            rel="noopener noreferrer"
+                    {printData ? (
+                        <Button
+                            asChild
+                            variant="default"
+                            size="default"
+                            className="h-10 shrink-0"
+                        >
+                            <a
+                                href={getPrintUrl()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Download PDF"
+                                className="flex items-center gap-2"
+                            >
+                                <Printer className="size-4" />
+                                Download PDF
+                            </a>
+                        </Button>
+                    ) : (
+                        <Button
+                            type="button"
+                            variant="default"
+                            size="default"
+                            disabled
+                            className="h-10 shrink-0"
                             aria-label="Download PDF"
-                            className="flex items-center gap-2"
                         >
                             <Printer className="size-4" />
                             Download PDF
-                        </a>
-                    </Button>
+                        </Button>
+                    )}
                 </div>
                 {docError && (
                     <div className="mt-3">

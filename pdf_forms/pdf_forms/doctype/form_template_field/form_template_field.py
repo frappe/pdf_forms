@@ -4,6 +4,7 @@
 from typing import Any
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -43,17 +44,7 @@ class FormTemplateField(Document):
 		xref: DF.Data | None
 		y_point: DF.Data
 	# end: auto-generated types
-
-	def before_save(self):
-		# get the dimensions of the annotation from value field and set x_point, y_point, width and height
-		self.get_dimensions()
-
-	def get_dimensions(self):
-		xywh = self.value.split("=")[1].split(":")[1].split(",")
-		self.x_point = xywh[0]
-		self.y_point = xywh[1]
-		self.width = xywh[2]
-		self.height = xywh[3]
+	pass
 
 
 def _extract_dimensions(value: str) -> tuple[str, str, str, str]:
@@ -195,7 +186,7 @@ def delete_annotation(form_template_id: str, annotation_id: str) -> str:
 		-1,
 	)
 	if row_index == -1:
-		return "Not Found"
+		frappe.throw(_("Annotation {annotation_id} not found"))
 
 	form_template.form_template_field.pop(row_index)
 	form_template.save()

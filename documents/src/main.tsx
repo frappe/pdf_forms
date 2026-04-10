@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
 import './lib/namespace';
+import { toast } from 'sonner';
 
 if (import.meta.env.DEV) {
   fetch('/api/method/pdf_forms.www.pdf_forms.get_context_for_dev', {
@@ -27,7 +28,11 @@ if (import.meta.env.DEV) {
         </StrictMode>,
       )
 
+    }).catch(error => {
+      console.error(error)
+      toast.error('Failed to fetch context for development')
     })
+
 } else {
   //@ts-expect-error - frappe will be available
   if (window.frappe?.boot?.docs) {

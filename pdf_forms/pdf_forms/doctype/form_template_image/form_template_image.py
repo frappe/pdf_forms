@@ -29,14 +29,7 @@ class FormTemplateImage(Document):
 		width: DF.Int
 	# end: auto-generated types
 
-	def before_save(self):
-		"""
-		Before saving check is repeat_page is unchecked then set repeat_after to 0, copies to "" and base_index to 0.
-		"""
-		if not self.repeat_page:
-			self.repeat_after = 0
-			self.copies = ""
-			self.base_index = 0
+	pass
 
 
 @frappe.whitelist(methods=["POST"])
