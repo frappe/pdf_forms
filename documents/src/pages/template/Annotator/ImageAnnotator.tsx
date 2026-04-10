@@ -477,8 +477,8 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                 </div>
             )}
 
-            <div 
-                className="relative pt-10 h-screen border border-gray-100 w-full"
+            <div
+                className="relative pt-10 h-[70vh] md:h-[75vh] lg:h-screen border border-gray-100 w-full"
                 style={annotatorImageStyles}
             >
                 <Button
