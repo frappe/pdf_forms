@@ -71,7 +71,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
             <section className="px-2">
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
                     <div className="flex flex-1 flex-col gap-2 min-w-0 sm:min-w-[240px] sm:max-w-xs">
-                        <Label className="text-muted-foreground font-normal">
+                        <Label>
                             Select Document
                         </Label>
                         <LinkFieldCombobox
@@ -85,9 +85,10 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     {printData ? (
                         <Button
                             asChild
-                            variant="default"
-                            size="default"
-                            className="h-10 shrink-0"
+                            variant="solid"
+                            theme="gray"
+                            size="lg"
+                            className="shrink-0"
                         >
                             <a
                                 href={getPrintUrl()}
@@ -103,10 +104,11 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     ) : (
                         <Button
                             type="button"
-                            variant="default"
-                            size="default"
+                            variant="solid"
+                            theme="gray"
+                            size="lg"
                             disabled
-                            className="h-10 shrink-0"
+                            className="shrink-0"
                             aria-label="Download PDF"
                         >
                             <Printer className="size-4" />
@@ -124,8 +126,8 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
             {/* Prompt fields used in mapping */}
             {prompts.length > 0 && (
                 <section className="px-5">
-                    <h3 className="text-sm font-medium text-foreground mb-4">Prompt fields</h3>
-                    <p className="text-xs text-muted-foreground mb-4">
+                    <h3 className="text-sm font-medium text-ink-gray-8 mb-4">Prompt fields</h3>
+                    <p className="text-xs text-ink-gray-5 mb-4">
                         These prompts are used in this template’s field mapping. Fill them to include in the printed PDF.
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -133,7 +135,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                             <div key={prompt.name ?? prompt.field_name} className="flex flex-col gap-2">
                                 <Label className="text-sm">
                                     {prompt.label}
-                                    {prompt.mandatory === 1 && <span className="text-destructive ml-0.5">*</span>}
+                                    {prompt.mandatory === 1 && <span className="text-ink-red-2 ms-0.5">*</span>}
                                 </Label>
                                 {prompt.type === "Checkbox" ? (
                                     <div className="flex items-center gap-2">
@@ -146,7 +148,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                                         />
                                         <label
                                             htmlFor={`prompt-${prompt.field_name}`}
-                                            className="text-sm text-muted-foreground cursor-pointer"
+                                            className="text-sm text-ink-gray-5 cursor-pointer"
                                         >
                                             {prompt.description ?? "Yes / No"}
                                         </label>
@@ -158,7 +160,8 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                                         placeholder={prompt.description ?? prompt.field_name}
                                         value={String(promptValues[prompt.field_name] ?? "")}
                                         onChange={(e) => setPromptValue(prompt.field_name, e.target.value)}
-                                        className="h-10 rounded-lg"
+                                        inputSize="lg"
+                                        className="rounded-lg"
                                     />
                                 )}
                             </div>
@@ -172,7 +175,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                 {documentData ? (
                     <Accordion type="single" collapsible defaultValue="document-data" className="w-full">
                         <AccordionItem value="document-data" className="border-0">
-                            <AccordionTrigger className="px-5 py-4 text-sm font-medium hover:no-underline hover:bg-muted/50 data-[state=open]:border-b data-[state=open]:border-border">
+                            <AccordionTrigger className="px-5 py-4 text-sm font-medium hover:no-underline hover:bg-surface-gray-2 data-[state=open]:border-b data-[state=open]:border-outline-gray-2">
                                 Document Data
                             </AccordionTrigger>
                             <AccordionContent className="px-0 pb-0 pt-0">
@@ -188,14 +191,14 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     </Accordion>
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
-                        <div className="rounded-full bg-muted p-4">
-                            <FileJson className="size-8 text-muted-foreground" />
+                        <div className="rounded-full bg-surface-gray-2 p-4">
+                            <FileJson className="size-8 text-ink-gray-5" />
                         </div>
                         <div className="space-y-1">
-                            <p className="text-sm font-medium text-foreground">
+                            <p className="text-sm font-medium text-ink-gray-8">
                                 {selectedDocument ? "Loading document…" : "No document selected"}
                             </p>
-                            <p className="text-sm text-muted-foreground max-w-sm">
+                            <p className="text-sm text-ink-gray-5 max-w-sm">
                                 {selectedDocument
                                     ? "Fetching document data…"
                                     : `Select a ${source} document above to preview its data and download a filled PDF.`}

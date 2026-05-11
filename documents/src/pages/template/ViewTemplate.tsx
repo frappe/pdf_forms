@@ -66,14 +66,14 @@ export const ViewTemplate = () => {
                         <div className="pointer-events-none">
                             <ViewTemplateLoader />
                         </div>
-                        <div className="absolute inset-0 bg-background/45" />
+                        <div className="absolute inset-0 bg-surface-gray-1/80" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <p className="text-lg font-medium text-muted-foreground">Documents are processing... Please wait.</p>
+                            <p className="text-lg font-medium text-ink-gray-5">Documents are processing... Please wait.</p>
                         </div>
                     </div>
                 ) : data.process_completed === 1 && data.is_pdf_converted === 0 ? (
                     <div className="flex items-center justify-center h-full p-4">
-                        <Alert variant="destructive" className="max-w-2xl">
+                        <Alert variant="subtle" theme="red" className="max-w-2xl">
                             <AlertTitle>Issue with Form PDF</AlertTitle>
                             <AlertDescription>
                                 Something went wrong while converting the PDF. Please check the uploaded file or inspect the background job to find the actual issue.
@@ -82,18 +82,20 @@ export const ViewTemplate = () => {
                     </div>
                 ) : data.process_completed === 1 && data.is_pdf_converted === 1 ? (
                             <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
-                                <div className="sticky top-0 z-70 border-b bg-background/95 p-2 backdrop-blur lg:hidden">
+                                <div className="sticky top-0 z-70 border-b border-outline-gray-2 bg-surface-white/95 p-2 backdrop-blur lg:hidden">
                                     <div className="grid grid-cols-2 gap-2">
                                         <Button
                                             type="button"
-                                            variant={mobilePane === 'annotator' ? 'default' : 'outline'}
+                                            variant={mobilePane === 'annotator' ? 'solid' : 'outline'}
+                                            theme="gray"
                                             onClick={() => setMobilePane('annotator')}
                                         >
                                             PDF Annotator
                                         </Button>
                                         <Button
                                             type="button"
-                                            variant={mobilePane === 'editor' ? 'default' : 'outline'}
+                                            variant={mobilePane === 'editor' ? 'solid' : 'outline'}
+                                            theme="gray"
                                             onClick={() => setMobilePane('editor')}
                                         >
                                             Field Editor

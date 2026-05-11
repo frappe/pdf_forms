@@ -12,7 +12,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { FileDropzone } from '@/components/ui/file-dropzone'
 import { DataField, LinkFormField, SmallTextField } from '@/components/ui/form-elements'
-import { FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form'
+import { FormField, FormItem, FormControl, FormLabel, FormMessage, FormRequiredIndicator } from '@/components/ui/form'
+import { cn } from '@/lib/utils'
 import ErrorBanner from '@/components/ui/error-banner'
 import FileUploadBanner from '@/components/common/FileUploadBanner'
 
@@ -118,7 +119,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                     render={({ field, fieldState }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            PDF File <span className="text-destructive">*</span>
+                                            PDF File <FormRequiredIndicator className="ms-0.5" />
                                         </FormLabel>
                                         <FormControl>
                                             <FileDropzone
@@ -132,7 +133,10 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                                 }
                                                 accept={{ 'application/pdf': ['.pdf'] }}
                                                 maxFiles={1}
-                                                className={fieldState.error ? 'border-destructive border' : undefined}
+                                                className={cn(
+                                                    fieldState.error &&
+                                                        'border-outline-red-3 shadow-focus-red'
+                                                )}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -148,6 +152,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                             <Button
                                 type="button"
                                 variant="ghost"
+                                theme="gray"
                                 onClick={() => handleClose()}
                                 disabled={isLoading}
                             >
@@ -155,6 +160,8 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                             </Button>
                             <Button
                                 type="submit"
+                                variant="solid"
+                                theme="gray"
                                 disabled={isLoading}
                             >
                                 {isLoading ? 'Creating…' : 'Create'}

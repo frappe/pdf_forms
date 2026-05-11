@@ -127,6 +127,7 @@ function InputGroupButton({
   className,
   type = "button",
   variant = "ghost",
+  theme = "gray",
   size = "xs",
   ...props
 }: Omit<React.ComponentProps<typeof Button>, "size"> &
@@ -136,6 +137,7 @@ function InputGroupButton({
       type={type}
       data-size={size}
       variant={variant}
+      theme={theme}
       className={cn(inputGroupButtonVariants({ size }), className)}
       {...props}
     />

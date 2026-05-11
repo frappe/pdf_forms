@@ -1,6 +1,6 @@
 import _ from '@/lib/translate'
-import { Dispatch, SetStateAction, useCallback } from 'react'
-import { Accept, useDropzone } from 'react-dropzone'
+import { type Dispatch, type SetStateAction, useCallback } from 'react'
+import { type Accept, useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
 import { formatBytes, getFileExtension } from '@/lib/file'
 import { Button } from './button'
@@ -43,8 +43,7 @@ export const FileDropzone = ({ files, setFiles, accept, multiple = true, onDrop,
                             <span className='text-ink-gray-5 text-xs'>{formatBytes(f.size)}</span>
                         </div>
                     </div>
-                    <Button type='button' variant='ghost' isIconButton
-                        className='text-ink-gray-5 hover:text-ink-gray-8 hover:bg-transparent'
+                    <Button type="button" variant="ghost" theme="gray" isIconButton size="sm"
                         onClick={(e) => {
                             e.stopPropagation()
                             setFiles?.(files.filter(file => file.name !== f.name))

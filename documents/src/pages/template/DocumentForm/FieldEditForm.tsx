@@ -11,7 +11,7 @@ import {
     SelectFormField,
     CodeEditorFormField,
 } from '@/components/ui/form-elements'
-import { FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form'
+import { FormField, FormItem, FormControl, FormLabel, FormMessage, FormRequiredIndicator } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import type { ConfigData } from '@/pages/template/Configuration/Configurations'
@@ -246,20 +246,24 @@ const ToggleDefaultValue = ({ index }: { index: number }) => {
     const isDefaultJinja = watch(`fields.${index}.is_default_jinja`)
 
     return (
-        <div className="flex border rounded-r-md overflow-hidden bg-white">
+        <div className="flex border border-outline-gray-2 rounded-r-md overflow-hidden bg-surface-white">
             <Button
                 type="button"
-                variant={!isDefaultJinja ? 'secondary' : 'ghost'}
+                variant={!isDefaultJinja ? 'subtle' : 'ghost'}
+                theme="gray"
                 size="sm"
-                className="rounded-none border-r"
+                isIconButton
+                className="rounded-none border-r border-outline-gray-2"
                 onClick={() => setValue(`fields.${index}.is_default_jinja`, false)}
             >
                 <Type className="size-4" />
             </Button>
             <Button
                 type="button"
-                variant={isDefaultJinja ? 'secondary' : 'ghost'}
+                variant={isDefaultJinja ? 'subtle' : 'ghost'}
+                theme="gray"
                 size="sm"
+                isIconButton
                 className="rounded-none"
                 onClick={() => setValue(`fields.${index}.is_default_jinja`, true)}
             >
@@ -324,7 +328,7 @@ const ValueTypeField = ({
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>
-                        Value Type <span className="text-destructive">*</span>
+                        Value Type <FormRequiredIndicator className="ms-0.5" />
                     </FormLabel>
                     <FormControl>
                         <Select
@@ -339,16 +343,16 @@ const ValueTypeField = ({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Text">
-                                    Text <span className="text-xs text-muted-foreground ml-2">({getKeyboardMetaKeyString()} + T)</span>
+                                    Text <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + T)</span>
                                 </SelectItem>
                                 <SelectItem value="Field">
-                                    Field <span className="text-xs text-muted-foreground ml-2">({getKeyboardMetaKeyString()} + F)</span>
+                                    Field <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + F)</span>
                                 </SelectItem>
                                 <SelectItem value="Prompt">
-                                    Prompt <span className="text-xs text-muted-foreground ml-2">({getKeyboardMetaKeyString()} + P)</span>
+                                    Prompt <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + P)</span>
                                 </SelectItem>
                                 <SelectItem value="Jinja">
-                                    Jinja <span className="text-xs text-muted-foreground ml-2">({getKeyboardMetaKeyString()} + J)</span>
+                                    Jinja <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + J)</span>
                                 </SelectItem>
                             </SelectContent>
                         </Select>

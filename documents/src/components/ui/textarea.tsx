@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { cva, VariantProps } from "class-variance-authority"
+import { cva, type VariantProps } from "class-variance-authority"
 
 
 const textareaVariants = cva(cn("flex field-sizing-content w-full transition-all focus-visible:bg-surface-white focus-visible:border-outline-gray-4 focus-visible:shadow-focus-gray active:bg-surface-white active:shadow-textarea-active active:border-outline-gray-4 outline-none border border-transparent placeholder:text-ink-gray-4 text-ink-gray-7 disabled:bg-surface-gray-1 disabled:placeholder:text-ink-gray-3 disabled:text-ink-gray-3 disabled:cursor-not-allowed aria-readonly:bg-surface-gray-1 aria-readonly:text-ink-gray-6 aria-readonly:pointer-events-none aria-invalid:shadow-focus-red aria-invalid:border-outline-red-3",

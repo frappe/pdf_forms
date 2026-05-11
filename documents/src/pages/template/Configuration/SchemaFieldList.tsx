@@ -15,7 +15,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
         return (
             <div
                 key={fieldKey}
-                className="py-2 border-b border-gray-200 last:border-b-0 max-h-[80vh] overflow-y-auto"
+                className="py-2 border-b border-outline-gray-2 last:border-b-0 max-h-[80vh] overflow-y-auto"
             >
                 {/* Render properties recursively if they exist */}
                 {field.properties && field.schema_type !== 'object' && (
@@ -80,7 +80,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
                         </CollapsibleSection>
                     )
                 ) : field.items ? (
-                    <p className="text-sm text-muted-foreground">Items Type: {field.items.schema_type}</p>
+                    <p className="text-sm text-ink-gray-5">Items Type: {field.items.schema_type}</p>
                 ) : (
                     !isRoot && field.schema_type !== 'object' && <FieldRow field={field} fieldKey={fieldKey} />
                 )}
@@ -91,12 +91,14 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
-                <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                <h2 className="text-xl font-semibold tracking-tight text-ink-gray-8">
                     {source}
                 </h2>
                 <Button
                     size="sm"
+                    isIconButton
                     variant="outline"
+                    theme="gray"
                     asChild
                 >
                     <a
@@ -165,8 +167,9 @@ const FieldRow: React.FC<{ field: SchemaField; fieldKey?: string }> = ({ field, 
                         <Button
                             type="button"
                             variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                            theme="gray"
+                            size="sm"
+                            isIconButton
                             onClick={(e) => {
                                 e.stopPropagation()
                                 copyFieldName()
@@ -177,10 +180,10 @@ const FieldRow: React.FC<{ field: SchemaField; fieldKey?: string }> = ({ field, 
                         </Button>
                     )}
                 </div>
-                {field.fieldtype && <Badge variant="secondary">{field.fieldtype}</Badge>}
+                {field.fieldtype && <Badge variant="subtle" theme="gray">{field.fieldtype}</Badge>}
             </div>
             {field.enum && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-ink-gray-5">
                     Option(s): {field.enum.join(', ')}
                 </p>
             )}

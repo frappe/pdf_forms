@@ -78,7 +78,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
     if (formTemplate && fields.length === 0) {
         return (
             <div className="flex justify-center items-center m-4">
-                <Alert variant="warning">
+                <Alert theme="amber">
                     <AlertTitle>We did not find any fields.</AlertTitle>
                     <AlertDescription>The system could not detect any fields, try manually creating a field.</AlertDescription>
                 </Alert>
@@ -88,7 +88,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
     if (!error && formTemplate && fields.length > 0) return (
         <div>
             <Tabs defaultValue="map-fields" className="w-full p-1 px-2">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList variant="subtle" size="md" className="grid w-full grid-cols-4">
                     <TabsTrigger value="map-fields">Mapping Fields</TabsTrigger>
                     <TabsTrigger value="fields">Fields</TabsTrigger>
                     <TabsTrigger value="prompts">Prompts</TabsTrigger>

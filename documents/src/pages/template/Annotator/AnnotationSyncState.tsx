@@ -65,7 +65,8 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                         className="rounded-none h-full" 
                         size="sm" 
                         onClick={update} 
-                        variant={highlightSyncButton ? 'default' : 'secondary'}
+                        variant={highlightSyncButton ? 'solid' : 'subtle'}
+                        theme="gray"
                         title="Force Update"
                     >
                         <div className="flex items-center">
@@ -91,9 +92,10 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                     <Button 
                         size="sm" 
                         variant="ghost"
-                        className="h-full rounded-none hover:bg-gray-100 active:bg-gray-100"
+                        theme="gray"
+                        className="h-full rounded-none"
                     >
-                        <div className="flex items-center text-gray-500">
+                        <div className="flex items-center">
                             <CheckCircle2 className="size-4" />
                             <span className="ml-2">Sync</span>
                         </div>

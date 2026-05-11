@@ -1,13 +1,14 @@
 import { getErrorMessages } from '@/lib/frappe'
-import { FrappeError } from 'frappe-react-sdk'
-import { Alert, AlertDescription, AlertProps, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import MarkdownRenderer from '@/components/ui/markdown'
-import _ from '@/lib/translate'
 import { useMemo } from 'react'
+import type { ComponentProps } from 'react'
 
-type ErrorBannerProps = AlertProps & {
-    error?: FrappeError | null,
+type FrappeErrorInput = NonNullable<Parameters<typeof getErrorMessages>[0]>
+
+type ErrorBannerProps = Omit<ComponentProps<typeof Alert>, 'children'> & {
+    error?: FrappeErrorInput | null,
     overrideHeading?: string,
 }
 

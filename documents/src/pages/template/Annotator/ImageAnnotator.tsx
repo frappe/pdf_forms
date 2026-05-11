@@ -394,10 +394,10 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
         <div className="relative w-full" {...props}>
             {showToolbar && (
                 <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto">
-                    <div className="flex items-stretch gap-0 bg-gray-100 w-full shadow-sm justify-between rounded-t-lg">
-                        <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200">
+                    <div className="flex items-stretch gap-0 bg-surface-gray-2 w-full shadow-sm justify-between rounded-t-lg">
+                        <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-e [&>*:not(:last-child)]:border-outline-gray-2">
                             {backTo && (
-                                <Button variant="ghost" size="icon" aria-label={backLabel} title={backLabel} className="rounded-none" asChild>
+                                <Button variant="ghost" theme="gray" isIconButton size="md" aria-label={backLabel} title={backLabel} className="rounded-none" asChild>
                                     {backToExternal ? (
                                         <a href={backTo}>
                                             <ArrowLeft className="size-4" />
@@ -411,7 +411,9 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             )}
                             <Button
                                 variant="ghost"
-                                size="icon"
+                                theme="gray"
+                                isIconButton
+                                size="md"
                                 aria-label="Full Screen"
                                 title="Full Screen"
                                 onClick={fullScreen}
@@ -422,7 +424,9 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             <div className="flex items-center gap-0">
                                 <Button
                                     variant="ghost"
-                                    size="icon"
+                                    theme="gray"
+                                    isIconButton
+                                    size="md"
                                     aria-label="Previous Page"
                                     disabled={currentPage === 0}
                                     onClick={prevPage}
@@ -435,7 +439,9 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                 </div>
                                 <Button
                                     variant="ghost"
-                                    size="icon"
+                                    theme="gray"
+                                    isIconButton
+                                    size="md"
                                     aria-label="Next Page"
                                     disabled={currentPage === images.length - 1}
                                     onClick={nextPage}
@@ -446,7 +452,9 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             </div>
                             <Button
                                 variant="ghost"
-                                size="icon"
+                                theme="gray"
+                                isIconButton
+                                size="md"
                                 aria-label="Zoom In"
                                 title="Zoom In"
                                 onClick={zoomIn}
@@ -456,7 +464,9 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             </Button>
                             <Button
                                 variant="ghost"
-                                size="icon"
+                                theme="gray"
+                                isIconButton
+                                size="md"
                                 aria-label="Zoom Out"
                                 title="Zoom Out"
                                 onClick={zoomOut}
@@ -466,7 +476,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             </Button>
                         </div>
                         {customButtons && (
-                            <div className="flex items-stretch gap-0 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200">
+                            <div className="flex items-stretch gap-0 [&>*:not(:last-child)]:border-e [&>*:not(:last-child)]:border-outline-gray-2">
                                 {customButtons}
                             </div>
                         )}
@@ -478,15 +488,17 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
             )}
 
             <div
-                className="relative pt-10 h-[70vh] md:h-[75vh] lg:h-screen border border-gray-100 w-full"
+                className="relative pt-10 h-[70vh] md:h-[75vh] lg:h-screen border border-outline-gray-2 w-full"
                 style={annotatorImageStyles}
             >
                 <Button
                     variant="outline"
+                    theme="gray"
                     size="sm"
                     type="button"
                     aria-label="Settings"
                     onClick={onOpen}
+                    isIconButton
                     className="absolute right-2 top-11 z-50"
                 >
                     <Settings className="size-4" />

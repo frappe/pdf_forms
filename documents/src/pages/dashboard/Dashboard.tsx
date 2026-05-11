@@ -95,7 +95,7 @@ export const Dashboard = () => {
             {/* Header */}
             <div className="flex items-center justify-between  py-4 border-b">
                 <h1 className="text-xl font-semibold">Form Template</h1>
-                <Button onClick={onOpen}>
+                <Button onClick={onOpen} variant="solid" theme="gray" size="md">
                     <Plus className="size-4" />
                     Add Form Template
                 </Button>
@@ -109,7 +109,7 @@ export const Dashboard = () => {
                         placeholder="ID"
                         value={idFilter}
                         onChange={(e) => setIdFilter(e.target.value)}
-                    className="max-w-xs bg-gray-50 rounded-md"
+                        className="max-w-xs"
                 />
 
                 {/* Source Filter */}
@@ -118,7 +118,7 @@ export const Dashboard = () => {
                         placeholder="Source"
                         value={sourceFilter}
                         onChange={(e) => setSourceFilter(e.target.value)}
-                    className="max-w-xs bg-gray-50 rounded-md"
+                    className="max-w-xs"
                 />
             </div>
 
@@ -135,9 +135,9 @@ export const Dashboard = () => {
             <AddFormTemplateDialog isOpen={isOpen} onClose={handleClose} />
 
             {/* Sticky Pagination */}
-            <div className="sticky bottom-0 bg-background border-t py-3 flex items-center justify-between z-10">
+            <div className="sticky bottom-0 bg-surface-white border-t border-outline-gray-2 py-3 flex items-center justify-between z-10">
                 {/* Page Length Selector */}
-                <div className="flex items-center gap-0 border border-gray-200 rounded-md overflow-hidden">
+                <div className="flex items-center gap-0 border border-outline-gray-2 rounded-md overflow-hidden">
                     {pageLengthOptions.map((option, index) => {
                         const isSelected = selectedPageLength === option
                         const isFirst = index === 0
@@ -146,13 +146,17 @@ export const Dashboard = () => {
                         return (
                             <Button
                                 key={option}
-                                variant="ghost"
+                                variant={isSelected ? 'subtle' : 'ghost'}
+                                theme="gray"
                                 size="sm"
                                 onClick={() => setPageLength(option)}
-                                className={`h-8 px-3 rounded-none border-0 border-r border-gray-200 last:border-r-0 ${isSelected
-                                        ? "bg-transparent hover:bg-gray-200"
-                                        : "bg-gray-100 hover:bg-gray-200"
-                                    } ${isFirst ? "rounded-l-md" : ""} ${isLast ? "rounded-r-md" : ""}`}
+                                className={(
+                                    [
+                                        'h-8 px-3 rounded-none border-0 border-e border-outline-gray-2 last:border-e-0',
+                                        isFirst ? 'rounded-s-md' : '',
+                                        isLast ? 'rounded-e-md' : '',
+                                    ].filter(Boolean).join(' ')
+                                )}
                             >
                                 {option}
                             </Button>
@@ -165,8 +169,8 @@ export const Dashboard = () => {
                     <Button
                         onClick={handleLoadMore}
                         variant="outline"
-                        size="sm"
-                        className="h-8"
+                        theme="gray"
+                        size="md"
                     >
                         Load More
                     </Button>

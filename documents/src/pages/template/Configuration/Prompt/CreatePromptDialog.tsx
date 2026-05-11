@@ -45,10 +45,10 @@ export const CreatePromptDialog = ({ isOpen, onClose, templateID, onRefresh }: {
                             {error && <ErrorBanner error={error} />}
                             <PromptForm isEdit={false} />
                             <DialogFooter>
-                                <Button type="button" variant="outline" onClick={onClose}>
+                                <Button type="button" variant="outline" theme="gray" onClick={onClose}>
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={loading}>
+                                <Button type="submit" variant="solid" theme="gray" disabled={loading}>
                                     {loading ? "Creating..." : "Create"}
                                 </Button>
                             </DialogFooter>

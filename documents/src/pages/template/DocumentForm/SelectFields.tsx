@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { FormItem, FormLabel, FormControl } from '@/components/ui/form'
+import { FormItem, FormLabel, FormControl, FormRequiredIndicator } from '@/components/ui/form'
 import { cn } from '@/lib/utils'
 import type { SchemaField } from '@/pages/template/Configuration/Configurations'
 
@@ -49,6 +49,7 @@ const SearchableSelect = ({
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
+                    theme="gray"
                     role="combobox"
                     aria-expanded={open}
                     className="w-full justify-between"
@@ -121,7 +122,7 @@ const IndexField = ({
 }) => (
     <FormItem>
         <FormLabel>
-            Index <span className="text-destructive">*</span>
+            Index <FormRequiredIndicator className="ms-0.5" />
         </FormLabel>
         <FormControl>
             <Input
@@ -179,7 +180,7 @@ const FieldSelector = ({
             <FormItem>
                 <FormLabel>
                     {schema.description || 'Select Field'}{' '}
-                    <span className="text-destructive">*</span>
+                    <FormRequiredIndicator className="ms-0.5" />
                 </FormLabel>
                 <FormControl>
                     <SearchableSelect
@@ -342,7 +343,7 @@ const SelectFields = ({
                 <FormItem>
                     <FormLabel>
                         {schemaField.description || 'Fields'}{' '}
-                        <span className="text-destructive">*</span>
+                        <FormRequiredIndicator className="ms-0.5" />
                     </FormLabel>
                     <FormControl>
                         <SearchableSelect

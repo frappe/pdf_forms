@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { cva, VariantProps } from "class-variance-authority"
+import { cva, type VariantProps } from "class-variance-authority"
 
 const inputVariants = cva(cn("flex w-full min-w-0 transition-all outline-none border border-transparent",
   "focus-visible:bg-surface-white focus-visible:border-outline-gray-4 focus-visible:shadow-focus-gray",

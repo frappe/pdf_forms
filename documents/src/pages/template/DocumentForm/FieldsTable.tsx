@@ -294,17 +294,18 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                     <div className="flex items-center justify-between gap-2 w-full px-2">
                         <div className="flex items-center gap-4 w-full">
                             <div className="relative flex-1 w-full max-w-[390px]">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" aria-hidden />
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-ink-gray-5 pointer-events-none" aria-hidden />
                                 <Input
                                     type="search"
                                     placeholder="Search by field name or label..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-8 h-8 w-full"
+                                    className="ps-8 w-full"
+                                    inputSize="md"
                                     aria-label="Search fields"
                                 />
                             </div>
-                            <label className="flex items-center gap-2 shrink-0 cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground">
+                            <label className="flex items-center gap-2 shrink-0 cursor-pointer select-none text-sm text-ink-gray-5 hover:text-ink-gray-8">
                                 <Checkbox
                                     checked={showUnmappedOnly}
                                     onCheckedChange={(checked) => setShowUnmappedOnly(checked === true)}
@@ -317,7 +318,9 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                             <Button
                                 type="button"
                                 variant="outline"
+                                theme="gray"
                                 size="sm"
+                                isIconButton
                                 aria-label="Import fields from clipboard"
                                 title="Import fields from clipboard"
                                 onClick={pasteToClipboard}
@@ -327,14 +330,16 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                             <Button
                                 type="button"
                                 variant="outline"
+                                theme="gray"
                                 size="sm"
+                                isIconButton
                                 aria-label="Export fields to clipboard"
                                 title="Export fields to clipboard"
                                 onClick={copyToClipboard}
                             >
                                 <Upload className="size-4" />
                             </Button>
-                            <Button type="submit" size="sm" ref={saveButtonRef} disabled={loading}>
+                            <Button type="submit" size="sm" ref={saveButtonRef} disabled={loading} variant="solid" theme="gray">
                                 {loading && <SpinnerLoader />}
                                 {loading ? 'Saving...' : 'Save'}
                             </Button>
@@ -359,9 +364,9 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                     </div>
                     {error && <ErrorBanner error={error} />}
                     <div className="overflow-y-auto px-2" style={{ height: 'calc(100vh - 200px)' }}>
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-muted/50 hover:bg-muted/50 sticky top-0 z-10">
+                        <Table containerClassName="rounded border border-outline-gray-1">
+                            <TableHeader className="sticky top-0 z-10">
+                                <TableRow>
                                     <TableHead>No.</TableHead>
                                     <TableHead>Label</TableHead>
                                     <TableHead>Field Type</TableHead>
@@ -378,7 +383,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                         onClick={() => onClick(field.name)}
                                         className={
                                             focusedAnnotationData?.name === field.name
-                                                ? 'bg-primary/10 min-h-[50px] ring-inset ring-1 ring-primary/30'
+                                                ? 'bg-surface-blue-2 min-h-[50px] ring-1 ring-inset ring-outline-blue-2'
                                                 : ''
                                         }
                                     >
@@ -396,7 +401,8 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                                             <FormControl>
                                                                 <Input
                                                                     id={`field-label-${field.id}`}
-                                                                    className="min-w-[200px] h-8 text-sm"
+                                                                    className="min-w-[200px]"
+                                                                    inputSize="md"
                                                                     {...f}
                                                                 />
                                                             </FormControl>
@@ -433,7 +439,9 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
-                                                    size="icon-xs"
+                                                    theme="gray"
+                                                    size="sm"
+                                                    isIconButton
                                                     aria-label="Edit"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
@@ -445,9 +453,10 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
-                                                    size="icon-xs"
+                                                    theme="red"
+                                                    size="sm"
+                                                    isIconButton
                                                     aria-label="Delete"
-                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         setDeleteAnnotationID(field.name)
@@ -482,10 +491,10 @@ const FieldValueDisplay = ({ index, fieldId }: { index: number; fieldId: string 
     const fieldValue = useWatch({ name: `fields.${index}.field_value` })
 
     return (
-        <InputGroup className="h-8">
+        <InputGroup size="md">
             <InputGroupInput
                 id={`field-value-${fieldId}`}
-                className="min-w-[200px] pointer-events-none read-only:bg-muted/30"
+                className="min-w-[200px] pointer-events-none"
                 readOnly
                 value={fieldValue ?? ''}
             />
@@ -529,7 +538,9 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    size="icon-xs"
+                                    theme="gray"
+                                    size="sm"
+                                    isIconButton
                                     aria-label="Close"
                                     onClick={onClose}
                                 >
@@ -591,7 +602,9 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                             autoFocus={false}
                             type="button"
                             variant="ghost"
-                            size="icon-xs"
+                            theme="gray"
+                            size="sm"
+                            isIconButton
                             aria-label="Previous Field"
                             onClick={onPreviousClick}
                             disabled={index === 0}
@@ -610,7 +623,9 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                             autoFocus={false}
                             type="button"
                             variant="ghost"
-                            size="icon-xs"
+                            theme="gray"
+                            size="sm"
+                            isIconButton
                             aria-label="Next Field"
                             onClick={onNextClick}
                             disabled={index === totalLength - 1}

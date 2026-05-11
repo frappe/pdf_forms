@@ -49,23 +49,23 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
     return (
         <div className="flex-1 overflow-auto pb-4">
             <Table>
-                <TableHeader className="rounded-md">
-                    <TableRow className="bg-gray-100 border-b-transparent">
-                        <TableHead className="w-12 px-4 rounded-l-md">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-12">
                             <Checkbox
                                 checked={isAllSelected}
                                 onCheckedChange={toggleSelectAll}
                             />
                         </TableHead>
 
-                        <TableHead className="px-4 text-gray-700">Template Name</TableHead>
-                        <TableHead className="px-4 text-gray-700">Description</TableHead>
-                        <TableHead className="px-4 text-gray-700">Status</TableHead>
-                        <TableHead className="px-4 text-gray-700">Source</TableHead>
-                        <TableHead className="px-4 text-right text-gray-700 rounded-r-md">
+                        <TableHead>Template Name</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead className="text-end">
                             <div className="flex items-center justify-end gap-2">
                                 {count !== undefined && (
-                                    <span className="text-xs font-normal text-gray-500">
+                                    <span className="text-xs font-normal text-ink-gray-5">
                                         {currentCount} of {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
                                     </span>
                                 )}
@@ -77,36 +77,33 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                 <TableBody>
                     {isLoading && data.length === 0 ? (
                         Array.from({ length: 8 }).map((_, index) => (
-                            <TableRow
-                                key={index}
-                                className={`border-b h-12 ${index % 2 === 1 ? "bg-gray-50/40" : ""}`}
-                            >
-                                <TableCell className="px-4">
+                            <TableRow key={index} className="h-12">
+                                <TableCell>
                                     <Checkbox disabled />
                                 </TableCell>
 
-                                <TableCell className="px-4">
+                                <TableCell>
                                     <div className="flex items-start gap-2">
-                                        <FileText className="size-4 text-muted-foreground mt-1" />
+                                        <FileText className="size-4 text-ink-gray-5 mt-1" />
 
                                         <Skeleton className="h-4 w-52" />
                                     </div>
                                 </TableCell>
 
-                                <TableCell className="px-4">
+                                <TableCell>
                                     <Skeleton className="h-4 w-64" />
                                 </TableCell>
 
-                                <TableCell className="px-4">
+                                <TableCell>
                                     <Skeleton className="h-5 w-20 rounded-full" />
                                 </TableCell>
 
-                                <TableCell className="px-4">
+                                <TableCell>
                                     <Skeleton className="h-4 w-24" />
                                 </TableCell>
 
-                                <TableCell className="px-4 text-right">
-                                    <Skeleton className="h-4 w-16 ml-auto" />
+                                <TableCell className="text-end">
+                                    <Skeleton className="h-4 w-16 ms-auto" />
                                 </TableCell>
                             </TableRow>
                         ))
@@ -114,38 +111,37 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                         <TableRow>
                             <TableCell
                                 colSpan={6}
-                                className="h-24 text-center text-muted-foreground"
+                                className="h-24 text-center text-ink-gray-5"
                             >
                                 No results.
                             </TableCell>
                         </TableRow>
                     ) : (
-                        data.map((row, index) => (
+                        data.map((row) => (
                             <TableRow
                                 key={row.name}
                                 data-state={selectedRows.has(row.name) ? "selected" : undefined}
-                                className={`border-b h-12 ${index % 2 === 1 ? "bg-gray-50/40" : ""
-                                    }`}
+                                className="h-12"
                             >
-                                <TableCell className="px-4">
+                                <TableCell>
                                     <Checkbox
                                         checked={selectedRows.has(row.name)}
                                         onCheckedChange={() => toggleRowSelection(row.name)}
                                     />
                                 </TableCell>
 
-                                <TableCell className="px-4">
+                                <TableCell>
                                     <div className="flex items-start gap-2">
-                                        <FileText className="size-4 text-muted-foreground mt-1" />
+                                        <FileText className="size-4 text-ink-gray-5 mt-1" />
                                         <Link
                                             to={`/template/${row.name}`}
-                                            className="font-medium underline hover:text-primary"
+                                            className="font-medium text-ink-gray-8 underline hover:text-ink-blue-3"
                                         >
                                             {row.template_name || row.name}
                                         </Link>
                                     </div>
                                 </TableCell>
-                                <TableCell className="px-4">
+                                <TableCell>
                                     {row.description
                                         ? (row.description.length > 50
                                             ? `${row.description.substring(0, 50)}...`
@@ -153,19 +149,19 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                                         : "-"}
                                 </TableCell>
 
-                                <TableCell className="px-4">
+                                <TableCell>
                                     <span
                                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.is_pdf_converted
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-gray-200 text-gray-700"
+                                            ? "bg-surface-green-2 text-ink-green-4"
+                                            : "bg-surface-gray-2 text-ink-gray-6"
                                             }`}
                                     >
                                         {row.is_pdf_converted ? (
                                             "Converted"
                                         ) : row.process_completed === 0 ? (
                                             <div className="flex items-center gap-2">
-                                                <Loader2 className="size-3 text-blue-500 animate-spin" />
-                                                <span className="text-gray-500 text-xs">Processing template...</span>
+                                                <Loader2 className="size-3 text-ink-blue-3 animate-spin" />
+                                                <span className="text-ink-gray-5 text-xs">Processing template...</span>
                                             </div>
                                         ) : row.process_completed === 1 && !row.is_pdf_converted ? (
                                             "Conversion failed"
@@ -173,11 +169,11 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                                     </span>
                                 </TableCell>
 
-                                <TableCell className="px-4">
+                                <TableCell>
                                     {row.source || "-"}
                                 </TableCell>
 
-                                <TableCell className="px-4 text-right">
+                                <TableCell className="text-end">
                                     {convertFrappeDateStringToTimeAgo(row.modified)}
                                 </TableCell>
                             </TableRow>

@@ -85,6 +85,7 @@ export const Editor = ({ jsonValue, templateID, readOnly, ...props }: EditorProp
                     <div className="absolute right-0 top-0 flex gap-2 p-1.5">
                         <Button
                             variant="outline"
+                            theme="gray"
                             size="sm"
                             type="button"
                             onClick={onCopy}
@@ -96,6 +97,7 @@ export const Editor = ({ jsonValue, templateID, readOnly, ...props }: EditorProp
                         </Button>
                         <Button
                             variant="outline"
+                            theme="gray"
                             size="sm"
                             asChild
                             className="gap-1.5"

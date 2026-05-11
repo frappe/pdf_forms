@@ -73,7 +73,6 @@ export const AnnotationDeleteModal = ({ annotationID, templateID, onClose }: Pro
                     <AlertDialogAction
                         onClick={deleteAnnotation}
                         disabled={loading}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                         {loading ? (
                             <>

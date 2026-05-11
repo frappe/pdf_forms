@@ -219,6 +219,7 @@ const LinkFieldCombobox = ({
                 {useInForm ? <FormControl>
                     <Button
                         variant="outline"
+                        theme="gray"
                         role="combobox"
                         ref={buttonRef}
                         tabIndex={0}
@@ -226,7 +227,7 @@ const LinkFieldCombobox = ({
                         aria-expanded={open}
                         aria-readonly={readOnly}
                         className={cn("w-full justify-between font-normal group",
-                            readOnly ? "bg-muted" : ""
+                            readOnly ? "bg-surface-gray-1" : ""
                             , buttonClassName)}>
                         {linkTitle !== "DocType" ? linkTitle : placeholder || placeholder}
 
@@ -240,12 +241,13 @@ const LinkFieldCombobox = ({
                 </FormControl>
                     : <Button
                         variant="outline"
+                        theme="gray"
                         role="combobox"
                         ref={buttonRef}
                         disabled={disabled}
                         aria-expanded={open}
                         className={cn("w-full justify-between font-normal",
-                            readOnly ? "bg-muted" : ""
+                            readOnly ? "bg-surface-gray-1" : ""
                             , buttonClassName)}>
                         {value || placeholder}
 
@@ -264,7 +266,7 @@ const LinkFieldCombobox = ({
                                     <span className="font-medium">
                                         {result.label || result.value}
                                     </span>
-                                    {result.description && <span className="text-xs text-muted-foreground">
+                                    {result.description && <span className="text-xs text-ink-gray-5">
                                         {result.description}
                                     </span>}
                                 </CommandItem>

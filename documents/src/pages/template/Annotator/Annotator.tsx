@@ -258,7 +258,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
     if (templateImages && templateImages.length === 0) {
         // return <Center m='4'><AlertBanner status='warning' heading='We did not find any images.'>This can happen if the PDF file is still being converted to images. Please try again later.</AlertBanner></Center>
         return <div className='flex flex-col items-center justify-center w-full h-full'>
-            <Alert variant='default'>
+            <Alert variant="subtle" theme="amber">
                 <AlertTitle>
                     We did not find any images.
                 </AlertTitle>

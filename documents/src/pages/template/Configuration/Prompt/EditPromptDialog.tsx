@@ -41,10 +41,10 @@ export const EditPromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateI
 
 
                             <DialogFooter>
-                                <Button type="button" variant="outline" onClick={onClose}>
+                                <Button type="button" variant="outline" theme="gray" onClick={onClose}>
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={loading}>
+                                <Button type="submit" variant="solid" theme="gray" disabled={loading}>
                                     {loading ? "Updating..." : "Update"}
                                 </Button>
 
