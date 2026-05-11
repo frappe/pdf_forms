@@ -1,5 +1,5 @@
 import _ from '@/lib/translate'
-import { type Dispatch, type SetStateAction, useCallback } from 'react'
+import { type Dispatch, type ReactNode, type SetStateAction, useCallback } from 'react'
 import { type Accept, useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
 import { formatBytes, getFileExtension } from '@/lib/file'
@@ -86,18 +86,14 @@ const pptIconSizeClasses = {
     xl: 'h-6 w-6'
 }
 
-export const FileTypeIcon = ({
-    fileType,
-    size = 'md',
-    className,
-    showBackground = true
-}: FileTypeIconProps) => {
+type FileTypeIconSize = keyof typeof sizeClasses
 
-
-    const containerClass = cn(sizeClasses[size], className)
-
-    const RenderIcon = ({ className }: { className?: string }) => {
-        switch (fileType.toLowerCase()) {
+function fileTypeIconGlyph(
+    fileType: string,
+    size: FileTypeIconSize = 'md',
+    className?: string
+): ReactNode {
+    switch (fileType.toLowerCase()) {
             case 'pdf':
                 return (
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className={cn("text-white", iconSizeClasses[size], className)}>
@@ -179,8 +175,18 @@ export const FileTypeIcon = ({
                         <path d="M18 22a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12zM13 4l5 5h-5V4zM7 8h3v2H7V8zm0 4h10v2H7v-2zm0 4h10v2H7v-2z" fill="currentColor" />
                     </svg>
                 )
-        }
     }
+}
+
+export const FileTypeIcon = ({
+    fileType,
+    size = 'md',
+    className,
+    showBackground = true
+}: FileTypeIconProps) => {
+
+
+    const containerClass = cn(sizeClasses[size], className)
 
     const getBackgroundColor = () => {
         switch (fileType.toLowerCase()) {
@@ -275,14 +281,14 @@ export const FileTypeIcon = ({
     if (showBackground) {
         return (
             <div className={cn("rounded-md flex items-center justify-center", getBackgroundColor(), containerClass)}>
-                <RenderIcon />
+                {fileTypeIconGlyph(fileType, size)}
             </div>
         )
     }
 
     return (
         <div className={cn("flex items-center justify-center")}>
-            <RenderIcon className={getTextColor()} />
+            {fileTypeIconGlyph(fileType, size, getTextColor())}
         </div>
     )
 }

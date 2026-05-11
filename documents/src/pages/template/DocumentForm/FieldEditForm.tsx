@@ -83,12 +83,13 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                         name={`fields.${index}.formatter`}
                         label="Formatter"
                         rules={{ required: false }}
-                        placeholder="Select formatter"
                     >
-                        <SelectItem value="Date">Date</SelectItem>
-                        <SelectItem value="Currency">Currency</SelectItem>
-                        <SelectItem value="Phone">Phone</SelectItem>
-                        <SelectItem value="Number">Number</SelectItem>
+                        <SelectContent>
+                            <SelectItem value="Date">Date</SelectItem>
+                            <SelectItem value="Currency">Currency</SelectItem>
+                            <SelectItem value="Phone">Phone</SelectItem>
+                            <SelectItem value="Number">Number</SelectItem>
+                        </SelectContent>
                     </SelectFormField>
                 )}
 
