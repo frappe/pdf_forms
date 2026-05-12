@@ -1,4 +1,5 @@
-import { Controller, useFormContext } from "react-hook-form";
+import * as React from "react"
+import { Controller, useFormContext } from "react-hook-form"
 import AceEditor, { type IAceEditorProps } from "react-ace";
 import "ace-builds/src-noconflict/mode-json"
 import "ace-builds/src-noconflict/theme-kuroir"
@@ -39,7 +40,13 @@ export interface AceEditorFieldProps extends IAceEditorProps {
 export const FormCodeEditor = ({ name, value, onChange, onBlur, ...props }: AceEditorFieldProps) => {
     const { control } = useFormContext()
 
-    const editor = (
+    const editorShell = (node: React.ReactNode) => (
+        <div className="min-h-52 rounded overflow-hidden border border-transparent bg-surface-gray-2 transition-colors hover:bg-surface-gray-3">
+            {node}
+        </div>
+    )
+
+    const editor = editorShell(
         <AceEditor
             {...defaultEditorProps}
             name={name}
@@ -47,7 +54,7 @@ export const FormCodeEditor = ({ name, value, onChange, onBlur, ...props }: AceE
             onChange={onChange}
             onBlur={onBlur}
             {...props}
-        />
+        />,
     )
 
     if (value !== undefined && onChange) {
@@ -58,13 +65,14 @@ export const FormCodeEditor = ({ name, value, onChange, onBlur, ...props }: AceE
         <Controller
             name={name}
             control={control}
-            render={({ field }) => (
-                <AceEditor
-                    {...defaultEditorProps}
-                    {...field}
-                    {...props}
-                />
-            )}
+            render={({ field }) =>
+                editorShell(
+                    <AceEditor
+                        {...defaultEditorProps}
+                        {...field}
+                        {...props}
+                    />,
+                )}
         />
     )
 }

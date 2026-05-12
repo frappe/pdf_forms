@@ -106,7 +106,7 @@ export const SettingPageModalContent = ({
                 <DialogHeader>
                     <DialogTitle>Settings</DialogTitle>
                 </DialogHeader>
-                <div className="flex flex-col gap-4 py-4">
+                <div className="flex flex-col gap-4">
                     {error && <ErrorBanner error={error} />}
                     <div className="flex flex-col gap-4">
                         <FormField
@@ -126,36 +126,37 @@ export const SettingPageModalContent = ({
                                 </FormItem>
                             )}
                         />
-                        {repeatPage && (
-                            <div className="flex flex-col gap-4">
-                                <DataField
-                                    name="repeat_after"
-                                    label="Repeat After"
-                                    isRequired
-                                    rules={{ required: "Repeat After is required" }}
-                                    formDescription="Repeat after this page, page index starts from 0."
-                                    inputProps={{ type: "number", min: 0 }}
-                                />
-                                <CodeEditorFormField
-                                    name="copies"
-                                    label="Copies"
-                                    isRequired
-                                    rules={{ required: "Copies is required" }}
-                                    formDescription="Use Number / Jinja template to generate copies."
-                                    editorProps={{
-                                        placeholder: "eg: {{ frappe.utils.date_diff(end_date, start_date) }}",
-                                    }}
-                                />
-                                <DataField
-                                    name="base_index"
-                                    label="Base Index"
-                                    isRequired
-                                    rules={{ required: "Base Index is required" }}
-                                    formDescription="Base index for the copies, it is useful for child table index."
-                                    inputProps={{ type: "number", min: 0 }}
-                                />
-                            </div>
-                        )}
+                        <div className="flex flex-col gap-4">
+                            <DataField
+                                name="repeat_after"
+                                label="Repeat After"
+                                disabled={!repeatPage}
+                                isRequired
+                                rules={{ required: "Repeat After is required" }}
+                                formDescription="Repeat after this page, page index starts from 0."
+                                inputProps={{ type: "number", min: 0 }}
+                            />
+                            <CodeEditorFormField
+                                name="copies"
+                                label="Copies"
+                                disabled={!repeatPage}
+                                isRequired
+                                rules={{ required: "Copies is required" }}
+                                formDescription="Use Number / Jinja template to generate copies."
+                                editorProps={{
+                                    placeholder: "eg: {{ frappe.utils.date_diff(end_date, start_date) }}",
+                                }}
+                            />
+                            <DataField
+                                name="base_index"
+                                label="Base Index"
+                                disabled={!repeatPage}
+                                isRequired
+                                rules={{ required: "Base Index is required" }}
+                                formDescription="Base index for the copies, it is useful for child table index."
+                                inputProps={{ type: "number", min: 0 }}
+                            />
+                        </div>
                     </div>
                 </div>
                 <DialogFooter showCloseButton={false} className="gap-2">

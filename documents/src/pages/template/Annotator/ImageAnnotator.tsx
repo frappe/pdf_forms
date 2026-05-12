@@ -497,9 +497,10 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     size="sm"
                     type="button"
                     aria-label="Settings"
+                    title='Settings'
                     onClick={onOpen}
                     isIconButton
-                    className="absolute right-2 top-11 z-50"
+                    className="absolute right-2 top-10 z-50"
                 >
                     <Settings className="size-4" />
                 </Button>
@@ -522,7 +523,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                         {tooltip.text}
                     </div>
                 )}
-                <div className="absolute bottom-2 left-1 bg-black/80 px-4 py-1 text-white rounded-md shadow-md">
+                <div className="absolute bottom-2 left-1 bg-black/80 px-3 py-1 text-white rounded-md shadow-md">
                     {NUMBER_OF_ANNOTATIONS}
                 </div>
             </div>
