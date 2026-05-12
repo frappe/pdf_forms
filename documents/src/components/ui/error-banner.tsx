@@ -46,6 +46,8 @@ const ErrorBanner = ({ error, overrideHeading, ...props }: ErrorBannerProps) => 
         return getErrorMessages(error)
     }, [error])
 
+    if (!error) return null
+
     return (
         <Alert theme={messages[0]?.indicator === 'yellow' ? 'amber' : "red"} {...props}>
             <AlertCircle />
