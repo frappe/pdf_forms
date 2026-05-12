@@ -86,8 +86,7 @@ function Calendar({
             : "rounded-md ps-2 pe-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-ink-gray-5 [&>svg]:size-3.5",
           defaultClassNames.caption_label
         ),
-        // @ts-expect-error - table is not a valid class name
-        table: "w-full border-collapse",
+        month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
           "text-ink-gray-5 rounded-md flex-1 font-normal text-[0.8rem] select-none",
@@ -195,7 +194,6 @@ function CalendarDayButton({
     <Button
       ref={ref}
       variant="ghost"
-      theme="gray"
       isIconButton
       data-day={day.date.toLocaleDateString()}
       data-selected-single={

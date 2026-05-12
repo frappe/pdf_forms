@@ -52,8 +52,9 @@ const SearchableSelect = ({
                     theme="gray"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between"
+                    className="w-full justify-between font-normal"
                     disabled={isDisabled}
+                    size="md"
                 >
                     {selectedOption ? selectedOption.label : placeholder}
                     <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />

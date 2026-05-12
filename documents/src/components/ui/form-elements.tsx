@@ -4,6 +4,7 @@ import _ from "@/lib/translate"
 import { Input } from "./input"
 import { type ComponentProps, useState } from "react"
 import { parseDate } from "chrono-node"
+import { formatDate, getUserDateFormat, toDate } from "@/lib/date"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Button } from "./button"
 import { CalendarIcon } from "lucide-react"
@@ -11,10 +12,10 @@ import { Calendar } from "./calendar"
 import dayjs from "dayjs"
 import { Textarea } from "./textarea"
 import { Select, SelectContent, SelectTrigger, SelectValue } from "./select"
-import { getUserDateFormat, formatDate, toDate } from "@/lib/date"
-import LinkFieldCombobox, { type LinkFieldComboboxProps } from "../common/LinkField/LinkFieldCombobox"
+import type { LinkFieldComboboxProps } from "../common/LinkField/LinkFieldCombobox"
+import LinkFieldCombobox from "../common/LinkField/LinkFieldCombobox"
 import type { IAceEditorProps } from "react-ace"
-import { FormCodeEditor } from "../common/Editor/FormCodeEditor"
+import { FormCodeEditor } from "@/components/common/Editor/FormCodeEditor"
 
 interface FormElementProps {
     name: string,
@@ -55,11 +56,9 @@ export const DataField = ({ name, rules, label, isRequired, formDescription, inp
 
 interface SelectFieldProps extends FormElementProps {
     children: React.ReactNode
-    /** Shown when no option is selected; forwarded to Radix `SelectValue`. */
-    placeholder?: string
 }
 
-export const SelectFormField = ({ name, rules, label, isRequired, formDescription, hideLabel, children, disabled, readOnly, placeholder }: SelectFieldProps) => {
+export const SelectFormField = ({ name, rules, label, isRequired, formDescription, hideLabel, children, disabled, readOnly }: SelectFieldProps) => {
 
     const { control } = useFormContext()
 
@@ -71,16 +70,18 @@ export const SelectFormField = ({ name, rules, label, isRequired, formDescriptio
         render={({ field }) => (
             <FormItem>
                 <FormLabel className={hideLabel ? 'sr-only' : ''}>{label}{isRequired && <FormRequiredIndicator />}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={disabled || readOnly} aria-readonly={readOnly}>
-                    <FormControl>
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder={placeholder} />
-                        </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        {children}
-                    </SelectContent>
-                </Select>
+                <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={disabled || readOnly} aria-readonly={readOnly}>
+                        <FormControl>
+                            <SelectTrigger className="w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {children}
+                        </SelectContent>
+                    </Select>
+                </FormControl>
                 {formDescription && <FormDescription>{formDescription}</FormDescription>}
                 <FormMessage />
             </FormItem>
@@ -148,10 +149,7 @@ export const DateField = ({ name, rules, label, isRequired, formDescription, inp
                     <Button
                         id="date-picker-button"
                         variant="ghost"
-                        theme="gray"
-                        isIconButton
-                        size="sm"
-                        className="absolute top-1/2 ltr:right-2 rtl:left-2 -translate-y-1/2"
+                        className="absolute top-1/2 ltr:right-2 rtl:left-2 size-6 -translate-y-1/2"
                     >
                         <CalendarIcon className="size-3.5" />
                         <span className="sr-only">{_("Select date")}</span>
@@ -165,10 +163,9 @@ export const DateField = ({ name, rules, label, isRequired, formDescription, inp
                         endMonth={dayjs().add(1, "year").toDate()}
                         captionLayout="dropdown"
                         defaultMonth={date}
-                        onSelect={(selectedDate) => {
-                            if (!selectedDate) return
-                            setValue(formatDate(selectedDate))
-                            field.onChange(formatDate(selectedDate, "YYYY-MM-DD"))
+                        onSelect={(date) => {
+                            setValue(formatDate(date))
+                            field.onChange(formatDate(date, "YYYY-MM-DD"))
                             setOpen(false)
                         }}
                     />
@@ -242,8 +239,9 @@ export const LinkFormField = ({ name, rules, label, isRequired, formDescription,
         )}
     />
 }
+
 interface CodeEditorFormFieldProps extends FormElementProps {
-    editorProps?: Omit<IAceEditorProps, "value" | "onChange" | "name">
+    editorProps?: Omit<Partial<IAceEditorProps>, "value" | "onChange" | "onBlur" | "name">
 }
 
 export const CodeEditorFormField = ({
@@ -255,41 +253,32 @@ export const CodeEditorFormField = ({
     hideLabel,
     disabled,
     readOnly,
-    editorProps = {},
+    editorProps,
 }: CodeEditorFormFieldProps) => {
+
     const { control } = useFormContext()
-    return (
-        <FormField
-            control={control}
-            name={name}
-            disabled={disabled}
-            rules={rules}
-            render={({ field }) => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars -- onBlur from editorProps excluded so we always use field.onBlur
-                const { onBlur: _omit, ...restEditorProps } = editorProps ?? {}
-                return (
-                <FormItem className="flex flex-col">
-                    <FormLabel className={hideLabel ? "sr-only" : ""}>
-                        {label}
-                        {isRequired && <FormRequiredIndicator className="-ml-1" />}
-                    </FormLabel>
-                    <FormControl>
-                        <div className="min-h-[20vh] w-full rounded-md border border-outline-gray-2">
-                            <FormCodeEditor
-                                name={name}
-                                value={field.value ?? ""}
-                                    onChange={(value) => field.onChange(value)}
-                                onBlur={() => field.onBlur()}
-                                readOnly={readOnly}
-                                {...restEditorProps}
-                            />
-                        </div>
-                    </FormControl>
-                    {formDescription && <FormDescription>{formDescription}</FormDescription>}
-                    <FormMessage />
-                </FormItem>
-                )
-            }}
-        />
-    )
+
+    return <FormField
+        control={control}
+        name={name}
+        disabled={disabled}
+        rules={rules}
+        render={({ field }) => (
+            <FormItem className='flex flex-col'>
+                <FormLabel className={hideLabel ? 'sr-only' : ''}>{label}{isRequired && <FormRequiredIndicator />}</FormLabel>
+                <FormControl>
+                    <FormCodeEditor
+                        name={name}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        {...editorProps}
+                        readOnly={readOnly}
+                    />
+                </FormControl>
+                {formDescription && <FormDescription>{formDescription}</FormDescription>}
+                <FormMessage />
+            </FormItem>
+        )}
+    />
 }

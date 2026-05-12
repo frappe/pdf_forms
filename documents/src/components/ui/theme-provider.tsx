@@ -47,7 +47,9 @@ export function ThemeProvider({
         if (theme !== "Automatic") {
             root.classList.remove("light", "dark")
             root.classList.add(theme.toLowerCase())
-            setThemeValue(theme)
+            setTimeout(() => {
+                setThemeValue(theme)
+            }, 0)
             return () => { }
         }
 

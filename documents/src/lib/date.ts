@@ -17,9 +17,10 @@ dayjs.extend(customParseFormat);
 const FRAPPE_DATE_FORMAT = "YYYY-MM-DD"
 
 export const getUserDateFormat = () => {
-
-    return window?.frappe?.boot?.user?.defaults?.date_format.toUpperCase() || window?.frappe.boot.sysdefaults.date_format.toUpperCase()
-
+    const fromUser = window.frappe?.boot?.user?.defaults?.date_format
+    const fromSys = window.frappe?.boot?.sysdefaults?.date_format
+    const raw = fromUser ?? fromSys
+    return raw ? String(raw).toUpperCase() : FRAPPE_DATE_FORMAT
 }
 // const FRAPPE_DATETIME_FORMAT = "YYYY-MM-DD HH:mm:ss"
 

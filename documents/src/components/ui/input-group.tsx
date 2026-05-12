@@ -127,7 +127,6 @@ function InputGroupButton({
   className,
   type = "button",
   variant = "ghost",
-  theme = "gray",
   size = "xs",
   ...props
 }: Omit<React.ComponentProps<typeof Button>, "size"> &
@@ -137,7 +136,6 @@ function InputGroupButton({
       type={type}
       data-size={size}
       variant={variant}
-      theme={theme}
       className={cn(inputGroupButtonVariants({ size }), className)}
       {...props}
     />
@@ -156,25 +154,15 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
-function InputGroupInput({
-  className,
-  ...props
-}: React.ComponentProps<typeof Input>) {
-  return (
-    <Input
-      className={cn(
-        "flex-1 min-w-0 rounded-none shadow-none",
-        className
-      )}
-      {...props}
-    />
-  )
+/** Text field that picks up {@link InputGroup} focus and sizing styles (`data-slot="input"`). */
+function InputGroupInput({ className, ...props }: React.ComponentProps<typeof Input>) {
+  return <Input className={cn("min-w-0 flex-1", className)} {...props} />
 }
 
 export {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupText,
   InputGroupInput,
+  InputGroupText,
 }

@@ -132,7 +132,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                                     )
                                                 }
                                                 accept={{ 'application/pdf': ['.pdf'] }}
-                                                maxFiles={1}
+                                                    multiple={false}
                                                 className={cn(
                                                     fieldState.error &&
                                                         'border-outline-red-3 shadow-focus-red'
@@ -204,6 +204,7 @@ const FormTemplateFormFields = ({ isEdit = false }: { isEdit?: boolean }) => {
                 placeholder='Select a source'
                 isRequired
                 readOnly={isEdit}
+                useInForm={true}
                 rules={{ required: 'Source is required' }}
             />
 
