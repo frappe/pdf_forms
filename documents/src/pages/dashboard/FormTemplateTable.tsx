@@ -1,4 +1,4 @@
-import { useState, memo } from "react"
+import { memo } from "react"
 import { Link } from "react-router-dom"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -19,28 +19,26 @@ interface FormTemplateTableProps {
     count?: number
     currentCount: number
     isLoading?: boolean
+    selectedRows: Set<string>
+    onSelectedRowsChange: (rows: Set<string>) => void
 }
 
-export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }: FormTemplateTableProps) => {
-    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
-
+export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, selectedRows, onSelectedRowsChange }: FormTemplateTableProps) => {
     const toggleRowSelection = (id: string) => {
-        setSelectedRows(prev => {
-            const newSet = new Set(prev)
-            if (newSet.has(id)) {
-                newSet.delete(id)
-            } else {
-                newSet.add(id)
-            }
-            return newSet
-        })
+        const newSet = new Set(selectedRows)
+        if (newSet.has(id)) {
+            newSet.delete(id)
+        } else {
+            newSet.add(id)
+        }
+        onSelectedRowsChange(newSet)
     }
 
     const toggleSelectAll = (checked: boolean) => {
         if (checked) {
-            setSelectedRows(new Set(data.map(item => item.name)))
+            onSelectedRowsChange(new Set(data.map(item => item.name)))
         } else {
-            setSelectedRows(new Set())
+            onSelectedRowsChange(new Set())
         }
     }
 
@@ -131,8 +129,8 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading }:
                                 </TableCell>
 
                                 <TableCell>
-                                    <div className="flex items-start gap-2">
-                                        <FileText className="size-4 text-ink-gray-5 mt-1" />
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="size-4 text-ink-gray-5" />
                                         <Link
                                             to={`/template/${row.name}`}
                                             className="font-medium text-ink-gray-8 underline hover:text-ink-blue-3"

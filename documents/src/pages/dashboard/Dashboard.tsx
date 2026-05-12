@@ -1,13 +1,24 @@
 import { useDebounce } from "@/hooks/useDebounce"
 import { usePaginationWithDoctype } from "@/hooks/usePagination"
-import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetDocList } from "frappe-react-sdk"
-import { useState } from "react"
+import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetDocList, useFrappePostCall } from "frappe-react-sdk"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus } from "lucide-react"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import ErrorBanner from "@/components/ui/error-banner"
+import { Plus, Trash2, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import type { Filter } from "frappe-react-sdk"
 import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
-import ErrorBanner from "@/components/ui/error-banner"
 import { FormTemplateTable } from "./FormTemplateTable"
 import { AddFormTemplateDialog } from "./AddFormTemplateDialog"
 
@@ -16,6 +27,17 @@ export const Dashboard = () => {
     const [isOpen, setOpen] = useState<boolean>(false)
     const [idFilter, setIdFilter] = useState<string>("")
     const [sourceFilter, setSourceFilter] = useState<string>("")
+    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+
+    const { call: deleteItems, loading: deleteLoading, error: deleteError, reset: resetDeleteError } =
+        useFrappePostCall('frappe.desk.reportview.delete_items')
+
+    useEffect(() => {
+        if (deleteConfirmOpen) {
+            resetDeleteError()
+        }
+    }, [deleteConfirmOpen, resetDeleteError])
 
     const onOpen = () => {
         setOpen(true)
@@ -87,6 +109,34 @@ export const Dashboard = () => {
         setPageLength(selectedPageLength + selectedPageLength)
     }
 
+    const confirmBulkDelete = () => {
+        const items = [...selectedRows]
+        if (items.length === 0) return
+
+        deleteItems({
+            doctype: 'Form Template',
+            // Match desk list BulkOperations: array is JSON-stringified in form requests
+            items: JSON.stringify(items),
+        })
+            .then(() => {
+                const n = items.length
+                toast.success(
+                    n > 10
+                        ? `Deletion of ${n} template${n === 1 ? '' : 's'} has been queued.`
+                        : n === 1
+                            ? 'Template deleted'
+                            : `${n} templates deleted`,
+                )
+                setSelectedRows(new Set())
+                setDeleteConfirmOpen(false)
+                void mutate()
+            })
+            .catch((err: unknown) => {
+                toast.error('Could not delete templates')
+                console.error(err)
+            })
+    }
+
     const hasMoreData = count ? selectedPageLength < count : false
     const pageLengthOptions = [20, 100, 500, 2500]
 
@@ -102,24 +152,37 @@ export const Dashboard = () => {
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-3 ">
-                {/* ID Filter */}
+            <div className="flex items-center w-full gap-3 justify-between">
+                <div className="flex items-center gap-3 shrink-0">
                     <Input
                         type="text"
                         placeholder="ID"
                         value={idFilter}
                         onChange={(e) => setIdFilter(e.target.value)}
-                        className="max-w-xs"
-                />
-
-                {/* Source Filter */}
+                        className="min-w-xs"
+                    />
                     <Input
                         type="text"
                         placeholder="Source"
                         value={sourceFilter}
                         onChange={(e) => setSourceFilter(e.target.value)}
-                    className="max-w-xs"
-                />
+                        className="min-w-xs"
+                    />
+                </div>
+                {selectedRows.size > 0 && (
+                    <div className="flex justify-end w-full">
+                        <Button
+                            type="button"
+                            variant="solid"
+                            theme="red"
+                            size="md"
+                            onClick={() => setDeleteConfirmOpen(true)}
+                        >
+                            <Trash2 className="size-4" />
+                            Delete ({selectedRows.size})
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {error && <ErrorBanner error={error} />}
@@ -129,10 +192,46 @@ export const Dashboard = () => {
                     count={count}
                     currentCount={data?.length ?? 0}
                     isLoading={isLoading}
+                    selectedRows={selectedRows}
+                    onSelectedRowsChange={setSelectedRows}
                 />
             </div>
 
             <AddFormTemplateDialog isOpen={isOpen} onClose={handleClose} />
+
+            <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete templates</AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <div className="space-y-4">
+                        {deleteError && <ErrorBanner error={deleteError} />}
+                        <AlertDialogDescription>
+                            Delete {selectedRows.size} selected template
+                            {selectedRows.size === 1 ? '' : 's'}? This cannot be undone.
+                        </AlertDialogDescription>
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={deleteLoading}
+                            onClick={(e) => {
+                                e.preventDefault()
+                                confirmBulkDelete()
+                            }}
+                        >
+                            {deleteLoading ? (
+                                <>
+                                    <Loader2 className="size-4 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                'Delete'
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* Sticky Pagination */}
             <div className="sticky bottom-0 bg-surface-white border-t border-outline-gray-2 py-3 flex items-center justify-between z-10">
