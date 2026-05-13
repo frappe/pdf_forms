@@ -11,17 +11,17 @@ import { useState } from 'react'
 const ViewTemplateLoader = () => {
     return (
         <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
-            <div className="w-full border-b p-4 space-y-4 lg:w-[44%] lg:border-b-0 lg:border-r">
+            <div className="w-full border-b p-2 space-y-4 lg:w-[44%] lg:border-b-0 lg:border-r">
                 <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-[45vh] w-full rounded-lg lg:h-[calc(100vh-7rem)]" />
+                <Skeleton className="h-[45vh] w-full rounded-lg lg:h-[calc(100vh-5rem)]" />
             </div>
-            <div className="w-full p-4 space-y-4 lg:w-[56%]">
+            <div className="w-full p-2 space-y-4 lg:w-[56%]">
                 <div className="grid w-full grid-cols-3 gap-2">
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                 </div>
-                <div className="border rounded-md min-h-[45vh] p-4 space-y-3 lg:min-h-[calc(100vh-7rem)]">
+                <div className="border rounded-md min-h-[45vh] p-4 space-y-3 lg:min-h-[calc(100vh-5rem)]">
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />

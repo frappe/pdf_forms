@@ -90,26 +90,26 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
     }
     if (!error && formTemplate && fields.length > 0) return (
         <div>
-            <Tabs defaultValue="map-fields" className="w-full p-1 px-2">
-                <TabsList variant="subtle" size="md" className="grid w-full grid-cols-4">
+            <Tabs defaultValue="map-fields" className="w-full py-3 px-2">
+                <TabsList variant="underline" size="sm" className="grid w-full grid-cols-4">
                     <TabsTrigger value="map-fields">Mapping Fields</TabsTrigger>
                     <TabsTrigger value="fields">Fields</TabsTrigger>
                     <TabsTrigger value="prompts">Prompts</TabsTrigger>
                     <TabsTrigger value="preview">Preview</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="map-fields" className="mt-2">
+                <TabsContent value="map-fields">
                     <FieldsTable data={fieldsTableData} focusedAnnotation={focusedAnnotation} onClick={onAnnotationClick} mutate={mutateAll}
                         templateID={templateID}
                     />
                 </TabsContent>
-                <TabsContent value="fields" className="mt-2">
+                <TabsContent value="fields">
                     <Configurations />
                 </TabsContent>
-                <TabsContent value="prompts" className="mt-2">
+                <TabsContent value="prompts">
                     <PromptsContent />
                 </TabsContent>
-                <TabsContent value="preview" className="mt-2">
+                <TabsContent value="preview">
                     <Preview templateID={templateID} source={formTemplate.source ?? ''} />
                 </TabsContent>
             </Tabs>

@@ -402,8 +402,8 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
     return (
         <div className="relative w-full" {...props}>
             {showToolbar && (
-                <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto">
-                    <div className="flex items-stretch gap-0 bg-surface-gray-2 w-full shadow-sm justify-between">
+                <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto border-l border-r border-outline-gray-2">
+                    <div className="flex items-stretch gap-0 bg-surface-gray-1 w-full shadow-sm justify-between p-1">
                         <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-e [&>*:not(:last-child)]:border-outline-gray-2">
                             {backTo && (
                                 <Button variant="ghost" theme="gray" isIconButton size="md" aria-label={backLabel} title={backLabel} className="rounded-none" asChild>
@@ -509,7 +509,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     title='Settings'
                     onClick={onOpen}
                     isIconButton
-                    className="absolute right-2 top-10 z-50"
+                    className="absolute right-2 top-12 z-50"
                 >
                     <Settings className="size-4" />
                 </Button>
