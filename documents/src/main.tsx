@@ -11,14 +11,14 @@ if (import.meta.env.DEV) {
   })
     .then(response => response.json())
     .then((values) => {
-      const v = JSON.parse(values.message)
-      if (!window.frappe) window.frappe = {}
-      window.frappe.boot = v
-      window.frappe._messages = v["__messages"] as Record<string, string>
-      const boot = window.frappe.boot
-      if (boot?.docs && window.frappe.model) {
-        window.frappe.model.sync(boot.docs)
-      }
+      const v = values.message;
+      const boot = typeof v === 'string' ? JSON.parse(v) : v;
+      if (!window.frappe) window.frappe = {};
+      frappe.boot = boot;
+      //@ts-expect-error - frappe will be available
+      frappe._messages = frappe.boot["__messages"];
+      //@ts-expect-error - frappe will be available
+      frappe.model.sync(frappe.boot.docs);
       createRoot(document.getElementById('root') as HTMLElement).render(
         <StrictMode>
           <App />
@@ -31,10 +31,8 @@ if (import.meta.env.DEV) {
     })
 
 } else {
-  const boot = window.frappe?.boot
-  if (boot?.docs && window.frappe?.model) {
-    window.frappe.model.sync(boot.docs)
-  }
+  //@ts-expect-error - frappe will be available
+  frappe.model.sync(frappe.boot.docs);
   createRoot(document.getElementById('root') as HTMLElement).render(
     <StrictMode>
       <App />

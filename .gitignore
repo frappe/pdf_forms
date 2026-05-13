@@ -10,6 +10,6 @@ __pycache__
 dist/
 pdf_forms/public/documents
 pdf_forms/public/node_modules
-pdf_forms/www/documents.html
+pdf_forms/www/pdf_forms.html
 
 *.env

@@ -8,7 +8,7 @@
     "build": "vite build --base=/assets/pdf_forms/documents/ && yarn copy-html-entry",
     "lint": "eslint .",
     "preview": "vite preview",
-    "copy-html-entry": "cp ../pdf_forms/public/documents/index.html ../pdf_forms/www/documents.html"
+    "copy-html-entry": "cp ../pdf_forms/public/documents/index.html ../pdf_forms/www/pdf_forms.html"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
