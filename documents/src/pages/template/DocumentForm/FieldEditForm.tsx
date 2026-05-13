@@ -19,13 +19,17 @@ import SelectFields from './SelectFields'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { CREATE_DEFAULT_OPTIONS } from '@/hooks/useReactHotKeys'
 import { getKeyboardMetaKeyString } from '@/lib/utils'
+import _ from '@/lib/translate'
+
+/** Radix Select forbids `SelectItem value=""`. Map this to `""` in the form. */
+const FORMATTER_CLEAR = '__formatter_clear__'
 
 interface FieldEditFormProps {
     index: number
 }
 
 export const FieldEditForm = ({ index }: FieldEditFormProps) => {
-    const { watch, setValue } = useFormContext()
+    const { watch, setValue, control } = useFormContext()
     const { templateID } = useParams<{ templateID: string }>()
 
     const valueType = watch(`fields.${index}.value_type`)
@@ -79,18 +83,40 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                 <ValueTypeField index={index} resetMetaField={resetMetaField} />
 
                 {valueType === 'Field' && (
-                    <SelectFormField
+                    <FormField
+                        control={control}
                         name={`fields.${index}.formatter`}
-                        label="Formatter"
                         rules={{ required: false }}
-                    >
-                        <SelectContent>
-                            <SelectItem value="Date">Date</SelectItem>
-                            <SelectItem value="Currency">Currency</SelectItem>
-                            <SelectItem value="Phone">Phone</SelectItem>
-                            <SelectItem value="Number">Number</SelectItem>
-                        </SelectContent>
-                    </SelectFormField>
+                        render={({ field }) => {
+                            const raw = field.value as string | null | undefined
+                            const empty = raw == null || raw === ''
+                            return (
+                                <FormItem>
+                                    <FormLabel>{_("Formatter")}</FormLabel>
+                                    <Select
+                                        value={empty ? FORMATTER_CLEAR : raw}
+                                        onValueChange={(v) =>
+                                            field.onChange(v === FORMATTER_CLEAR ? '' : v)
+                                        }
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder={_("No formatter")} />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value={FORMATTER_CLEAR}>{_("No formatter")}</SelectItem>
+                                            <SelectItem value="Date">Date</SelectItem>
+                                            <SelectItem value="Currency">Currency</SelectItem>
+                                            <SelectItem value="Phone">Phone</SelectItem>
+                                            <SelectItem value="Number">Number</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )
+                        }}
+                    />
                 )}
 
                 {valueType === 'Prompt' && data?.message?.prompts && (
