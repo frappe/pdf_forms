@@ -6,15 +6,18 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { web_url } from "../../../config/socket"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Copy, Printer } from "lucide-react"
 
 export interface EditorProps extends IAceEditorProps {
     jsonValue: Record<string, unknown>
     templateID: string
     readOnly?: boolean
+    /** Classes for the outer flex shell. Control height with a parent wrapper (e.g. `h-[60vh]`) rather than inside this component. */
+    shellClassName?: string
 }
 
-export const Editor = ({ jsonValue, templateID, readOnly, ...props }: EditorProps) => {
+export const Editor = ({ jsonValue, templateID, readOnly, shellClassName, ...props }: EditorProps) => {
     const [value, setValue] = useState<string>(() =>
         JSON.stringify(jsonValue, null, 2)
     )
@@ -54,12 +57,17 @@ export const Editor = ({ jsonValue, templateID, readOnly, ...props }: EditorProp
     const printUrl = `${web_url}/api/method/pdf_forms.api.print.print_form_template?template_id=${templateID}&data=${encodeURIComponent(value)}&print_name=Print ${encodeURIComponent(templateID)}`
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="relative h-[86vh]">
+        <div
+            className={cn(
+                "flex h-full min-h-0 w-full flex-col gap-4",
+                shellClassName
+            )}
+        >
+            <div className="relative min-h-0 w-full flex-1">
                 <AceEditor
                     placeholder="Enter your sample data here... (JSON format)"
                     width="100%"
-                    height="86vh"
+                    height="100%"
                     mode="json"
                     theme="kuroir"
                     name="MY_EDITOR"

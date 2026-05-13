@@ -79,7 +79,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                             value={selectedDocument ?? ""}
                             onChange={(value) => setSelectedDocument(value || null)}
                             placeholder={`Select ${source}`}
-                            buttonClassName="h-10 rounded-lg"
+                            buttonClassName="h-8"
                         />
                     </div>
                     {printData ? (
@@ -87,8 +87,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                             title="Download PDF"
                             asChild
                             variant="solid"
-                            theme="gray"
-                            size="lg"
+                            size="md"
                             className="shrink-0"
                         >
                             <a
@@ -106,8 +105,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                         <Button
                             type="button"
                             variant="solid"
-                            theme="gray"
-                            size="lg"
+                            size="md"
                             disabled
                             className="shrink-0"
                             aria-label="Download PDF"
@@ -127,14 +125,14 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
 
             {/* Prompt fields used in mapping */}
             {prompts.length > 0 && (
-                <section className="px-5">
-                    <h3 className="text-sm font-medium text-ink-gray-8 mb-4">Prompt fields</h3>
+                <section className="px-2">
+                    <h3 className="text-base font-semibold text-ink-gray-8 mb-2">Prompt fields</h3>
                     <p className="text-xs text-ink-gray-5 mb-4">
                         These prompts are used in this template’s field mapping. Fill them to include in the printed PDF.
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {prompts.map((prompt) => (
-                            <div key={prompt.name ?? prompt.field_name} className="flex flex-col gap-2">
+                            <div key={prompt.name ?? prompt.field_name} className="flex flex-col gap-1">
                                 <Label className="text-sm">
                                     {prompt.label}
                                     {prompt.mandatory === 1 && <span className="text-ink-red-2 ms-0.5">*</span>}
@@ -162,8 +160,6 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                                         placeholder={prompt.description ?? prompt.field_name}
                                         value={String(promptValues[prompt.field_name] ?? "")}
                                         onChange={(e) => setPromptValue(prompt.field_name, e.target.value)}
-                                        inputSize="lg"
-                                        className="rounded-lg"
                                     />
                                 )}
                             </div>
@@ -172,16 +168,16 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                 </section>
             )}
 
-            {/* Document data / empty state */}
-            <section className="overflow-hidden min-h-[280px]">
+            {/* Document data / empty state — height comes from Editor; avoid capping shorter than the editor */}
+            <section className="min-h-0 overflow-x-hidden px-2">
                 {documentData ? (
                     <Accordion type="single" collapsible defaultValue="document-data" className="w-full">
                         <AccordionItem value="document-data" className="border-0">
-                            <AccordionTrigger className="px-5 py-4 text-sm font-medium hover:no-underline hover:bg-surface-gray-2 data-[state=open]:border-b data-[state=open]:border-outline-gray-2">
+                            <AccordionTrigger className="p-2 text-sm font-medium hover:no-underline hover:bg-surface-gray-2 data-[state=open]:border-b data-[state=open]:border-outline-gray-2">
                                 Document Data
                             </AccordionTrigger>
                             <AccordionContent className="px-0 pb-0 pt-0">
-                                <div>
+                                <div className="min-h-[240px] h-[min(65vh,calc(100vh-12rem))] w-full">
                                     <Editor
                                         jsonValue={documentData as Record<string, unknown>}
                                         templateID={templateID}
