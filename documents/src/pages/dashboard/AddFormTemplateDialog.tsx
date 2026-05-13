@@ -111,7 +111,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                         </DialogHeader>
 
                         <div className="flex flex-col gap-4 py-6">
-                            {uploading && uploadProgress ? <FileUploadBanner uploadProgress={uploadProgress} />
+                            {uploading && uploadProgress ? <FileUploadBanner uploadProgress={uploadProgress} label={files.length > 0 ? files[0].name : 'Uploading...'} />
                                 : <FormField
                                 control={control}
                                 name="files"

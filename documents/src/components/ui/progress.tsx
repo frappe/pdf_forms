@@ -48,6 +48,8 @@ function Progress({
       <ProgressPrimitive.Root
         data-slot="progress"
         data-size={size}
+        value={value ?? null}
+        max={100}
         className={cn(
           progressVariants({ size }),
           className
