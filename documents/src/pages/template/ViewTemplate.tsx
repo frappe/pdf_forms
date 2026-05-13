@@ -89,6 +89,7 @@ export const ViewTemplate = () => {
                                             variant={mobilePane === 'annotator' ? 'solid' : 'outline'}
                                             theme="gray"
                                             onClick={() => setMobilePane('annotator')}
+                                            title="PDF Annotator"
                                         >
                                             PDF Annotator
                                         </Button>
@@ -97,6 +98,7 @@ export const ViewTemplate = () => {
                                             variant={mobilePane === 'editor' ? 'solid' : 'outline'}
                                             theme="gray"
                                             onClick={() => setMobilePane('editor')}
+                                            title="Field Editor"
                                         >
                                             Field Editor
                                         </Button>

@@ -35,10 +35,10 @@ export const DeletePromptDialog = ({ isOpen, onClose, prompt, onRefresh, templat
                     </DialogDescription>
                 </div>
                 <DialogFooter>
-                    <Button type="button" variant="outline" theme="gray" onClick={onClose}>
+                    <Button type="button" variant="outline" theme="gray" onClick={onClose} title="Cancel">
                         Cancel
                     </Button>
-                    <Button variant="solid" theme="red" disabled={loading} onClick={onSubmit}>
+                    <Button variant="solid" theme="red" disabled={loading} onClick={onSubmit} title="Delete">
                         {loading ? "Deleting..." : "Delete"}
                     </Button>
                 </DialogFooter>

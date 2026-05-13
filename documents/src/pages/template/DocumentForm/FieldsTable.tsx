@@ -327,7 +327,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                             >
                                 <Upload className="size-4" />
                             </Button>
-                            <Button type="submit" size="sm" ref={saveButtonRef} disabled={loading} variant="solid" theme="gray">
+                            <Button type="submit" size="sm" ref={saveButtonRef} disabled={loading} variant="solid" theme="gray" title="Save">
                                 {loading && <SpinnerLoader />}
                                 {loading ? 'Saving...' : 'Save'}
                             </Button>
@@ -431,6 +431,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                                     size="sm"
                                                     isIconButton
                                                     aria-label="Edit"
+                                                    title="Edit"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         onFieldOpen(index)
@@ -445,6 +446,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                                     size="sm"
                                                     isIconButton
                                                     aria-label="Delete"
+                                                    title="Delete"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         setDeleteAnnotationID(field.name)
@@ -531,6 +533,7 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
                                     isIconButton
                                     aria-label="Close"
                                     onClick={onClose}
+                                    title="Close"
                                 >
                                     <X className="size-4" />
                                 </Button>
@@ -594,6 +597,7 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                             size="sm"
                             isIconButton
                             aria-label="Previous Field"
+                            title="Previous Field"
                             onClick={onPreviousClick}
                             disabled={index === 0}
                         >
@@ -615,6 +619,7 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                             size="sm"
                             isIconButton
                             aria-label="Next Field"
+                            title="Next Field"
                             onClick={onNextClick}
                             disabled={index === totalLength - 1}
                         >

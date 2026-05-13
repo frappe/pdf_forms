@@ -42,9 +42,9 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
             <div className="flex flex-col h-full min-h-[200px]">
                 {templateID && (
                     <div className="flex justify-end py-2 shrink-0">
-                        <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)}>
+                        <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)} title="Add Prompt">
                             <Plus className="size-4" />
-                            Add prompt
+                            Add Prompt
                         </Button>
                     </div>
                 )}
@@ -65,16 +65,16 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
     }
 
     return (
-        <div className="flex flex-col gap-2 px-2">
+        <div className="flex flex-col gap-2">
             {templateID && (
                 <div className="flex justify-end py-2">
-                    <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)}>
+                    <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)} title="Add Prompt">
                         <Plus className="size-4" />
-                        Add prompt
+                        Add Prompt
                     </Button>
                 </div>
             )}
-            <div className="overflow-y-auto px-2 flex flex-col gap-2" style={{ height: 'calc(100vh - 210px)' }}>
+            <div className="overflow-y-auto flex flex-col gap-2 max-h-[85vh]">
                 {prompts.map((prompt, index) => (
                     <div
                         key={prompt.name || index}
@@ -102,6 +102,7 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                                     isIconButton
                                     onClick={() => onEdit(prompt)}
                                     aria-label="Edit prompt"
+                                    title="Edit prompt"
                                 >
                                     <Pencil className="size-3.5" />
                                 </Button>
@@ -113,6 +114,7 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                                     isIconButton
                                     onClick={() => onDelete(prompt)}
                                     aria-label="Delete prompt"
+                                    title="Delete prompt"
                                 >
                                     <Trash2 className="size-3.5" />
                                 </Button>
@@ -136,7 +138,8 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                                     })
                                 }}
                                 aria-label="Copy field name"
-                        >
+                                title="Copy field name"
+                            >
                                 <Copy className="size-3" />
                             </Button>
                         </div>

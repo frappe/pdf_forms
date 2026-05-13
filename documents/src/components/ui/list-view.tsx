@@ -16,7 +16,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { useDebounceCallback } from "usehooks-ts"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useDirection } from "./direction"
 
@@ -504,7 +504,11 @@ function ListViewInner<TData>({
  * Div-based list with CSS Grid columns, optional resize handles, row virtualization, and frappe-ui–aligned Espresso tokens.
  */
 export function ListView<TData>(props: ListViewProps<TData>) {
-    return <ListViewInner {...props} />
+    return (
+        <TooltipProvider delayDuration={400}>
+            <ListViewInner {...props} />
+        </TooltipProvider>
+    )
 }
 
 export type { ColumnSizingState, RowSelectionState }

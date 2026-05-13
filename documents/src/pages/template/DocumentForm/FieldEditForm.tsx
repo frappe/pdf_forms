@@ -256,6 +256,7 @@ const ToggleDefaultValue = ({ index }: { index: number }) => {
                 isIconButton
                 className="rounded-none border-r border-outline-gray-2"
                 onClick={() => setValue(`fields.${index}.is_default_jinja`, false)}
+                title="Toggle Default Value"
             >
                 <Type className="size-4" />
             </Button>
@@ -267,6 +268,7 @@ const ToggleDefaultValue = ({ index }: { index: number }) => {
                 isIconButton
                 className="rounded-none"
                 onClick={() => setValue(`fields.${index}.is_default_jinja`, true)}
+                title="Toggle Default Value"
             >
                 <Code className="size-4" />
             </Button>

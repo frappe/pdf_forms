@@ -84,6 +84,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     </div>
                     {printData ? (
                         <Button
+                            title="Download PDF"
                             asChild
                             variant="solid"
                             theme="gray"
@@ -110,6 +111,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                             disabled
                             className="shrink-0"
                             aria-label="Download PDF"
+                                title="Download PDF"
                         >
                             <Printer className="size-4" />
                             Download PDF

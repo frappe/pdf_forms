@@ -160,7 +160,7 @@ export const SettingPageModalContent = ({
                     </div>
                 </div>
                 <DialogFooter showCloseButton={false} className="gap-2">
-                <Button type="button" variant="ghost" theme="gray" onClick={onClose}>
+                    <Button type="button" variant="ghost" theme="gray" onClick={onClose} title="Close">
                     Close
                 </Button>
                 <Button
@@ -169,6 +169,7 @@ export const SettingPageModalContent = ({
                     theme="gray"
                     onClick={methods.handleSubmit(onSubmit)}
                     disabled={loading}
+                        title="Save"
                 >
                         {loading ? "Saving..." : "Save"}
                     </Button>

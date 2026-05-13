@@ -15,7 +15,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
         return (
             <div
                 key={fieldKey}
-                className="py-1 border-b border-outline-gray-2 last:border-b-0 max-h-[87vh] overflow-y-auto"
+                className="py-1 border-b border-outline-gray-2 last:border-b-0 max-h-[87vh] overflow-y-auto pr-1"
             >
                 {/* Render properties recursively if they exist */}
                 {field.properties && field.schema_type !== 'object' && (
@@ -100,6 +100,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
                     variant="outline"
                     theme="gray"
                     asChild
+                    title="Download"
                 >
                     <a
                         href={`${web_url}/api/method/pdf_forms.pdf_forms.doctype.form_template.form_template.download_data_source_sheet?template_id=${templateID}`}

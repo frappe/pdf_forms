@@ -145,7 +145,7 @@ export const Dashboard = () => {
             {/* Header */}
             <div className="flex items-center justify-between  py-4 border-b">
                 <h1 className="text-xl font-semibold">Form Template</h1>
-                <Button onClick={onOpen} variant="solid" theme="gray" size="md">
+                <Button onClick={onOpen} variant="solid" theme="gray" size="md" title="Add Form Template">
                     <Plus className="size-4" />
                     Add Form Template
                 </Button>
@@ -177,6 +177,7 @@ export const Dashboard = () => {
                             theme="red"
                             size="md"
                             onClick={() => setDeleteConfirmOpen(true)}
+                            title="Delete templates"
                         >
                             <Trash2 className="size-4" />
                             Delete ({selectedRows.size})
@@ -266,6 +267,7 @@ export const Dashboard = () => {
                 {/* Load More Button */}
                 {hasMoreData && (
                     <Button
+                        title="Load more"
                         onClick={handleLoadMore}
                         variant="outline"
                         theme="gray"

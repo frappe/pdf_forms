@@ -440,6 +440,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                     disabled={currentPage === 0}
                                     onClick={prevPage}
                                     className="rounded-none"
+                                    title="Previous Page"
                                 >
                                     <ChevronLeft className="size-4" />
                                 </Button>
@@ -455,6 +456,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                     disabled={currentPage === images.length - 1}
                                     onClick={nextPage}
                                     className="rounded-none"
+                                    title="Next Page"
                                 >
                                     <ChevronRight className="size-4" />
                                 </Button>

@@ -155,6 +155,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                 theme="gray"
                                 onClick={() => handleClose()}
                                 disabled={isLoading}
+                                title="Cancel"
                             >
                                 Cancel
                             </Button>
@@ -163,6 +164,7 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                 variant="solid"
                                 theme="gray"
                                 disabled={isLoading}
+                                title="Create"
                             >
                                 {isLoading ? 'Creating…' : 'Create'}
                             </Button>

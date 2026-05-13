@@ -91,6 +91,7 @@ export const Editor = ({ jsonValue, templateID, readOnly, ...props }: EditorProp
                             onClick={onCopy}
                             aria-label="Copy"
                             className="gap-1.5"
+                            title="Copy to clipboard"
                         >
                             <Copy className="size-4" />
                             Copy
@@ -101,6 +102,7 @@ export const Editor = ({ jsonValue, templateID, readOnly, ...props }: EditorProp
                             size="sm"
                             asChild
                             className="gap-1.5"
+                            title="Print"
                         >
                             <a
                                 href={printUrl}

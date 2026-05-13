@@ -94,6 +94,7 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                         variant="ghost"
                         theme="gray"
                         className="h-full rounded-none"
+                        title="Sync"
                     >
                         <div className="flex items-center">
                             <CheckCircle2 className="size-4" />
