@@ -15,7 +15,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
         return (
             <div
                 key={fieldKey}
-                className="py-2 border-b border-outline-gray-2 last:border-b-0 max-h-[80vh] overflow-y-auto"
+                className="py-1 border-b border-outline-gray-2 last:border-b-0 max-h-[87vh] overflow-y-auto"
             >
                 {/* Render properties recursively if they exist */}
                 {field.properties && field.schema_type !== 'object' && (
@@ -89,8 +89,8 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
     };
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
                 <h2 className="text-xl font-semibold tracking-tight text-ink-gray-8">
                     {source}
                 </h2>
@@ -175,6 +175,7 @@ const FieldRow: React.FC<{ field: SchemaField; fieldKey?: string }> = ({ field, 
                                 copyFieldName()
                             }}
                             aria-label="Copy field name"
+                            title='Copy field name'
                         >
                             <Copy className="size-3" />
                         </Button>
