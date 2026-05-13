@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
-import { useFrappePostCall, useSWRConfig } from "frappe-react-sdk"
+import { useFrappePostCall } from "frappe-react-sdk"
 import type { KeyedMutator } from 'swr'
 import { useBoolean } from "usehooks-ts"
 import { useCopyToClipboardHotkey, usePasteFromClipboardHotkey, useSaveHotkey } from "../../../hooks/useReactHotKeys"
@@ -86,6 +86,14 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
     })
     const { handleSubmit, control, reset, getValues } = methods
 
+    useEffect(() => {
+        reset({
+            fields: defaultFields ?? [],
+            font: data.font,
+            font_size: data.font_size,
+        })
+    }, [defaultFields, data.font, data.font_size, reset])
+
     const { fields } = useFieldArray({
         control,
         name: "fields"
@@ -138,32 +146,12 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         return () => cancelAnimationFrame(id)
     }, [focusedAnnotation, fields]);
 
-    const { mutate: globalMutate } = useSWRConfig()
-
     const [deleteAnnotationID, setDeleteAnnotationID] = useState<string | null>(null)
 
     const deleteAnnotationModalClose = useCallback(() => {
         setDeleteAnnotationID(null)
-        globalMutate('form_template_image')
-        globalMutate('form_template_annotations')
-        globalMutate('form_template_meta')
-        mutate().then((doc) => {
-            const defaultValue = doc?.map((field: FormTemplateField) => {
-                return {
-                    name: field.name,
-                    field_label: field.field_label,
-                    field_type: field.field_type,
-                    value_type: field.value_type,
-                    field_value: field.field_value,
-                    annotation_type: field.annotation_type
-                }
-            })
 
-            reset({
-                fields: defaultValue
-            })
-        })
-    }, [mutate, setDeleteAnnotationID, globalMutate, reset])
+    }, [setDeleteAnnotationID,])
 
     const [index, setIndex] = useState<number | null>(null)
 

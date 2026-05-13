@@ -1,4 +1,4 @@
-import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetDoc } from "frappe-react-sdk"
+import { useFrappeDocTypeEventListener, useFrappeDocumentEventListener, useFrappeEventListener, useFrappeGetDoc } from "frappe-react-sdk"
 import { useAnnotationFocus } from "../../../hooks/useAnnotationFocus"
 import type { FormTemplateField } from "@/types/FormPrinter/FormTemplateField"
 import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
@@ -8,6 +8,7 @@ import ErrorBanner from "@/components/ui/error-banner"
 import { Configurations, PromptsContent } from "../Configuration/Configurations"
 import { FieldsTable } from "./FieldsTable"
 import { Preview } from "./Preview"
+import { useMemo } from "react"
 
 interface DocumentFormProps {
     templateID: string,
@@ -21,10 +22,18 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
         revalidateIfStale: false
     })
 
-    const fields: FormTemplateField[] = [...(formTemplate?.form_template_field ?? [])].sort((a, b) =>
+    const fields: FormTemplateField[] = useMemo(() => [...(formTemplate?.form_template_field ?? [])].sort((a, b) =>
         (a.creation ?? "").localeCompare(b.creation ?? "")
-    )
+    ), [formTemplate])
 
+    const fieldsTableData = useMemo(
+        () => ({
+            field: fields,
+            font: formTemplate?.font ?? 'helvetica',
+            font_size: Number(formTemplate?.font_size ?? 12),
+        }),
+        [fields, formTemplate?.font, formTemplate?.font_size],
+    )
     const mutateAll = () => {
         return mutate().then(() => fields)
     }
@@ -41,18 +50,12 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
         }
     })
 
-    useFrappeEventListener('annotations_updated', (data) => {
-        if (data.form_template_id === templateID) {
-            mutate()
-        }
-    })
 
-    useFrappeEventListener('doc_update', (data) => {
+    useFrappeDocumentEventListener('Form Template', templateID, (data) => {
         if (data.doctype === 'Form Template' && data.name === templateID) {
             mutate()
         }
     })
-
 
     const { focusedAnnotation, onAnnotationClick } = useAnnotationFocus(templateID)
 
@@ -96,11 +99,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                 </TabsList>
 
                 <TabsContent value="map-fields" className="mt-2">
-                    <FieldsTable data={{
-                        field: fields,
-                        font: formTemplate.font ?? 'helvetica',
-                        font_size: Number(formTemplate.font_size ?? 12)
-                    }} focusedAnnotation={focusedAnnotation} onClick={onAnnotationClick} mutate={mutateAll}
+                    <FieldsTable data={fieldsTableData} focusedAnnotation={focusedAnnotation} onClick={onAnnotationClick} mutate={mutateAll}
                         templateID={templateID}
                     />
                 </TabsContent>

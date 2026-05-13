@@ -44,6 +44,8 @@ interface Props {
      * Required when leaving the documents SPA to Frappe Desk (basename would break &lt;Link to="/app/..."&gt;).
      */
     backToExternal?: boolean,
+    /** Increment after a successful delete to reset pan/zoom to the default (full-page) view. */
+    resetZoomNonce?: number,
 }
 
 function getTooltipText(annotationId: string, labels?: Record<string, AnnotationLabelMap>): string | null {
@@ -52,11 +54,12 @@ function getTooltipText(annotationId: string, labels?: Record<string, Annotation
     return l.field_label?.trim() || l.field_name?.trim() || null
 }
 
-export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onDualView, viewMode, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, ...props }: Props) => {
+export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, resetZoomNonce = 0, ...props }: Props) => {
 
     const [currentPage, setCurrentPage] = useState(0);
 
     const mounted = useRef(false);
+    const lastResetZoomNonce = useRef(0);
 
     const [annotator, setAnnotator] = useState<any>(null);
 
@@ -145,6 +148,12 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
 
         }
     }, [annotator])
+
+    useEffect(() => {
+        if (!viewer || !resetZoomNonce || resetZoomNonce <= lastResetZoomNonce.current) return
+        lastResetZoomNonce.current = resetZoomNonce
+        viewer.viewport.goHome(true)
+    }, [resetZoomNonce, viewer])
 
     useEffect(() => {
         if (annotator && annotations) {
