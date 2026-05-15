@@ -4,6 +4,7 @@ import { Alert, AlertDescription, type AlertProps, AlertTitle } from '@/componen
 import { AlertCircle } from 'lucide-react'
 import MarkdownRenderer from '@/components/ui/markdown'
 import { useMemo } from 'react'
+import _ from '@/lib/translate'
 
 type ErrorBannerProps = AlertProps & {
     error?: FrappeError | null,
@@ -17,7 +18,7 @@ interface ParsedErrorMessage {
 }
 
 const parseHeading = (message?: ParsedErrorMessage) => {
-    if (message?.title === 'Message' || message?.title === 'Error') return "There was an error."
+    if (message?.title === 'Message' || message?.title === 'Error') return (_("There was an error."))
     return message?.title
 }
 

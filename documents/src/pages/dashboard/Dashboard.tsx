@@ -274,7 +274,7 @@ export const Dashboard = () => {
                 {/* Load More Button */}
                 {hasMoreData && (
                     <Button
-                        title="Load more templates"
+                        title={_("Load more templates")}
                         onClick={handleLoadMore}
                         variant="outline"
                         theme="gray"
