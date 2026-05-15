@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ImageAnnotator } from './ImageAnnotator'
 import { AnnotationDeleteModal } from './AnnotationDeleteModal'
 import { AnnotationSyncState } from './AnnotationSyncState'
+import _ from '@/lib/translate'
 
 interface GetTemplateFieldResponse {
     name: string,
@@ -276,10 +277,10 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
         return <div className='flex flex-col items-center justify-center w-full h-full'>
             <Alert variant="subtle" theme="amber">
                 <AlertTitle>
-                    We did not find any images.
+                    {_("We did not find any images.")}
                 </AlertTitle>
                 <AlertDescription>
-                    This can happen if the PDF file is still being converted to images. Please try again later.
+                    {_("This can happen if the PDF file is still being converted to images. Please try again later.")}
                 </AlertDescription>
             </Alert>
         </div>

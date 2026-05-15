@@ -8,6 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { FormItem, FormLabel, FormControl, FormRequiredIndicator } from '@/components/ui/form'
 import { cn } from '@/lib/utils'
 import type { SchemaField } from '@/pages/template/Configuration/Configurations'
+import _ from '@/lib/translate'
 
 interface FieldMap {
     field: string
@@ -27,7 +28,7 @@ interface SearchableSelectProps {
 const SearchableSelect = ({
     value,
     onChange,
-    placeholder = 'Select an option',
+    placeholder = _("{0}", ["Select an option"]),
     isDisabled = false,
     isSearchable = true,
     options,
@@ -68,7 +69,7 @@ const SearchableSelect = ({
                 <Command shouldFilter={false} className="w-full">
                     {isSearchable && (
                         <CommandInput
-                            placeholder="Search..."
+                            placeholder={_("{0}", ["Search..."])}
                             value={searchQuery}
                             onValueChange={setSearchQuery}
                         />
@@ -82,7 +83,7 @@ const SearchableSelect = ({
                         }}
                     >
                         <CommandList>
-                            <CommandEmpty>No options found.</CommandEmpty>
+                            <CommandEmpty>{_("No options found.")}</CommandEmpty>
                             <CommandGroup>
                                 {filteredOptions.map((option) => (
                                     <CommandItem
@@ -123,12 +124,12 @@ const IndexField = ({
 }) => (
     <FormItem>
         <FormLabel>
-            Index <FormRequiredIndicator className="ms-0.5" />
+            {_("Index")} <FormRequiredIndicator className="ms-0.5" />
         </FormLabel>
         <FormControl>
             <Input
                 type="number"
-                placeholder="Index"
+                placeholder={_("{0}", ["Index"])}
                 value={index || ''}
                 onChange={(e) => onIndexChange(e.target.value)}
             />
@@ -180,14 +181,14 @@ const FieldSelector = ({
         <>
             <FormItem>
                 <FormLabel>
-                    {schema.description || 'Select Field'}{' '}
+                    {_("{0}", [schema.description ?? 'Select Field'])}{' '}
                     <FormRequiredIndicator className="ms-0.5" />
                 </FormLabel>
                 <FormControl>
                     <SearchableSelect
                         value={currentMap.field}
                         onChange={handleFieldChange}
-                        placeholder="Select field"
+                        placeholder={_("Select field")}
                         isSearchable
                         options={fieldOptions}
                     />
@@ -343,14 +344,14 @@ const SelectFields = ({
             ) : (
                 <FormItem>
                     <FormLabel>
-                        {schemaField.description || 'Fields'}{' '}
+                            {_("{0}", [schemaField.description || 'Fields'])}{' '}
                         <FormRequiredIndicator className="ms-0.5" />
                     </FormLabel>
                     <FormControl>
                         <SearchableSelect
                             value=""
                             onChange={(value) => setFieldMap({ field: value })}
-                            placeholder={`Select ${schemaField.description || 'field'}`}
+                                placeholder={_("Select {0}", [_("{0}", [schemaField.description ?? 'field'])])}
                             isSearchable
                                 options={fieldOptions}
                         />

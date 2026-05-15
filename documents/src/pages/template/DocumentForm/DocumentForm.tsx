@@ -9,6 +9,7 @@ import { Configurations, PromptsContent } from "../Configuration/Configurations"
 import { FieldsTable } from "./FieldsTable"
 import { Preview } from "./Preview"
 import { useMemo } from "react"
+import _ from "@/lib/translate"
 
 interface DocumentFormProps {
     templateID: string,
@@ -71,8 +72,8 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
         return (
             <div className="flex justify-center items-center m-4">
                 <Alert>
-                    <AlertTitle>Loading template...</AlertTitle>
-                    <AlertDescription>Fetching fields and configuration.</AlertDescription>
+                    <AlertTitle>{_("Loading template...")}</AlertTitle>
+                    <AlertDescription>{_("Fetching fields and configuration.")}</AlertDescription>
                 </Alert>
             </div>
         )
@@ -82,8 +83,8 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
         return (
             <div className="flex justify-center items-center m-4">
                 <Alert theme="amber">
-                    <AlertTitle>We did not find any fields.</AlertTitle>
-                    <AlertDescription>The system could not detect any fields, try manually creating a field.</AlertDescription>
+                    <AlertTitle>{_("We did not find any fields.")}</AlertTitle>
+                    <AlertDescription>{_("The system could not detect any fields, try manually creating a field.")}</AlertDescription>
                 </Alert>
             </div>
         )
@@ -92,10 +93,10 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
         <div>
             <Tabs defaultValue="map-fields" className="w-full py-3 px-2">
                 <TabsList variant="underline" size="sm" className="grid w-full grid-cols-4">
-                    <TabsTrigger value="map-fields">Mapping Fields</TabsTrigger>
-                    <TabsTrigger value="fields">Fields</TabsTrigger>
-                    <TabsTrigger value="prompts">Prompts</TabsTrigger>
-                    <TabsTrigger value="preview">Preview</TabsTrigger>
+                    <TabsTrigger value="map-fields">{_("Mapping Fields")}</TabsTrigger>
+                    <TabsTrigger value="fields">{_("Fields")}</TabsTrigger>
+                    <TabsTrigger value="prompts">{_("Prompts")}</TabsTrigger>
+                    <TabsTrigger value="preview">{_("Preview")}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="map-fields">

@@ -6,6 +6,7 @@ import { PromptForm } from "./PromptForm"
 import { FormProvider, useForm } from "react-hook-form"
 import ErrorBanner from "@/components/ui/error-banner"
 import { Button } from "@/components/ui/button"
+import _ from "@/lib/translate"
 
 export const CreatePromptDialog = ({ isOpen, onClose, templateID, onRefresh }: { isOpen: boolean, onClose: () => void, templateID: string, onRefresh: () => void }) => {
 
@@ -25,11 +26,11 @@ export const CreatePromptDialog = ({ isOpen, onClose, templateID, onRefresh }: {
             form_template_id: templateID,
             prompt: data,
         }).then(() => {
-            toast.success("Prompt created successfully")
+            toast.success(_("Prompt created successfully"))
             onRefresh()
             onClose()
         }).catch(() => {
-            toast.error("Failed to create prompt")
+            toast.error(_("Failed to create prompt"))
         })
     }
 
@@ -37,7 +38,7 @@ export const CreatePromptDialog = ({ isOpen, onClose, templateID, onRefresh }: {
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create Prompt</DialogTitle>
+                    <DialogTitle>{_("Create Prompt")}</DialogTitle>
                 </DialogHeader>
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -45,11 +46,11 @@ export const CreatePromptDialog = ({ isOpen, onClose, templateID, onRefresh }: {
                             {error && <ErrorBanner error={error} />}
                             <PromptForm isEdit={false} />
                             <DialogFooter>
-                                <Button type="button" variant="outline" theme="gray" onClick={onClose} title="Cancel">
-                                    Cancel
+                                <Button type="button" variant="outline" theme="gray" onClick={onClose} title={_("Cancel")}>
+                                    {_("Cancel")}
                                 </Button>
-                                <Button type="submit" variant="solid" theme="gray" disabled={loading} title="Create">
-                                    {loading ? "Creating..." : "Create"}
+                                <Button type="submit" variant="solid" theme="gray" disabled={loading} title={_("Create")}>
+                                    {loading ? _("Creating...") : _("Create")}
                                 </Button>
                             </DialogFooter>
                         </div>

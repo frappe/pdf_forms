@@ -16,6 +16,7 @@ import { FileJson, Printer } from "lucide-react"
 import { web_url } from "@/config/socket"
 import ErrorBanner from "@/components/ui/error-banner"
 import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
+import _ from "@/lib/translate"
 
 export interface PreviewProps {
     templateID: string
@@ -72,19 +73,19 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
                     <div className="flex flex-1 flex-col gap-2 min-w-0 sm:min-w-[240px] sm:max-w-xs">
                         <Label>
-                            Select Document
+                            {_("Select Document")}
                         </Label>
                         <LinkFieldCombobox
                             doctype={source}
                             value={selectedDocument ?? ""}
                             onChange={(value) => setSelectedDocument(value || null)}
-                            placeholder={`Select ${source}`}
+                            placeholder={_("Select {0}", [source])}
                             buttonClassName="h-8"
                         />
                     </div>
                     {printData ? (
                         <Button
-                            title="Download PDF"
+                            title={_("Download PDF")}
                             asChild
                             variant="solid"
                             size="md"
@@ -98,7 +99,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                                 className="flex items-center gap-2"
                             >
                                 <Printer className="size-4" />
-                                Download PDF
+                                {_("Download PDF")}
                             </a>
                         </Button>
                     ) : (
@@ -109,10 +110,10 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                             disabled
                             className="shrink-0"
                             aria-label="Download PDF"
-                                title="Download PDF"
+                                title={_("Download PDF")}
                         >
                             <Printer className="size-4" />
-                            Download PDF
+                                {_("Download PDF")}
                         </Button>
                     )}
                 </div>
@@ -128,13 +129,13 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                 <section className="px-2">
                     <h3 className="text-base font-semibold text-ink-gray-8 mb-2">Prompt fields</h3>
                     <p className="text-xs text-ink-gray-5 mb-4">
-                        These prompts are used in this template’s field mapping. Fill them to include in the printed PDF.
+                        {_("These prompts are used in this template’s field mapping. Fill them to include in the printed PDF.")}
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {prompts.map((prompt) => (
                             <div key={prompt.name ?? prompt.field_name} className="flex flex-col gap-1">
                                 <Label className="text-sm">
-                                    {prompt.label}
+                                    {_("{0}", [prompt.label])}
                                     {prompt.mandatory === 1 && <span className="text-ink-red-2 ms-0.5">*</span>}
                                 </Label>
                                 {prompt.type === "Checkbox" ? (
@@ -150,14 +151,14 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                                             htmlFor={`prompt-${prompt.field_name}`}
                                             className="text-sm text-ink-gray-5 cursor-pointer"
                                         >
-                                            {prompt.description ?? "Yes / No"}
+                                            {_("{0}", [prompt.description ?? _("{0} / {1}", [_("Yes"), _("No")])])}
                                         </label>
                                     </div>
                                 ) : (
                                     <Input
                                         id={`prompt-${prompt.field_name}`}
                                         type="text"
-                                        placeholder={prompt.description ?? prompt.field_name}
+                                            placeholder={_("{0}", [prompt.description ?? prompt.field_name])}
                                         value={String(promptValues[prompt.field_name] ?? "")}
                                         onChange={(e) => setPromptValue(prompt.field_name, e.target.value)}
                                     />
@@ -174,7 +175,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     <Accordion type="single" collapsible defaultValue="document-data" className="w-full">
                         <AccordionItem value="document-data" className="border-0">
                             <AccordionTrigger className="p-2 text-sm font-medium hover:no-underline hover:bg-surface-gray-2 data-[state=open]:border-b data-[state=open]:border-outline-gray-2">
-                                Document Data
+                                {_("Document Data")}
                             </AccordionTrigger>
                             <AccordionContent className="px-0 pb-0 pt-0">
                                 <div className="min-h-[240px] h-[min(65vh,calc(100vh-12rem))] w-full">
@@ -194,12 +195,12 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                         </div>
                         <div className="space-y-1">
                             <p className="text-sm font-medium text-ink-gray-8">
-                                {selectedDocument ? "Loading document…" : "No document selected"}
+                                    {selectedDocument ? _("{0}...", [_("Loading document")]) : _("{0}...", [_("No document selected")])}
                             </p>
                             <p className="text-sm text-ink-gray-5 max-w-sm">
                                 {selectedDocument
-                                    ? "Fetching document data…"
-                                    : `Select a ${source} document above to preview its data and download a filled PDF.`}
+                                        ? _("{0}...", [_("Fetching document data")])
+                                        : _("{0}...", [_("Select a {0} document above to preview its data and download a filled PDF.", [source])])}
                             </p>
                         </div>
                     </div>

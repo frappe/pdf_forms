@@ -13,6 +13,7 @@ import { FileText, Loader2 } from "lucide-react"
 import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 import { convertFrappeDateStringToTimeAgo } from "@/lib/dateConversions"
 import { Skeleton } from "@/components/ui/skeleton"
+import _ from "@/lib/translate"
 
 interface FormTemplateTableProps {
     data: FormTemplate[]
@@ -56,15 +57,15 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                             />
                         </TableHead>
 
-                        <TableHead>Template Name</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Source</TableHead>
+                        <TableHead>{_("Template Name")}</TableHead>
+                        <TableHead>{_("Description")}</TableHead>
+                        <TableHead>{_("Status")}</TableHead>
+                        <TableHead>{_("Source")}</TableHead>
                         <TableHead className="text-end">
                             <div className="flex items-center justify-end gap-2">
                                 {count !== undefined && (
                                     <span className="text-xs font-normal text-ink-gray-5">
-                                        {currentCount} of {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
+                                        {currentCount} {_("of")} {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
                                     </span>
                                 )}
                             </div>
@@ -111,7 +112,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                                 colSpan={6}
                                 className="h-24 text-center text-ink-gray-5"
                             >
-                                No results.
+                                    {_("No results.")}
                             </TableCell>
                         </TableRow>
                     ) : (
@@ -159,10 +160,10 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                                         ) : row.process_completed === 0 ? (
                                             <div className="flex items-center gap-2">
                                                 <Loader2 className="size-3 text-ink-blue-3 animate-spin" />
-                                                <span className="text-ink-gray-5 text-xs">Processing template...</span>
+                                                    <span className="text-ink-gray-5 text-xs">{_("Processing template...")}</span>
                                             </div>
                                         ) : row.process_completed === 1 && !row.is_pdf_converted ? (
-                                            "Conversion failed"
+                                                    _("Conversion failed")
                                         ) : null}
                                     </span>
                                 </TableCell>

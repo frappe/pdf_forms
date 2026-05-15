@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
+import _ from '@/lib/translate'
 
 const ViewTemplateLoader = () => {
     return (
@@ -68,15 +69,15 @@ export const ViewTemplate = () => {
                         </div>
                         <div className="absolute inset-0 bg-surface-gray-1/80" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <p className="text-lg font-medium text-ink-gray-5">Documents are processing... Please wait.</p>
+                            <p className="text-lg font-medium text-ink-gray-5">{_("Documents are processing... Please wait.")}</p>
                         </div>
                     </div>
                 ) : data.process_completed === 1 && data.is_pdf_converted === 0 ? (
                     <div className="flex items-center justify-center h-full p-4">
                         <Alert variant="subtle" theme="red" className="max-w-2xl">
-                            <AlertTitle>Issue with Form PDF</AlertTitle>
+                                <AlertTitle>{_("Issue with Form PDF")}</AlertTitle>
                             <AlertDescription>
-                                Something went wrong while converting the PDF. Please check the uploaded file or inspect the background job to find the actual issue.
+                                    {_("Something went wrong while converting the PDF. Please check the uploaded file or inspect the background job to find the actual issue.")}
                             </AlertDescription>
                         </Alert>
                     </div>
@@ -89,18 +90,18 @@ export const ViewTemplate = () => {
                                             variant={mobilePane === 'annotator' ? 'solid' : 'outline'}
                                             theme="gray"
                                             onClick={() => setMobilePane('annotator')}
-                                            title="PDF Annotator"
+                                            title={_("PDF Annotator")}
                                         >
-                                            PDF Annotator
+                                            {_("PDF Annotator")}
                                         </Button>
                                         <Button
                                             type="button"
                                             variant={mobilePane === 'editor' ? 'solid' : 'outline'}
                                             theme="gray"
                                             onClick={() => setMobilePane('editor')}
-                                            title="Field Editor"
+                                            title={_("Field Editor")}
                                         >
-                                            Field Editor
+                                            {_("Field Editor")}
                                         </Button>
                                     </div>
                                 </div>

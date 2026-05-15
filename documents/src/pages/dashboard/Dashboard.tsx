@@ -21,6 +21,7 @@ import type { Filter } from "frappe-react-sdk"
 import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 import { FormTemplateTable } from "./FormTemplateTable"
 import { AddFormTemplateDialog } from "./AddFormTemplateDialog"
+import _ from "@/lib/translate"
 
 export const Dashboard = () => {
 
@@ -122,17 +123,17 @@ export const Dashboard = () => {
                 const n = items.length
                 toast.success(
                     n > 10
-                        ? `Deletion of ${n} template${n === 1 ? '' : 's'} has been queued.`
+                        ? _(`Deletion of ${n} template${n === 1 ? '' : 's'} has been queued.`)
                         : n === 1
-                            ? 'Template deleted'
-                            : `${n} templates deleted`,
+                            ? _("Template deleted")
+                            : _(`${n} templates deleted`),
                 )
                 setSelectedRows(new Set())
                 setDeleteConfirmOpen(false)
                 void mutate()
             })
             .catch((err: unknown) => {
-                toast.error('Could not delete templates')
+                toast.error(_("Could not delete templates"))
                 console.error(err)
             })
     }
@@ -145,9 +146,9 @@ export const Dashboard = () => {
             {/* Header */}
             <div className="flex items-center justify-between  py-4 border-b">
                 <h1 className="text-xl font-semibold">Form Template</h1>
-                <Button onClick={onOpen} variant="solid" theme="gray" size="md" title="Add Form Template">
+                <Button onClick={onOpen} variant="solid" theme="gray" size="md" title={_("Add Form Template")}>
                     <Plus className="size-4" />
-                    Add Form Template
+                    {_("Add Form Template")}
                 </Button>
             </div>
 
@@ -156,14 +157,14 @@ export const Dashboard = () => {
                 <div className="flex items-center gap-3 shrink-0">
                     <Input
                         type="text"
-                        placeholder="ID"
+                        placeholder={_("ID")}
                         value={idFilter}
                         onChange={(e) => setIdFilter(e.target.value)}
                         className="min-w-xs"
                     />
                     <Input
                         type="text"
-                        placeholder="Source"
+                        placeholder={_("Source")}
                         value={sourceFilter}
                         onChange={(e) => setSourceFilter(e.target.value)}
                         className="min-w-xs"
@@ -177,10 +178,10 @@ export const Dashboard = () => {
                             theme="red"
                             size="md"
                             onClick={() => setDeleteConfirmOpen(true)}
-                            title="Delete templates"
+                            title={_("Delete templates")}
                         >
                             <Trash2 className="size-4" />
-                            Delete ({selectedRows.size})
+                            {_("Delete")}
                         </Button>
                     </div>
                 )}
@@ -203,17 +204,17 @@ export const Dashboard = () => {
             <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete templates</AlertDialogTitle>
+                        <AlertDialogTitle>{_("Delete templates")}</AlertDialogTitle>
                     </AlertDialogHeader>
                     <div className="space-y-4">
                         {deleteError && <ErrorBanner error={deleteError} />}
                         <AlertDialogDescription>
-                            Delete {selectedRows.size} selected template
-                            {selectedRows.size === 1 ? '' : 's'}? This cannot be undone.
+                            {_(`Delete ${selectedRows.size} selected template
+                            ${selectedRows.size === 1 ? '' : 's'}? This cannot be undone.`)}
                         </AlertDialogDescription>
                     </div>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={deleteLoading}>{_("Cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             disabled={deleteLoading}
                             onClick={(e) => {
@@ -224,10 +225,10 @@ export const Dashboard = () => {
                             {deleteLoading ? (
                                 <>
                                     <Loader2 className="size-4 animate-spin" />
-                                    Deleting...
+                                    {_("Deleting...")}
                                 </>
                             ) : (
-                                'Delete'
+                                    _("Delete")
                             )}
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -267,13 +268,13 @@ export const Dashboard = () => {
                 {/* Load More Button */}
                 {hasMoreData && (
                     <Button
-                        title="Load more"
+                        title="Load more templates"
                         onClick={handleLoadMore}
                         variant="outline"
                         theme="gray"
                         size="md"
                     >
-                        Load More
+                        {_("Load More")}
                     </Button>
                 )}
             </div>

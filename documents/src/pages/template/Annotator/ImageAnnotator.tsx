@@ -8,6 +8,7 @@ import type { Annotation } from '@/types/Annotation';
 import { Button } from '@/components/ui/button';
 import { DocumentImageSettingModal } from './DocumentImageSettingModal';
 import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Settings, ArrowLeft } from 'lucide-react';
+import _ from '@/lib/translate';
 
 
 interface AnnotationLabelMap {
@@ -423,8 +424,8 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                 theme="gray"
                                 isIconButton
                                 size="md"
-                                aria-label="Full Screen"
-                                title="Full Screen"
+                                aria-label={_("Full Screen")}
+                                title={_("Full Screen")}
                                 onClick={fullScreen}
                                 className="rounded-none"
                             >
@@ -436,27 +437,27 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                     theme="gray"
                                     isIconButton
                                     size="md"
-                                    aria-label="Previous Page"
+                                    aria-label={_("Previous Page")}
                                     disabled={currentPage === 0}
                                     onClick={prevPage}
                                     className="rounded-none"
-                                    title="Previous Page"
+                                    title={_("Previous Page")}
                                 >
                                     <ChevronLeft className="size-4" />
                                 </Button>
                                 <div className="w-[70px] text-center">
-                                    <span className="text-xs">Page {currentPage + 1} of {images.length}</span>
+                                    <span className="text-xs">{_("Page")} {currentPage + 1} {_("of")} {images.length}</span>
                                 </div>
                                 <Button
                                     variant="ghost"
                                     theme="gray"
                                     isIconButton
                                     size="md"
-                                    aria-label="Next Page"
+                                    aria-label={_("Next Page")}
                                     disabled={currentPage === images.length - 1}
                                     onClick={nextPage}
                                     className="rounded-none"
-                                    title="Next Page"
+                                    title={_("Next Page")}
                                 >
                                     <ChevronRight className="size-4" />
                                 </Button>
@@ -466,8 +467,8 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                 theme="gray"
                                 isIconButton
                                 size="md"
-                                aria-label="Zoom In"
-                                title="Zoom In"
+                                aria-label={_("Zoom In")}
+                                title={_("Zoom In")}
                                 onClick={zoomIn}
                                 className="rounded-none"
                             >
@@ -478,8 +479,8 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                 theme="gray"
                                 isIconButton
                                 size="md"
-                                aria-label="Zoom Out"
-                                title="Zoom Out"
+                                aria-label={_("Zoom Out")}
+                                title={_("Zoom Out")}
                                 onClick={zoomOut}
                                 className="rounded-none"
                             >
@@ -507,8 +508,8 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     theme="gray"
                     size="sm"
                     type="button"
-                    aria-label="Settings"
-                    title='Settings'
+                    aria-label={_("Settings")}
+                    title={_("Settings")}
                     onClick={onOpen}
                     isIconButton
                     className="absolute right-2 top-12 z-50"

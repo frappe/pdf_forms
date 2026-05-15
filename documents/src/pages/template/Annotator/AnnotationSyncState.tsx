@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { RefreshCw, CheckCircle2 } from 'lucide-react'
+import _ from '@/lib/translate'
 
 interface Props {
     syncing: boolean,
@@ -23,12 +24,12 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
             .then(() => {
                 mutate('document_template_fields')
                 setHighlightSyncButton(false)
-                toast.success('Annotations Saved', {
+                toast.success(_("Annotations Saved"), {
                     duration: 1000,
                 })
             })
             .catch((error) => {
-                toast.error('Error Saving Annotations', {
+                toast.error(_("Error Saving Annotations"), {
                     duration: 1000,
                 })
                 console.error(error)
@@ -42,7 +43,7 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                 // alert('You have unsaved changes. Please save them before syncing.')
                 setHighlightSyncButton(true)
                 update()
-                e.returnValue = 'You have unsaved changes. Please save them before syncing.'
+                e.returnValue = _('You have unsaved changes. Please save them before syncing.')
             }
         }
         window.addEventListener('beforeunload', alertUser)
@@ -67,7 +68,7 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                         onClick={update} 
                         variant={highlightSyncButton ? 'solid' : 'subtle'}
                         theme="gray"
-                        title="Force Update"
+                        title={_("Force Update")}
                     >
                         <div className="flex items-center">
                             <motion.div 
@@ -77,7 +78,7 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                             >
                                 <RefreshCw className="size-4" />
                             </motion.div>
-                            <span className="ml-2">Sync</span>
+                            <span className="ml-2">{_("Sync")}</span>
                         </div>
                     </Button>
                 </motion.div>
@@ -94,11 +95,11 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                         variant="ghost"
                         theme="gray"
                         className="h-full rounded-none"
-                        title="Sync"
+                            title={_("Sync")}
                     >
                         <div className="flex items-center">
                             <CheckCircle2 className="size-4" />
-                            <span className="ml-2">Sync</span>
+                                <span className="ml-2">{_("Sync")}</span>
                         </div>
                     </Button>
                 </motion.div>

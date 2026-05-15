@@ -20,6 +20,7 @@ import {
 import { CodeEditorFormField, DataField } from "@/components/ui/form-elements"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
+import _ from "@/lib/translate"
 
 interface Props {
     isOpen: boolean
@@ -74,7 +75,7 @@ export const SettingPageModalContent = ({
 
     const onSubmit = (value: SettingFields) => {
         if (!data.parent) {
-            toast.error("Unable to update settings: missing form template id")
+            toast.error(_("Unable to update settings: missing form template id"))
             return
         }
 
@@ -87,12 +88,12 @@ export const SettingPageModalContent = ({
             base_index: value.base_index,
         })
             .then(() => {
-                toast.success("Settings Updated", { duration: 2000 })
+                toast.success(_("Settings Updated"))
                 onUpdated?.()
                 onClose()
             })
             .catch((submitError: { message?: string }) => {
-                toast.error("Failed to update settings", {
+                toast.error(_("Failed to update settings"), {
                     description: submitError?.message,
                 })
             })
@@ -104,7 +105,7 @@ export const SettingPageModalContent = ({
         <FormProvider {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <DialogHeader>
-                    <DialogTitle>Settings</DialogTitle>
+                    <DialogTitle>{_("Settings")}</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col gap-4">
                     {error && <ErrorBanner error={error} />}
@@ -121,7 +122,7 @@ export const SettingPageModalContent = ({
                                         />
                                     </FormControl>
                                     <div className="space-y-1 leading-none">
-                                        <FormLabel>Repeat Page</FormLabel>
+                                        <FormLabel>{_("Repeat Page")}</FormLabel>
                                     </div>
                                 </FormItem>
                             )}
@@ -129,39 +130,39 @@ export const SettingPageModalContent = ({
                         <div className="flex flex-col gap-4">
                             <DataField
                                 name="repeat_after"
-                                label="Repeat After"
+                                label={_("Repeat After")}
                                 disabled={!repeatPage}
                                 isRequired
-                                rules={{ required: "Repeat After is required" }}
-                                formDescription="Repeat after this page, page index starts from 0."
+                                rules={{ required: _("Repeat After is required") }}
+                                formDescription={_("Repeat after this page, page index starts from 0.")}
                                 inputProps={{ type: "number", min: 0 }}
                             />
                             <CodeEditorFormField
                                 name="copies"
-                                label="Copies"
+                                label={_("Copies")}
                                 disabled={!repeatPage}
                                 isRequired
-                                rules={{ required: "Copies is required" }}
-                                formDescription="Use Number / Jinja template to generate copies."
+                                rules={{ required: _("Copies is required") }}
+                                formDescription={_("Use Number / Jinja template to generate copies.")}
                                 editorProps={{
-                                    placeholder: "eg: {{ frappe.utils.date_diff(end_date, start_date) }}",
+                                    placeholder: _('eg: {{ frappe.utils.date_diff(end_date, start_date) }}'),
                                 }}
                             />
                             <DataField
                                 name="base_index"
-                                label="Base Index"
+                                label={_("Base Index")}
                                 disabled={!repeatPage}
                                 isRequired
-                                rules={{ required: "Base Index is required" }}
-                                formDescription="Base index for the copies, it is useful for child table index."
+                                rules={{ required: _("Base Index is required") }}
+                                formDescription={_("Base index for the copies, it is useful for child table index.")}
                                 inputProps={{ type: "number", min: 0 }}
                             />
                         </div>
                     </div>
                 </div>
                 <DialogFooter showCloseButton={false} className="gap-2">
-                    <Button type="button" variant="ghost" theme="gray" onClick={onClose} title="Close">
-                    Close
+                    <Button type="button" variant="ghost" theme="gray" onClick={onClose} title={_("Close")}>
+                        {_("Close")}
                 </Button>
                 <Button
                     type="submit"
@@ -169,9 +170,9 @@ export const SettingPageModalContent = ({
                     theme="gray"
                     onClick={methods.handleSubmit(onSubmit)}
                     disabled={loading}
-                        title="Save"
+                        title={_("Save")}
                 >
-                        {loading ? "Saving..." : "Save"}
+                        {loading ? _("Saving...") : _("Save")}
                     </Button>
                 </DialogFooter>
             </form>

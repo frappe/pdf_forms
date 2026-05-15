@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { CreatePromptDialog } from './Prompt/CreatePromptDialog'
 import { EditPromptDialog } from './Prompt/EditPromptDialog'
 import { DeletePromptDialog } from './Prompt/DeletePromptDialog'
+import _ from '@/lib/translate'
 
 export const Prompts = ({ prompts, templateID, onRefresh }: {
     prompts: FormTemplatePrompts[]
@@ -42,19 +43,19 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
             <div className="flex flex-col h-full min-h-[200px]">
                 {templateID && (
                     <div className="flex justify-end py-2 shrink-0">
-                        <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)} title="Add Prompt">
+                        <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)} title={_("Add Prompt")}>
                             <Plus className="size-4" />
-                            Add Prompt
+                            {_("Add Prompt")}
                         </Button>
                     </div>
                 )}
                 <div className="flex flex-col items-center justify-center py-12 text-center flex-1 overflow-auto">
                     <MessageSquareText className="size-12 text-ink-gray-5 opacity-50 mb-4" />
                     <p className="text-sm text-ink-gray-5">
-                        No prompts configured for this template.
+                        {_("No prompts configured for this template.")}
                     </p>
                     <p className="text-xs text-ink-gray-5 mt-1">
-                        Prompts allow you to collect additional input when filling the form.
+                        {_("Prompts allow you to collect additional input when filling the form.")}
                     </p>
                 </div>
                 {templateID && (
@@ -70,7 +71,7 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                 <div className="flex justify-end py-2">
                     <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)} title="Add Prompt">
                         <Plus className="size-4" />
-                        Add Prompt
+                        {_("Add Prompt")}
                     </Button>
                 </div>
             )}
@@ -85,11 +86,11 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                             <div className="flex items-center gap-1.5 flex-wrap">
                                 <h4 className="font-medium text-sm">{prompt.label}</h4>
                                 <Badge variant="subtle" theme="gray" className="text-[10px] px-1.5 py-0 font-normal">
-                                    {prompt.type || 'Text'}
+                                    {_("{0}", [prompt.type || _("Text")])}
                                 </Badge>
                                 {prompt.mandatory === 1 && (
                                     <Badge variant="solid" theme="red" className="text-[10px] px-1.5 py-0 font-normal">
-                                        Required
+                                        {_("Required")}
                                     </Badge>
                                 )}
                             </div>
@@ -101,8 +102,8 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                                     size="sm"
                                     isIconButton
                                     onClick={() => onEdit(prompt)}
-                                    aria-label="Edit prompt"
-                                    title="Edit prompt"
+                                    aria-label={_("Edit prompt")}
+                                    title={_("Edit prompt")}
                                 >
                                     <Pencil className="size-3.5" />
                                 </Button>
@@ -113,8 +114,8 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                                     size="sm"
                                     isIconButton
                                     onClick={() => onDelete(prompt)}
-                                    aria-label="Delete prompt"
-                                    title="Delete prompt"
+                                    aria-label={_("Delete prompt")}
+                                    title={_("Delete prompt")}
                                 >
                                     <Trash2 className="size-3.5" />
                                 </Button>
@@ -132,13 +133,13 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                                 isIconButton
                                 onClick={() => {
                                     void navigator.clipboard.writeText(prompt.field_name).then(() => {
-                                        toast.success('Copied to clipboard')
+                                        toast.success(_("Copied to clipboard"))
                                     }).catch(() => {
-                                        toast.error('Failed to copy')
+                                        toast.error(_("Failed to copy"))
                                     })
                                 }}
-                                aria-label="Copy field name"
-                                title="Copy field name"
+                                aria-label={_("Copy field name")}
+                                title={_("Copy field name")}
                             >
                                 <Copy className="size-3" />
                             </Button>
@@ -148,10 +149,10 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                         {prompt.description && (
                             <div className="mt-2 pt-2 border-t border-outline-gray-2">
                                 <p className="text-[11px] text-ink-gray-5 uppercase tracking-wide mb-0.5">
-                                    Description
+                                    {_("Description")}
                                 </p>
                                 <p className="text-xs text-ink-gray-8 whitespace-pre-wrap leading-tight">
-                                    {prompt.description}
+                                    {_("{0}", [prompt.description])}
                                 </p>
                             </div>
                         )}

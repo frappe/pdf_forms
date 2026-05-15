@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Loader2 } from 'lucide-react'
 import ErrorBanner from '@/components/ui/error-banner'
+import _ from '@/lib/translate'
 
 interface Props {
     annotationID: string | null,
@@ -39,11 +40,11 @@ export const AnnotationDeleteModal = ({ annotationID, templateID, onClose, onDel
             }).then(() => {
                 onDeleted?.()
                 onClose()
-                toast.success('Annotation deleted', {
+                toast.success(_("Annotation deleted"), {
                     duration: 1000,
                 })
             }).catch((error) => {
-                toast.error('Error Deleting Annotation', {
+                toast.error(_("Error Deleting Annotation"), {
                     duration: 1000,
                 })
                 console.error(error)
@@ -58,7 +59,7 @@ export const AnnotationDeleteModal = ({ annotationID, templateID, onClose, onDel
         }}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Annotation</AlertDialogTitle>
+                    <AlertDialogTitle>{_("Delete Annotation")}</AlertDialogTitle>
                 </AlertDialogHeader>
                 <div className="space-y-4">
                     {error && (
@@ -67,25 +68,26 @@ export const AnnotationDeleteModal = ({ annotationID, templateID, onClose, onDel
                         />
                     )}
                     <AlertDialogDescription>
-                        Are you sure? This will delete the annotation.<br />
-                        You can't undo this action afterwards.
+                        {_("Are you sure? This will delete the annotation.")}<br />
+                        {_("You can't undo this action afterwards.")}
                     </AlertDialogDescription>
                 </div>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={loading}>
-                        Cancel
+                    <AlertDialogCancel disabled={loading} title={_("Cancel")}>
+                        {_("Cancel")}
                     </AlertDialogCancel>
                     <AlertDialogAction
                         onClick={deleteAnnotation}
                         disabled={loading}
+                        title={_("Delete")}
                     >
                         {loading ? (
                             <>
                                 <Loader2 className="mr-2 size-4 animate-spin" />
-                                Deleting...
+                                {_("Deleting...")}
                             </>
                         ) : (
-                            'Delete'
+                                _('Delete')
                         )}
                     </AlertDialogAction>
                 </AlertDialogFooter>

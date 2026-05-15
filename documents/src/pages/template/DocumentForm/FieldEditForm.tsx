@@ -66,18 +66,18 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
             <div className="grid grid-cols-2 gap-4">
                 <DataField
                     name={`fields.${index}.field_label`}
-                    label="Label"
+                    label={_("Label")}
                     isRequired
                     readOnly
-                    inputProps={{ placeholder: 'Label' }}
+                    inputProps={{ placeholder: _("{0}", ["Label"]) }}
                 />
 
                 <DataField
                     name={`fields.${index}.field_type`}
-                    label="Field Type"
+                    label={_("Field Type")}
                     isRequired
                     readOnly
-                    inputProps={{ placeholder: 'Field Type' }}
+                    inputProps={{ placeholder: _("{0}", ["Field Type"]) }}
                 />
 
                 <ValueTypeField index={index} resetMetaField={resetMetaField} />
@@ -106,10 +106,10 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                         </FormControl>
                                         <SelectContent>
                                             <SelectItem value={FORMATTER_CLEAR}>{_("No formatter")}</SelectItem>
-                                            <SelectItem value="Date">Date</SelectItem>
-                                            <SelectItem value="Currency">Currency</SelectItem>
-                                            <SelectItem value="Phone">Phone</SelectItem>
-                                            <SelectItem value="Number">Number</SelectItem>
+                                            <SelectItem value="Date">{_("{0}", ["Date"])}</SelectItem>
+                                            <SelectItem value="Currency">{_("{0}", ["Currency"])}</SelectItem>
+                                            <SelectItem value="Phone">{_("{0}", ["Phone"])}</SelectItem>
+                                            <SelectItem value="Number">{_("{0}", ["Number"])}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -122,13 +122,13 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                 {valueType === 'Prompt' && data?.message?.prompts && (
                     <SelectFormField
                         name={`fields.${index}.field_value`}
-                        label="Select Prompt"
+                        label={_("Select Prompt")}
                         isRequired
-                        rules={{ required: 'Prompt is required' }}
+                        rules={{ required: _("{0}", ["Prompt is required"]) }}
                     >
                         {data.message.prompts.map((prompt) => (
                             <SelectItem key={prompt.name} value={prompt.field_name}>
-                                {prompt.label}
+                                {_("{0}", [prompt.label ?? ''])}
                             </SelectItem>
                         ))}
                     </SelectFormField>
@@ -140,9 +140,9 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                     <SelectFields key={`fields.${index}.field_value`} schemaField={data.message.fields} name={`fields.${index}.field_value`} />
                     <DataField
                         name={`fields.${index}.field_value`}
-                        label="Value"
+                        label={_("Value")}
                         readOnly
-                        inputProps={{ placeholder: 'Selected field path will appear here' }}
+                        inputProps={{ placeholder: _("{0}", ["Selected field path will appear here"]) }}
                     />
                 </>
             )}
@@ -150,19 +150,19 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
             {valueType === 'Prompt' && (
                 <DataField
                     name={`fields.${index}.field_value`}
-                    label="Value"
+                    label={_("Value")}
                     readOnly
-                    inputProps={{ placeholder: 'Selected prompt field name will appear here' }}
+                    inputProps={{ placeholder: _("{0}", ["Selected prompt field name will appear here"]) }}
                 />
             )}
 
             {valueType === 'Jinja' && (
                 <CodeEditorFormField
                     name={`fields.${index}.field_value`}
-                    label="Value"
+                    label={_("Value")}
                     isRequired
                     editorProps={{
-                        placeholder: "eg: {{ frappe.format_date('2019-09-08') }}",
+                        placeholder: _("{0}", ["eg: {{ frappe.format_date('2019-09-08') }}"]),
                         height: '30vh',
                     }}
                 />
@@ -171,10 +171,10 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
             {(valueType === 'Text') && (
                 <DataField
                     name={`fields.${index}.field_value`}
-                    label="Value"
+                    label={_("Value")}
                     isRequired
                     readOnly={valueType === 'Field'}
-                    inputProps={{ placeholder: 'Value' }}
+                    inputProps={{ placeholder: _("{0}", ["Value"]) }}
                 />
             )}
 
@@ -182,7 +182,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                 name={`fields.${index}.default_value`}
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Default value</FormLabel>
+                        <FormLabel>{_("Default value")}</FormLabel>
                         {isDefaultJinja ? (
                             <div className="relative min-h-[30vh]">
                                 <CodeEditorFormField
@@ -190,7 +190,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                     label=""
                                     hideLabel
                                     editorProps={{
-                                        placeholder: "eg: {{ frappe.format_date('2019-09-08') }}",
+                                        placeholder: _("{0}", ["eg: {{ frappe.format_date('2019-09-08') }}"]),
                                         height: '30vh',
                                     }}
                                 />
@@ -203,7 +203,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                 <InputGroup>
                                     <InputGroupInput
                                         {...field}
-                                            placeholder="eg: 2019-09-08"
+                                            placeholder={_("{0}", ["eg: 2019-09-08"])}
                                     />
                                 </InputGroup>
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2">
@@ -237,7 +237,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                             />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                            <FormLabel>Override Style</FormLabel>
+                            <FormLabel>{_("Override Style")}</FormLabel>
                         </div>
                     </FormItem>
                 )}
@@ -246,16 +246,16 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
             {overrideStyleTrue && (
                 <div className="grid grid-cols-2 gap-4">
                     <SelectFormField name={`fields.${index}.font`} label="Font">
-                        <SelectItem value="helvetica">Helvetica</SelectItem>
-                        <SelectItem value="courier">Courier</SelectItem>
-                        <SelectItem value="times-roman">Times Roman</SelectItem>
-                        <SelectItem value="symbol">Symbol</SelectItem>
-                        <SelectItem value="zapfdingbats">ZapfDingbats</SelectItem>
+                        <SelectItem value="helvetica">{_("Helvetica")}</SelectItem>
+                        <SelectItem value="courier">{_("Courier")}</SelectItem>
+                        <SelectItem value="times-roman">{_("Times Roman")}</SelectItem>
+                        <SelectItem value="symbol">{_("Symbol")}</SelectItem>
+                        <SelectItem value="zapfdingbats">{_("ZapfDingbats")}</SelectItem>
                     </SelectFormField>
 
                     <DataField
                         name={`fields.${index}.font_size`}
-                        label="Font Size"
+                        label={_("Font Size")}
                         inputProps={{
                             type: 'number',
                             min: 0,
@@ -282,7 +282,7 @@ const ToggleDefaultValue = ({ index }: { index: number }) => {
                 isIconButton
                 className="rounded-none border-r border-outline-gray-2"
                 onClick={() => setValue(`fields.${index}.is_default_jinja`, false)}
-                title="Toggle Default Value"
+                title={_("Toggle Default Value")}
             >
                 <Type className="size-4" />
             </Button>
@@ -294,7 +294,7 @@ const ToggleDefaultValue = ({ index }: { index: number }) => {
                 isIconButton
                 className="rounded-none"
                 onClick={() => setValue(`fields.${index}.is_default_jinja`, true)}
-                title="Toggle Default Value"
+                title={_("Toggle Default Value")}
             >
                 <Code className="size-4" />
             </Button>
@@ -353,11 +353,11 @@ const ValueTypeField = ({
         <FormField
             control={control}
             name={`fields.${index}.value_type`}
-            rules={{ required: 'Value Type is required' }}
+            rules={{ required: _("{0}", ["Value Type is required"]) }}
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>
-                        Value Type <FormRequiredIndicator className="ms-0.5" />
+                        {_("Value Type")} <FormRequiredIndicator className="ms-0.5" />
                     </FormLabel>
                     <FormControl>
                         <Select
@@ -368,20 +368,20 @@ const ValueTypeField = ({
                             value={field.value}
                         >
                             <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select Value Type" />
+                                <SelectValue placeholder={_("{0}", ["Select Value Type"])} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Text">
-                                    Text <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + T)</span>
+                                    {_("Text")} <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + T)</span>
                                 </SelectItem>
                                 <SelectItem value="Field">
-                                    Field <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + F)</span>
+                                    {_("Field")} <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + F)</span>
                                 </SelectItem>
                                 <SelectItem value="Prompt">
-                                    Prompt <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + P)</span>
+                                    {_("Prompt")} <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + P)</span>
                                 </SelectItem>
                                 <SelectItem value="Jinja">
-                                    Jinja <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + J)</span>
+                                    {_("Jinja")} <span className="text-xs text-ink-gray-5 ms-2">({getKeyboardMetaKeyString()} + J)</span>
                                 </SelectItem>
                             </SelectContent>
                         </Select>
