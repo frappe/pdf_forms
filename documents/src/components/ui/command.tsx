@@ -65,7 +65,7 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex items-center gap-2 m-1.5 h-8 rounded px-2.5 py-2 border border-transparent transition-all bg-surface-gray-2 not-focus-within:hover:bg-surface-gray-3 text-ink-gray-7 focus-within:bg-surface-white focus-within:border-outline-gray-4 focus-within:shadow-focus-gray"
+      className="flex items-center gap-2 m-1.5 h-8 rounded px-2.5 py-2 border border-transparent transition-all bg-surface-gray-2 not-focus-within:hover:bg-surface-gray-3 text-ink-gray-7 focus-within:bg-surface-gray-3 focus-within:border-outline-gray-4 focus-within:shadow-focus-gray"
     >
       <SearchIcon className="size-4 shrink-0 text-ink-gray-4" />
       <CommandPrimitive.Input

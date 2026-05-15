@@ -505,7 +505,6 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
             >
                 <Button
                     variant="outline"
-                    theme="gray"
                     size="sm"
                     type="button"
                     aria-label={_("Settings")}

@@ -49,15 +49,22 @@ const SearchableSelect = ({
         <Popover open={open} onOpenChange={setOpen} modal={false}>
             <PopoverTrigger asChild>
                 <Button
-                    variant="outline"
+                    variant="subtle"
                     theme="gray"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between font-normal"
+                    className="w-full justify-between border border-transparent font-normal"
                     disabled={isDisabled}
                     size="md"
                 >
-                    {selectedOption ? selectedOption.label : placeholder}
+                    <span
+                        className={cn(
+                            'min-w-0 flex-1 truncate text-start',
+                            selectedOption ? 'text-ink-gray-7' : 'text-ink-gray-4',
+                        )}
+                    >
+                        {selectedOption ? selectedOption.label : placeholder}
+                    </span>
                     <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>

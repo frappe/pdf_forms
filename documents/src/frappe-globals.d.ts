@@ -4,6 +4,8 @@ export {}
 
 /** Minimal boot payload used by the Documents SPA inside Frappe / dev stub */
 interface FrappeBoot {
+  /** User Desk Theme: Light | Dark | Automatic (see frappe.sessions) */
+  desk_theme?: 'Light' | 'Dark' | 'Automatic'
   docs?: unknown[]
   __messages?: Record<string, unknown>
   time_zone?: {

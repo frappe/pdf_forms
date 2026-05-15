@@ -274,7 +274,7 @@ export const CodeEditorFormField = ({
                         onChange={field.onChange}
                         onBlur={field.onBlur}
                         {...editorProps}
-                        readOnly={readOnly}
+                        readOnly={readOnly || disabled}
                     />
                 </FormControl>
                 {formDescription && <FormDescription>{formDescription}</FormDescription>}

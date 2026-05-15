@@ -1,6 +1,7 @@
 import AceEditor, { type IAceEditorProps } from "react-ace"
 import "ace-builds/src-noconflict/mode-json"
-import "ace-builds/src-noconflict/theme-kuroir"
+import "ace-builds/src-noconflict/theme-github"
+import "ace-builds/src-noconflict/theme-github_dark"
 import "ace-builds/src-noconflict/ext-language_tools"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -8,6 +9,8 @@ import { web_url } from "../../../config/socket"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Copy, Printer } from "lucide-react"
+import { useTheme } from "@/components/ui/theme-provider"
+import { aceEditorTheme } from "@/components/common/Editor/ace-theme"
 
 export interface EditorProps extends IAceEditorProps {
     jsonValue: Record<string, unknown>
@@ -18,6 +21,9 @@ export interface EditorProps extends IAceEditorProps {
 }
 
 export const Editor = ({ jsonValue, templateID, readOnly, shellClassName, ...props }: EditorProps) => {
+    const { themeValue } = useTheme()
+    const aceTheme = aceEditorTheme(themeValue)
+
     const [value, setValue] = useState<string>(() =>
         JSON.stringify(jsonValue, null, 2)
     )
@@ -69,7 +75,6 @@ export const Editor = ({ jsonValue, templateID, readOnly, shellClassName, ...pro
                     width="100%"
                     height="100%"
                     mode="json"
-                    theme="kuroir"
                     name="MY_EDITOR"
                     value={value}
                     onChange={onChange}
@@ -88,6 +93,7 @@ export const Editor = ({ jsonValue, templateID, readOnly, shellClassName, ...pro
                         useWorker: false,
                     }}
                     {...props}
+                    theme={aceTheme}
                 />
                 {!readOnly && (
                     <div className="absolute right-0 top-0 flex gap-2 p-1.5">

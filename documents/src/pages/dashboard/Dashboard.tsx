@@ -214,7 +214,7 @@ export const Dashboard = () => {
                         </AlertDialogDescription>
                     </div>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleteLoading}>{_("Cancel")}</AlertDialogCancel>
+                        <AlertDialogCancel variant={"ghost"} disabled={deleteLoading}>{_("Cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             disabled={deleteLoading}
                             onClick={(e) => {

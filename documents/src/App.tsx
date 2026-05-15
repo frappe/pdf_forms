@@ -1,7 +1,8 @@
 import { FrappeProvider } from 'frappe-react-sdk'
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom'
 import { UserProvider } from '@/providers/UserProvider'
-import { Toaster } from 'sonner'
+import { ThemeProvider } from '@/components/ui/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 import { useEffect } from 'react'
 import { ViewTemplate } from './pages/template/ViewTemplate'
 import { Dashboard } from './pages/dashboard/Dashboard'
@@ -52,10 +53,12 @@ function App() {
 			socketPort={import.meta.env.VITE_SOCKET_PORT ? import.meta.env.VITE_SOCKET_PORT : undefined}
 			siteName={getSiteName()}
 		>
-			<UserProvider>
-				<Toaster richColors />
-				<RouterProvider router={router} />
-			</UserProvider>
+			<ThemeProvider defaultTheme={window.frappe?.boot?.desk_theme ?? 'Automatic'}>
+				<UserProvider>
+					<Toaster richColors />
+					<RouterProvider router={router} />
+				</UserProvider>
+			</ThemeProvider>
 		</FrappeProvider>
 	)
 }
