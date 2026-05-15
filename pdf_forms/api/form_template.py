@@ -1,6 +1,7 @@
 from typing import Any
 
 import frappe
+from frappe import _
 
 
 @frappe.whitelist()
@@ -43,7 +44,7 @@ def remove_prompt_from_form_template(form_template_id: str, prompt: dict[str, An
 			form_template.remove(row)
 			break
 	else:
-		frappe.throw(f"Prompt {prompt_name} not found")
+		frappe.throw(_("Prompt {0} was not found").format(prompt_name))
 
 	form_template.save()
 	return form_template
@@ -72,7 +73,7 @@ def update_prompt_in_form_template(form_template_id: str, prompt: dict[str, Any]
 			row.mandatory = prompt.get("mandatory", row.mandatory)
 			break
 	else:
-		frappe.throw(f"Prompt {prompt.get('name')} not found")
+		frappe.throw(_("Prompt {0} was not found").format(prompt.get("name")))
 
 	form_template.save()
 

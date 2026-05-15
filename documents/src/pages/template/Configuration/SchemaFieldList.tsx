@@ -81,7 +81,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
                         </CollapsibleSection>
                     )
                 ) : field.items ? (
-                        <p className="text-sm text-ink-gray-5">{_("Items Type: {0}", [_("{0}", [field.items.schema_type])])}</p>
+                        <p className="text-sm text-ink-gray-5">{_("Item type: {0}", [_("{0}", [field.items.schema_type])])}</p>
                 ) : (
                     !isRoot && field.schema_type !== 'object' && <FieldRow field={field} fieldKey={fieldKey} />
                 )}

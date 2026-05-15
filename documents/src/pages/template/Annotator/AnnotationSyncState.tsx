@@ -24,12 +24,12 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
             .then(() => {
                 mutate('document_template_fields')
                 setHighlightSyncButton(false)
-                toast.success(_("Annotations Saved"), {
+                toast.success(_("Annotations saved"), {
                     duration: 1000,
                 })
             })
             .catch((error) => {
-                toast.error(_("Error Saving Annotations"), {
+                toast.error(_("Failed to save annotations"), {
                     duration: 1000,
                 })
                 console.error(error)
@@ -43,7 +43,7 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                 // alert('You have unsaved changes. Please save them before syncing.')
                 setHighlightSyncButton(true)
                 update()
-                e.returnValue = _('You have unsaved changes. Please save them before syncing.')
+                e.returnValue = _('You have unsaved changes. Save them before leaving this page.')
             }
         }
         window.addEventListener('beforeunload', alertUser)

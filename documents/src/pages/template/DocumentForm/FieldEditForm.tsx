@@ -162,7 +162,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                     label={_("Value")}
                     isRequired
                     editorProps={{
-                        placeholder: _("{0}", ["eg: {{ frappe.format_date('2019-09-08') }}"]),
+                        placeholder: _("{0}", ["e.g. {{ frappe.format_date('2019-09-08') }}"]),
                         height: '30vh',
                     }}
                 />
@@ -190,7 +190,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                     label=""
                                     hideLabel
                                     editorProps={{
-                                        placeholder: _("{0}", ["eg: {{ frappe.format_date('2019-09-08') }}"]),
+                                        placeholder: _("{0}", ["e.g. {{ frappe.format_date('2019-09-08') }}"]),
                                         height: '30vh',
                                     }}
                                 />
@@ -203,7 +203,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                 <InputGroup>
                                     <InputGroupInput
                                         {...field}
-                                            placeholder={_("{0}", ["eg: 2019-09-08"])}
+                                            placeholder={_("{0}", ["e.g. 2019-09-08"])}
                                     />
                                 </InputGroup>
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2">

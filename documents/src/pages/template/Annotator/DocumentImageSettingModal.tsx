@@ -75,7 +75,7 @@ export const SettingPageModalContent = ({
 
     const onSubmit = (value: SettingFields) => {
         if (!data.parent) {
-            toast.error(_("Unable to update settings: missing form template id"))
+            toast.error(_("Unable to update settings: missing form template ID"))
             return
         }
 
@@ -88,7 +88,7 @@ export const SettingPageModalContent = ({
             base_index: value.base_index,
         })
             .then(() => {
-                toast.success(_("Settings Updated"))
+                toast.success(_("Settings updated"))
                 onUpdated?.()
                 onClose()
             })
@@ -134,7 +134,7 @@ export const SettingPageModalContent = ({
                                 disabled={!repeatPage}
                                 isRequired
                                 rules={{ required: _("Repeat After is required") }}
-                                formDescription={_("Repeat after this page, page index starts from 0.")}
+                                formDescription={_("Repeat after this page. Page indices start at 0.")}
                                 inputProps={{ type: "number", min: 0 }}
                             />
                             <CodeEditorFormField
@@ -143,9 +143,9 @@ export const SettingPageModalContent = ({
                                 disabled={!repeatPage}
                                 isRequired
                                 rules={{ required: _("Copies is required") }}
-                                formDescription={_("Use Number / Jinja template to generate copies.")}
+                                formDescription={_("Use a number or a Jinja template to define how many copies to generate.")}
                                 editorProps={{
-                                    placeholder: _('eg: {{ frappe.utils.date_diff(end_date, start_date) }}'),
+                                    placeholder: _('e.g. {{ frappe.utils.date_diff(end_date, start_date) }}'),
                                 }}
                             />
                             <DataField
@@ -154,7 +154,7 @@ export const SettingPageModalContent = ({
                                 disabled={!repeatPage}
                                 isRequired
                                 rules={{ required: _("Base Index is required") }}
-                                formDescription={_("Base index for the copies, it is useful for child table index.")}
+                                formDescription={_("Base index for copies; useful for child table row indexing.")}
                                 inputProps={{ type: "number", min: 0 }}
                             />
                         </div>

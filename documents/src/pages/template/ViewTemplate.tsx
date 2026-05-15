@@ -69,7 +69,7 @@ export const ViewTemplate = () => {
                         </div>
                         <div className="absolute inset-0 bg-surface-gray-1/80" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <p className="text-lg font-medium text-ink-gray-5">{_("Documents are processing... Please wait.")}</p>
+                            <p className="text-lg font-medium text-ink-gray-5">{_("The document is still processing. Please wait.")}</p>
                         </div>
                     </div>
                 ) : data.process_completed === 1 && data.is_pdf_converted === 0 ? (

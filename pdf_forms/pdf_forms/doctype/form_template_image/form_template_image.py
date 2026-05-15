@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -46,7 +47,7 @@ def update_image_settings(
 		(row for row in form_template.form_template_image if row.name == form_template_image), None
 	)
 	if not image_row:
-		frappe.throw("Form Template Image row not found")
+		frappe.throw(_("Form Template Image row was not found."))
 
 	image_row.repeat_page = 1 if frappe.utils.cint(repeat_page) else 0
 	image_row.repeat_after = (

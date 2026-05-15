@@ -185,7 +185,7 @@ const FormTemplateFormFields = ({ isEdit = false }: { isEdit?: boolean }) => {
                 isRequired
                 readOnly={isEdit}
                 rules={{ required: _('Template name is required'), maxLength: { value: 100, message: _('Maximum 100 characters') } }}
-                inputProps={{ placeholder: _('eg: User Appointment Letter') }}
+                inputProps={{ placeholder: _('e.g. User Appointment Letter') }}
             />
 
             {/* <SelectFormField

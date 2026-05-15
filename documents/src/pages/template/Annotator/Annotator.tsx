@@ -277,7 +277,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
         return <div className='flex flex-col items-center justify-center w-full h-full'>
             <Alert variant="subtle" theme="amber">
                 <AlertTitle>
-                    {_("We did not find any images.")}
+                    {_("No images were found.")}
                 </AlertTitle>
                 <AlertDescription>
                     {_("This can happen if the PDF file is still being converted to images. Please try again later.")}

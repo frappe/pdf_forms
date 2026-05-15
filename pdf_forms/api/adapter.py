@@ -1,6 +1,7 @@
 from io import BytesIO
 
 import frappe
+from frappe import _
 from openpyxl import Workbook
 
 removed_column_type = [
@@ -166,7 +167,7 @@ def get_custom_data_source_api(source):
 						else value.get("get_meta")
 					)
 	if not found:
-		return frappe.throw(f"Source {source} not found in any of the installed apps")
+		return frappe.throw(_("Source {0} was not found in any installed app").format(source))
 
 	return None
 

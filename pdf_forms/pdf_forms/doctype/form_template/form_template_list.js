@@ -80,7 +80,7 @@ frappe.listview_settings["Form Template"] = {
 					fieldtype: "Data",
 					label: __("Template Name"),
 					reqd: 1,
-					placeholder: __("eg: User Appointment Letter"),
+					placeholder: __("e.g. User Appointment Letter"),
 				},
 				{
 					fieldname: "source",

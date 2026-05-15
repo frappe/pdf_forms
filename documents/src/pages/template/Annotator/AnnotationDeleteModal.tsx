@@ -44,7 +44,7 @@ export const AnnotationDeleteModal = ({ annotationID, templateID, onClose, onDel
                     duration: 1000,
                 })
             }).catch((error) => {
-                toast.error(_("Error Deleting Annotation"), {
+                toast.error(_("Failed to delete annotation"), {
                     duration: 1000,
                 })
                 console.error(error)
@@ -69,7 +69,7 @@ export const AnnotationDeleteModal = ({ annotationID, templateID, onClose, onDel
                     )}
                     <AlertDialogDescription>
                         {_("Are you sure? This will delete the annotation.")}<br />
-                        {_("You can't undo this action afterwards.")}
+                        {_("You can't undo this action.")}
                     </AlertDialogDescription>
                 </div>
                 <AlertDialogFooter>

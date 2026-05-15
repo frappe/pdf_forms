@@ -7,9 +7,10 @@ import 'ace-builds/src-noconflict/theme-github_dark'
 import 'ace-builds/src-noconflict/ext-language_tools'
 import { useTheme } from '@/components/ui/theme-provider'
 import { aceEditorTheme } from '@/components/common/Editor/ace-theme'
+import _ from '@/lib/translate'
 
 const defaultEditorProps = {
-	placeholder: 'Enter your sample code here...',
+	placeholder: _('Enter your sample code here…'),
 	width: '100%',
 	height: '100%',
 	mode: 'python',

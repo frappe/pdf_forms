@@ -7,6 +7,7 @@ from collections import Counter
 
 import fitz
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils.file_manager import save_file
 from pdf2image import convert_from_path
@@ -50,7 +51,7 @@ class FormTemplate(Document):
 		Check if template_name Print Format exists
 		"""
 		if self.template_name and frappe.db.exists("Print Format", self.template_name):
-			frappe.throw("Print Format with the same name already exists, please use a different name")
+			frappe.throw(_("A Print Format with this name already exists. Please use a different name."))
 
 	def before_save(self):
 		# get filename and extension from the file path
