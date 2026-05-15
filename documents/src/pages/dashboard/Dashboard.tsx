@@ -22,6 +22,7 @@ import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 import { FormTemplateTable } from "./FormTemplateTable"
 import { AddFormTemplateDialog } from "./AddFormTemplateDialog"
 import _ from "@/lib/translate"
+import { getErrorMessages } from "@/lib/frappe"
 
 export const Dashboard = () => {
 
@@ -118,8 +119,12 @@ export const Dashboard = () => {
             doctype: 'Form Template',
             // Match desk list BulkOperations: array is JSON-stringified in form requests
             items: JSON.stringify(items),
-        })
-            .then(() => {
+        }).then((res) => {
+            if (res?._server_messages) {
+                const errorMessages = getErrorMessages(res)
+                toast.error((errorMessages.map((error) => error.message).join("\n")))
+            }
+            else {
                 const n = items.length
                 toast.success(
                     n > 10
@@ -131,7 +136,8 @@ export const Dashboard = () => {
                 setSelectedRows(new Set())
                 setDeleteConfirmOpen(false)
                 void mutate()
-            })
+            }
+        })
             .catch((err: unknown) => {
                 toast.error(_("Could not delete templates"))
                 console.error(err)

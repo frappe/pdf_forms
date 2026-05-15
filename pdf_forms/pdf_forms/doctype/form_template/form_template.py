@@ -115,7 +115,7 @@ class FormTemplate(Document):
 		Delete Form Template Field, Form Template Image and Print Format
 		"""
 		if self.print_format:
-			frappe.delete_doc("Print Format", self.print_format)
+			frappe.delete_doc("Print Format", self.print_format, force=1)
 
 
 def convert_pdf_to_image(form_template_id):
