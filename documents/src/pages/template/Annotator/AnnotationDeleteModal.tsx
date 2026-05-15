@@ -73,7 +73,7 @@ export const AnnotationDeleteModal = ({ annotationID, templateID, onClose, onDel
                     </AlertDialogDescription>
                 </div>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={loading} title={_("Cancel")}>
+                    <AlertDialogCancel disabled={loading} variant={"ghost"} title={_("Cancel")}>
                         {_("Cancel")}
                     </AlertDialogCancel>
                     <AlertDialogAction
