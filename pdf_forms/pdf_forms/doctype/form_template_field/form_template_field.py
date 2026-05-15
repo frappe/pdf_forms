@@ -73,16 +73,18 @@ def get_annotations(form_template_id: str) -> list[dict[str, Any]]:
 		)
 	]
 
+
 @frappe.whitelist()
 def get_for_template_images(form_template_id: str) -> list[dict[str, Any]]:
 	form_template = frappe.get_cached_doc("Form Template", form_template_id)
-	
+
 	# return form_template_images by sorting by page_index
 	form_template_images = sorted(
 		form_template.form_template_image,
 		key=lambda r: r.page_index,
 	)
 	return form_template_images
+
 
 @frappe.whitelist(methods=["POST"])
 def update_form_template_fields(
