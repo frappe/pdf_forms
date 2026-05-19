@@ -1,34 +1,27 @@
-import { useEffect, useState } from 'react';
-import { CustomFile } from '../components/features/FileUploader';
+import { useEffect, useMemo } from 'react';
+
+const VALID_IMAGE_TYPES = ['image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/webp', 'image/jpg']
 
 /**
  * Hook takes in a file and returns a blob URL for previewing the file if image
  * @param file 
  * @returns File url
  */
-export const useGetFilePreviewUrl = (file: CustomFile): string => {
+export const useGetFilePreviewUrl = (file: File): string => {
 
-    const [url, setUrl] = useState<string>("")
+    const url = useMemo(() => {
+        if (!VALID_IMAGE_TYPES.includes(file.type)) {
+            return ""
+        }
+        return URL.createObjectURL(file)
+    }, [file])
 
     useEffect(() => {
-
-        let objectUrl = ""
-        const validImageTypes = ['image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/webp', 'image/jpg'];
-
-        //Only create a URL for images
-        if (validImageTypes.includes(file.type)) {
-            // create the preview
-            objectUrl = URL.createObjectURL(file)
-            setUrl(objectUrl)
-        } else {
-            setUrl(objectUrl)
-        }
-
-        // free memory when ever this component is unmounted
+        if (!url) return
         return () => {
-            objectUrl && URL.revokeObjectURL(objectUrl)
+            URL.revokeObjectURL(url)
         }
-    }, [file])
+    }, [url])
 
     return url
 }

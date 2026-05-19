@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
-import { useFrappePostCall, useSWRConfig } from "frappe-react-sdk"
+import { useFrappePostCall } from "frappe-react-sdk"
 import type { KeyedMutator } from 'swr'
 import { useBoolean } from "usehooks-ts"
 import { useCopyToClipboardHotkey, usePasteFromClipboardHotkey, useSaveHotkey } from "../../../hooks/useReactHotKeys"
@@ -37,7 +37,7 @@ import ErrorBanner from "@/components/ui/error-banner"
 import { useHotkeys } from "react-hotkeys-hook"
 import { CREATE_DEFAULT_OPTIONS } from "@/hooks/useReactHotKeys"
 import { getKeyboardMetaKeyString } from "@/lib/utils"
-
+import _ from "@/lib/translate"
 
 interface FieldsListProps {
     data: {
@@ -86,6 +86,14 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
     })
     const { handleSubmit, control, reset, getValues } = methods
 
+    useEffect(() => {
+        reset({
+            fields: defaultFields ?? [],
+            font: data.font,
+            font_size: data.font_size,
+        })
+    }, [defaultFields, data.font, data.font_size, reset])
+
     const { fields } = useFieldArray({
         control,
         name: "fields"
@@ -109,11 +117,11 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
             font: data.font,
             font_size: data.font_size
         }).then(() => {
-            toast.success("Fields updated successfully")
+            toast.success(_("Fields updated successfully"))
             mutate()
         }).catch((error: { message?: string }) => {
-            toast.error("Error updating custom fields", {
-                description: error.message
+            toast.error(_("Error updating custom fields"), {
+                description: _("{0}", [error.message ?? ''])
             })
         })
     }
@@ -138,32 +146,12 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         return () => cancelAnimationFrame(id)
     }, [focusedAnnotation, fields]);
 
-    const { mutate: globalMutate } = useSWRConfig()
-
     const [deleteAnnotationID, setDeleteAnnotationID] = useState<string | null>(null)
 
     const deleteAnnotationModalClose = useCallback(() => {
         setDeleteAnnotationID(null)
-        globalMutate('form_template_image')
-        globalMutate('form_template_annotations')
-        globalMutate('form_template_meta')
-        mutate().then((doc) => {
-            const defaultValue = doc?.map((field: FormTemplateField) => {
-                return {
-                    name: field.name,
-                    field_label: field.field_label,
-                    field_type: field.field_type,
-                    value_type: field.value_type,
-                    field_value: field.field_value,
-                    annotation_type: field.annotation_type
-                }
-            })
 
-            reset({
-                fields: defaultValue
-            })
-        })
-    }, [mutate, setDeleteAnnotationID, globalMutate, reset])
+    }, [setDeleteAnnotationID,])
 
     const [index, setIndex] = useState<number | null>(null)
 
@@ -178,7 +166,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
     const copyToClipboard = () => {
         const formData = getValues()
         navigator.clipboard.writeText(JSON.stringify(formData, null, 2)).then(() => {
-            toast.success("Field data copied to clipboard")
+            toast.success(_("Field data copied to clipboard"))
         })
     }
 
@@ -198,16 +186,16 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
     const parseClipboardImportData = (text: string): ClipboardImportData => {
         const parsed: unknown = JSON.parse(text)
         if (!isObjectRecord(parsed)) {
-            throw new Error("Clipboard content must be a JSON object.")
+            throw new Error(_("Clipboard content must be a JSON object."))
         }
         if (!Array.isArray(parsed.fields) || !parsed.fields.every(isValidFormFieldRow)) {
-            throw new Error("Expected `fields` to be an array of valid field objects.")
+            throw new Error(_("Expected `fields` to be an array of valid field objects."))
         }
         if ("font" in parsed && parsed.font !== undefined && typeof parsed.font !== "string") {
-            throw new Error("Optional `font` must be a string.")
+            throw new Error(_("Optional `font` must be a string."))
         }
         if ("font_size" in parsed && parsed.font_size !== undefined && typeof parsed.font_size !== "number") {
-            throw new Error("Optional `font_size` must be a number.")
+            throw new Error(_("Optional `font_size` must be a number."))
         }
 
         return {
@@ -221,20 +209,20 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         try {
             const text = await navigator.clipboard.readText()
             if (!text.trim()) {
-                toast.error("Clipboard is empty", {
-                    description: "Copy field mapping JSON and try importing again.",
+                toast.error(_("Clipboard is empty"), {
+                    description: _("{0}", ["Copy field mapping JSON and try importing again."]),
                 })
                 return
             }
 
             const data = parseClipboardImportData(text)
             importDataToForm(data)
-            toast.success("Field data pasted from clipboard")
+            toast.success(_("Field data pasted from clipboard"))
         } catch (error) {
             const description = error instanceof Error
-                ? `${error.message} Please copy a valid exported mapping and retry.`
-                : "Please copy a valid exported mapping and retry."
-            toast.error("Could not import field data", { description })
+                ? `${_("{0}", [error.message])} ${_("Please copy a valid exported mapping and retry.")}`
+                : _("{0}", ["Please copy a valid exported mapping and retry."])
+            toast.error(_("Could not import field data"), { description })
         }
     }
 
@@ -294,32 +282,35 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                     <div className="flex items-center justify-between gap-2 w-full px-2">
                         <div className="flex items-center gap-4 w-full">
                             <div className="relative flex-1 w-full max-w-[390px]">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" aria-hidden />
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-ink-gray-5 pointer-events-none" aria-hidden />
                                 <Input
                                     type="search"
-                                    placeholder="Search by field name or label..."
+                                    placeholder={_("Search by field name or label...")}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-8 h-8 w-full"
-                                    aria-label="Search fields"
+                                    className="ps-8 w-full"
+                                    inputSize="md"
+                                    aria-label={_("Search fields")}
                                 />
                             </div>
-                            <label className="flex items-center gap-2 shrink-0 cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground">
+                            <label className="flex items-center gap-2 shrink-0 cursor-pointer select-none text-sm text-ink-gray-5 hover:text-ink-gray-8">
                                 <Checkbox
                                     checked={showUnmappedOnly}
                                     onCheckedChange={(checked) => setShowUnmappedOnly(checked === true)}
-                                    aria-label="Unmapped only"
+                                    aria-label={_("Unmapped only")}
                                 />
-                                <span>Unmapped only</span>
+                                <span>{_("Unmapped only")}</span>
                             </label>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
                                 type="button"
                                 variant="outline"
+                                theme="gray"
                                 size="sm"
-                                aria-label="Import fields from clipboard"
-                                title="Import fields from clipboard"
+                                isIconButton
+                                aria-label={_("Import fields from clipboard")}
+                                title={_("Import fields from clipboard")}
                                 onClick={pasteToClipboard}
                             >
                                 <Download className="size-4" />
@@ -327,27 +318,29 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                             <Button
                                 type="button"
                                 variant="outline"
+                                theme="gray"
                                 size="sm"
-                                aria-label="Export fields to clipboard"
-                                title="Export fields to clipboard"
+                                isIconButton
+                                aria-label={_("Export fields to clipboard")}
+                                title={_("Export fields to clipboard")}
                                 onClick={copyToClipboard}
                             >
                                 <Upload className="size-4" />
                             </Button>
-                            <Button type="submit" size="sm" ref={saveButtonRef} disabled={loading}>
+                            <Button type="submit" size="sm" ref={saveButtonRef} disabled={loading} variant="solid" theme="gray" title={_("Save")}>
                                 {loading && <SpinnerLoader />}
-                                {loading ? 'Saving...' : 'Save'}
+                                {loading ? _("{0}", ["Saving..."]) : _("{0}", ["Save"])}
                             </Button>
                         </div>
                     </div>
                     <div className="flex flex-row items-start gap-4 px-2 w-full">
                         <div className="w-full min-w-[140px]">
                             <SelectFormField name="font" label="Font">
-                                <SelectItem value="helvetica">Helvetica</SelectItem>
-                                <SelectItem value="courier">Courier</SelectItem>
-                                <SelectItem value="times-roman">Times Roman</SelectItem>
-                                <SelectItem value="symbol">Symbol</SelectItem>
-                                <SelectItem value="zapfdingbats">ZapfDingbats</SelectItem>
+                                <SelectItem value="helvetica">{_("Helvetica")}</SelectItem>
+                                <SelectItem value="courier">{_("Courier")}</SelectItem>
+                                <SelectItem value="times-roman">{_("Times Roman")}</SelectItem>
+                                <SelectItem value="symbol">{_("Symbol")}</SelectItem>
+                                <SelectItem value="zapfdingbats">{_("ZapfDingbats")}</SelectItem>
                             </SelectFormField>
                         </div>
                         <div className="w-full min-w-[140px]">
@@ -359,14 +352,14 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                     </div>
                     {error && <ErrorBanner error={error} />}
                     <div className="overflow-y-auto px-2" style={{ height: 'calc(100vh - 200px)' }}>
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-muted/50 hover:bg-muted/50 sticky top-0 z-10">
+                        <Table containerClassName="rounded border border-outline-gray-1">
+                            <TableHeader className="sticky top-0 z-10">
+                                <TableRow>
                                     <TableHead>No.</TableHead>
-                                    <TableHead>Label</TableHead>
-                                    <TableHead>Field Type</TableHead>
-                                    <TableHead>Value Type</TableHead>
-                                    <TableHead>Value</TableHead>
+                                    <TableHead>{_("Label")}</TableHead>
+                                    <TableHead>{_("Field Type")}</TableHead>
+                                    <TableHead>{_("Value Type")}</TableHead>
+                                    <TableHead>{_("Value")}</TableHead>
                                     <TableHead className="w-[50px]" />
                                 </TableRow>
                             </TableHeader>
@@ -378,14 +371,14 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                         onClick={() => onClick(field.name)}
                                         className={
                                             focusedAnnotationData?.name === field.name
-                                                ? 'bg-primary/10 min-h-[50px] ring-inset ring-1 ring-primary/30'
+                                                ? 'bg-surface-blue-2 min-h-[50px] ring-1 ring-inset ring-outline-blue-2'
                                                 : ''
                                         }
                                     >
                                         <TableCell className="p-2">{index + 1}.</TableCell>
                                         <TableCell className="p-2" title={field.field_label}>
                                             {field.annotation_type === 'Auto' ? (
-                                                <span className="block max-w-[25ch] truncate">{field.field_label}</span>
+                                                <span className="block max-w-[25ch] truncate">{_("{0}", [field.field_label ?? ''])}</span>
                                             ) : (
                                                 <FormField
                                                     control={control}
@@ -396,7 +389,8 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                                             <FormControl>
                                                                 <Input
                                                                     id={`field-label-${field.id}`}
-                                                                    className="min-w-[200px] h-8 text-sm"
+                                                                    className="min-w-[200px]"
+                                                                    inputSize="md"
                                                                     {...f}
                                                                 />
                                                             </FormControl>
@@ -408,21 +402,21 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                         </TableCell>
                                         <TableCell className="p-2">
                                             {field.annotation_type === 'Auto' ? (
-                                                field.field_type
+                                                _("{0}", [field.field_type ?? ''])
                                             ) : (
                                                 <SelectFormField name={`fields.${index}.field_type`} label="" hideLabel>
-                                                    <SelectItem value="Text">Text</SelectItem>
-                                                    <SelectItem value="Checkbox">Checkbox</SelectItem>
-                                                    <SelectItem value="Radio Button">Radio Button</SelectItem>
+                                                        <SelectItem value="Text">{_("Text")}</SelectItem>
+                                                        <SelectItem value="Checkbox">{_("Checkbox")}</SelectItem>
+                                                        <SelectItem value="Radio Button">{_("Radio Button")}</SelectItem>
                                                 </SelectFormField>
                                             )}
                                         </TableCell>
                                         <TableCell className="p-2">
                                             <SelectFormField name={`fields.${index}.value_type`} label="" hideLabel>
-                                                <SelectItem value="Text">Text</SelectItem>
-                                                <SelectItem value="Field">Field</SelectItem>
-                                                <SelectItem value="Prompt">Prompt</SelectItem>
-                                                <SelectItem value="Jinja">Jinja</SelectItem>
+                                                <SelectItem value="Text">{_("Text")}</SelectItem>
+                                                <SelectItem value="Field">{_("Field")}</SelectItem>
+                                                <SelectItem value="Prompt">{_("Prompt")}</SelectItem>
+                                                <SelectItem value="Jinja">{_("Jinja")}</SelectItem>
                                             </SelectFormField>
                                         </TableCell>
                                         <TableCell className="p-2">
@@ -433,8 +427,11 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
-                                                    size="icon-xs"
-                                                    aria-label="Edit"
+                                                    theme="gray"
+                                                    size="sm"
+                                                    isIconButton
+                                                    aria-label={_("Edit")}
+                                                    title={_("Edit")}
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         onFieldOpen(index)
@@ -445,9 +442,11 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
-                                                    size="icon-xs"
-                                                    aria-label="Delete"
-                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    theme="red"
+                                                    size="sm"
+                                                    isIconButton
+                                                    aria-label={_("Delete")}
+                                                    title={_("Delete")}
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         setDeleteAnnotationID(field.name)
@@ -482,10 +481,10 @@ const FieldValueDisplay = ({ index, fieldId }: { index: number; fieldId: string 
     const fieldValue = useWatch({ name: `fields.${index}.field_value` })
 
     return (
-        <InputGroup className="h-8">
+        <InputGroup size="md">
             <InputGroupInput
                 id={`field-value-${fieldId}`}
-                className="min-w-[200px] pointer-events-none read-only:bg-muted/30"
+                className="min-w-[200px] pointer-events-none"
                 readOnly
                 value={fieldValue ?? ''}
             />
@@ -517,7 +516,7 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
             >
                 <DialogHeader>
                     <div className="flex items-center justify-between px-2">
-                        <DialogTitle>Edit field {index + 1} of {totalLength}</DialogTitle>
+                        <DialogTitle>{_("Edit field")} {index + 1} {_("of")} {totalLength}</DialogTitle>
                         <div className="flex items-center gap-2">
                             <NextPreviousButtons
                                 onNextClick={onNextClick}
@@ -529,9 +528,12 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    size="icon-xs"
-                                    aria-label="Close"
+                                    theme="gray"
+                                    size="sm"
+                                    isIconButton
+                                    aria-label={_("Close")}
                                     onClick={onClose}
+                                    title={_("Close")}
                                 >
                                     <X className="size-4" />
                                 </Button>
@@ -591,8 +593,11 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                             autoFocus={false}
                             type="button"
                             variant="ghost"
-                            size="icon-xs"
-                            aria-label="Previous Field"
+                            theme="gray"
+                            size="sm"
+                            isIconButton
+                            aria-label={_("Previous Field")}
+                            title={_("Previous Field")}
                             onClick={onPreviousClick}
                             disabled={index === 0}
                         >
@@ -600,7 +605,7 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Previous Field ({getKeyboardMetaKeyString()} + ←)</p>
+                        <p>{_("Previous Field")} ({getKeyboardMetaKeyString()} + ←)</p>
                     </TooltipContent>
                 </Tooltip>
                 <Tooltip>
@@ -610,8 +615,11 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                             autoFocus={false}
                             type="button"
                             variant="ghost"
-                            size="icon-xs"
-                            aria-label="Next Field"
+                            theme="gray"
+                            size="sm"
+                            isIconButton
+                            aria-label={_("Next Field")}
+                            title={_("Next Field")}
                             onClick={onNextClick}
                             disabled={index === totalLength - 1}
                         >
@@ -619,7 +627,7 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Next Field ({getKeyboardMetaKeyString()} + →)</p>
+                        <p>{_("Next Field")} ({getKeyboardMetaKeyString()} + →)</p>
                     </TooltipContent>
                 </Tooltip>
             </div>

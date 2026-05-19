@@ -7,21 +7,22 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
+import _ from '@/lib/translate'
 
 const ViewTemplateLoader = () => {
     return (
         <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
-            <div className="w-full border-b p-4 space-y-4 lg:w-[44%] lg:border-b-0 lg:border-r">
+            <div className="w-full border-b p-2 space-y-4 lg:w-[44%] lg:border-b-0 lg:border-r">
                 <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-[45vh] w-full rounded-lg lg:h-[calc(100vh-7rem)]" />
+                <Skeleton className="h-[45vh] w-full rounded-lg lg:h-[calc(100vh-5rem)]" />
             </div>
-            <div className="w-full p-4 space-y-4 lg:w-[56%]">
+            <div className="w-full p-2 space-y-4 lg:w-[56%]">
                 <div className="grid w-full grid-cols-3 gap-2">
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                 </div>
-                <div className="border rounded-md min-h-[45vh] p-4 space-y-3 lg:min-h-[calc(100vh-7rem)]">
+                <div className="border rounded-md min-h-[45vh] p-4 space-y-3 lg:min-h-[calc(100vh-5rem)]">
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
@@ -66,37 +67,41 @@ export const ViewTemplate = () => {
                         <div className="pointer-events-none">
                             <ViewTemplateLoader />
                         </div>
-                        <div className="absolute inset-0 bg-background/45" />
+                        <div className="absolute inset-0 bg-surface-gray-1/80" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <p className="text-lg font-medium text-muted-foreground">Documents are processing... Please wait.</p>
+                            <p className="text-lg font-medium text-ink-gray-5">{_("The document is still processing. Please wait.")}</p>
                         </div>
                     </div>
                 ) : data.process_completed === 1 && data.is_pdf_converted === 0 ? (
                     <div className="flex items-center justify-center h-full p-4">
-                        <Alert variant="destructive" className="max-w-2xl">
-                            <AlertTitle>Issue with Form PDF</AlertTitle>
+                        <Alert variant="subtle" theme="red" className="max-w-2xl">
+                                <AlertTitle>{_("Issue with Form PDF")}</AlertTitle>
                             <AlertDescription>
-                                Something went wrong while converting the PDF. Please check the uploaded file or inspect the background job to find the actual issue.
+                                    {_("Something went wrong while converting the PDF. Please check the uploaded file or inspect the background job to find the actual issue.")}
                             </AlertDescription>
                         </Alert>
                     </div>
                 ) : data.process_completed === 1 && data.is_pdf_converted === 1 ? (
                             <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
-                                <div className="sticky top-0 z-70 border-b bg-background/95 p-2 backdrop-blur lg:hidden">
+                                <div className="sticky top-0 z-70 border-b border-outline-gray-2 bg-surface-white/95 p-2 backdrop-blur lg:hidden">
                                     <div className="grid grid-cols-2 gap-2">
                                         <Button
                                             type="button"
-                                            variant={mobilePane === 'annotator' ? 'default' : 'outline'}
+                                            variant={mobilePane === 'annotator' ? 'solid' : 'outline'}
+                                            theme="gray"
                                             onClick={() => setMobilePane('annotator')}
+                                            title={_("PDF Annotator")}
                                         >
-                                            PDF Annotator
+                                            {_("PDF Annotator")}
                                         </Button>
                                         <Button
                                             type="button"
-                                            variant={mobilePane === 'editor' ? 'default' : 'outline'}
+                                            variant={mobilePane === 'editor' ? 'solid' : 'outline'}
+                                            theme="gray"
                                             onClick={() => setMobilePane('editor')}
+                                            title={_("Field Editor")}
                                         >
-                                            Field Editor
+                                            {_("Field Editor")}
                                         </Button>
                                     </div>
                                 </div>

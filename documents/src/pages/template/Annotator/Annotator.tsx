@@ -2,13 +2,13 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import ErrorBanner from '@/components/ui/error-banner'
 import { useAnnotationFocus } from '@/hooks/useAnnotationFocus'
 import type { Annotation, AnnotationBodyElement } from '@/types/Annotation'
-import type { FormTemplate } from '@/types/FormPrinter/FormTemplate'
 import type { FormTemplateImage } from '@/types/FormPrinter/FormTemplateImage'
-import { useFrappeGetCall, useFrappeGetDoc, useFrappePostCall, useSWRConfig } from 'frappe-react-sdk'
+import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetCall, useFrappePostCall } from 'frappe-react-sdk'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ImageAnnotator } from './ImageAnnotator'
 import { AnnotationDeleteModal } from './AnnotationDeleteModal'
 import { AnnotationSyncState } from './AnnotationSyncState'
+import _ from '@/lib/translate'
 
 interface GetTemplateFieldResponse {
     name: string,
@@ -39,18 +39,37 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
     const [unsavedAnnotations, setUnsavedAnnotations] = useState<TemplateUnsavedAnnotation[]>([])
     const { call, loading } = useFrappePostCall<void>('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.update_annotation')
 
-    /** Fetch form template images */
-    const { data: formTemplate, error } = useFrappeGetDoc<FormTemplate>('Form Template', templateID)
+    const { data: formTemplateImages } = useFrappeGetCall<{ message: FormTemplateImage[] }>('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.get_for_template_images', {
+        form_template_id: templateID
+    }, undefined, {
+        revalidateOnFocus: false,
+        keepPreviousData: true,
+        revalidateIfStale: false
+    })
     const templateImages = useMemo<FormTemplateImage[]>(
-        () => [...(formTemplate?.form_template_image ?? [])].sort((a, b) => a.page_index - b.page_index),
-        [formTemplate?.form_template_image]
+        () => [...(formTemplateImages?.message ?? [])].sort((a, b) => a.page_index - b.page_index),
+        [formTemplateImages?.message]
     )
 
-    const { data: annotations, mutate } = useFrappeGetCall<{ message: GetTemplateFieldResponse[] }>('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.get_annotations', {
+    const { data: annotations, mutate, error } = useFrappeGetCall<{ message: GetTemplateFieldResponse[] }>('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.get_annotations', {
         form_template_id: templateID
-    }, ['form_template_annotations', templateID])
+    }, ['form_template_annotations', templateID], {
+        revalidateOnFocus: false,
+        revalidateIfStale: false,
+        revalidateOnReconnect: false,
+    })
 
-    const { mutate: globalMutate } = useSWRConfig()
+    useFrappeDocTypeEventListener('Form Template', (data) => {
+        if (data?.name === templateID) {
+            mutate()
+        }
+    })
+
+    useFrappeEventListener('annotations_deleted', (data) => {
+        if (data.form_template_id === templateID) {
+            mutate()
+        }
+    })
 
     const addToAnnotationUpdateQueue = useCallback((annotation: Annotation, pageIndex: number) => {
 
@@ -78,14 +97,9 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
         return call({
             'form_template_id': templateID,
             'annotations': unsavedAnnotations
+        }).then(() => {
+            setUnsavedAnnotations([])
         })
-            .then(() => {
-                setUnsavedAnnotations([])
-                return mutate()
-            })
-            .then(() => {
-                return
-            })
     }
     // If there are any changes, send a request to the server
     useEffect(() => {
@@ -94,11 +108,9 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
             return call({
                 'form_template_id': templateID,
                 'annotations': unsavedAnnotations
+            }).then(() => {
+                setUnsavedAnnotations([])
             })
-                .then(() => {
-                    setUnsavedAnnotations([])
-                    return mutate()
-                })
 
         }
         // @ts-expect-error NodeJS.Timer is not defined in the browser
@@ -117,12 +129,16 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
     const { focusedAnnotation, onAnnotationClick, setFocusedAnnotation } = useAnnotationFocus(templateID)
 
     const [deleteAnnotationID, setDeleteAnnotationID] = useState<string | null>(null)
+    const [resetViewportNonce, setResetViewportNonce] = useState(0)
 
     const deleteAnnotationModalClose = useCallback(() => {
         setDeleteAnnotationID(null)
-        mutate()
-        globalMutate('form_template_fields')
-    }, [mutate, setDeleteAnnotationID, globalMutate])
+    }, [setDeleteAnnotationID])
+
+    const onAnnotationDeleted = useCallback(() => {
+        onAnnotationClick(null)
+        setResetViewportNonce((n) => n + 1)
+    }, [onAnnotationClick])
 
     const parsedAnnotations: Record<number, Annotation[]> = useMemo(() => {
 
@@ -238,6 +254,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                     id={`osd-form-template-${templateID}`}
                     setFocusedAnnotation={setFocusedAnnotation}
                     onAnnotationDelete={setDeleteAnnotationID}
+                    resetZoomNonce={resetViewportNonce}
                     backTo={
                         import.meta.env.VITE_DESK_FORM_TEMPLATE_LIST_URL?.trim() ||
                         `${String(import.meta.env.VITE_FRAPPE_PATH ?? '').replace(/\/$/, '')}/app/list/${encodeURIComponent('Form Template')}/List`
@@ -250,20 +267,20 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                             forceUpdate={uploadToDatabase}
                             syncing={loading} />
                     </>} />
-                <AnnotationDeleteModal annotationID={deleteAnnotationID} templateID={templateID} onClose={deleteAnnotationModalClose} />
+                <AnnotationDeleteModal annotationID={deleteAnnotationID} templateID={templateID} onClose={deleteAnnotationModalClose} onDeleted={onAnnotationDeleted} />
             </>
         )
     }
 
-    if (templateImages && templateImages.length === 0) {
+    if (formTemplateImages && formTemplateImages.message.length === 0) {
         // return <Center m='4'><AlertBanner status='warning' heading='We did not find any images.'>This can happen if the PDF file is still being converted to images. Please try again later.</AlertBanner></Center>
         return <div className='flex flex-col items-center justify-center w-full h-full'>
-            <Alert variant='default'>
+            <Alert variant="subtle" theme="amber">
                 <AlertTitle>
-                    We did not find any images.
+                    {_("No images were found.")}
                 </AlertTitle>
                 <AlertDescription>
-                    This can happen if the PDF file is still being converted to images. Please try again later.
+                    {_("This can happen if the PDF file is still being converted to images. Please try again later.")}
                 </AlertDescription>
             </Alert>
         </div>

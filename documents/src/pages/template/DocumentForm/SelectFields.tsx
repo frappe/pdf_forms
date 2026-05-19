@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { FormItem, FormLabel, FormControl } from '@/components/ui/form'
+import { FormItem, FormLabel, FormControl, FormRequiredIndicator } from '@/components/ui/form'
 import { cn } from '@/lib/utils'
 import type { SchemaField } from '@/pages/template/Configuration/Configurations'
+import _ from '@/lib/translate'
 
 interface FieldMap {
     field: string
@@ -27,7 +28,7 @@ interface SearchableSelectProps {
 const SearchableSelect = ({
     value,
     onChange,
-    placeholder = 'Select an option',
+    placeholder = _("{0}", ["Select an option"]),
     isDisabled = false,
     isSearchable = true,
     options,
@@ -48,13 +49,22 @@ const SearchableSelect = ({
         <Popover open={open} onOpenChange={setOpen} modal={false}>
             <PopoverTrigger asChild>
                 <Button
-                    variant="outline"
+                    variant="subtle"
+                    theme="gray"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between"
+                    className="w-full justify-between border border-transparent font-normal"
                     disabled={isDisabled}
+                    size="md"
                 >
-                    {selectedOption ? selectedOption.label : placeholder}
+                    <span
+                        className={cn(
+                            'min-w-0 flex-1 truncate text-start',
+                            selectedOption ? 'text-ink-gray-7' : 'text-ink-gray-4',
+                        )}
+                    >
+                        {selectedOption ? selectedOption.label : placeholder}
+                    </span>
                     <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -66,7 +76,7 @@ const SearchableSelect = ({
                 <Command shouldFilter={false} className="w-full">
                     {isSearchable && (
                         <CommandInput
-                            placeholder="Search..."
+                            placeholder={_("{0}", ["Search..."])}
                             value={searchQuery}
                             onValueChange={setSearchQuery}
                         />
@@ -80,7 +90,7 @@ const SearchableSelect = ({
                         }}
                     >
                         <CommandList>
-                            <CommandEmpty>No options found.</CommandEmpty>
+                            <CommandEmpty>{_("No options found.")}</CommandEmpty>
                             <CommandGroup>
                                 {filteredOptions.map((option) => (
                                     <CommandItem
@@ -121,12 +131,12 @@ const IndexField = ({
 }) => (
     <FormItem>
         <FormLabel>
-            Index <span className="text-destructive">*</span>
+            {_("Index")} <FormRequiredIndicator className="ms-0.5" />
         </FormLabel>
         <FormControl>
             <Input
                 type="number"
-                placeholder="Index"
+                placeholder={_("{0}", ["Index"])}
                 value={index || ''}
                 onChange={(e) => onIndexChange(e.target.value)}
             />
@@ -178,14 +188,14 @@ const FieldSelector = ({
         <>
             <FormItem>
                 <FormLabel>
-                    {schema.description || 'Select Field'}{' '}
-                    <span className="text-destructive">*</span>
+                    {_("{0}", [schema.description ?? 'Select Field'])}{' '}
+                    <FormRequiredIndicator className="ms-0.5" />
                 </FormLabel>
                 <FormControl>
                     <SearchableSelect
                         value={currentMap.field}
                         onChange={handleFieldChange}
-                        placeholder="Select field"
+                        placeholder={_("Select field")}
                         isSearchable
                         options={fieldOptions}
                     />
@@ -341,14 +351,14 @@ const SelectFields = ({
             ) : (
                 <FormItem>
                     <FormLabel>
-                        {schemaField.description || 'Fields'}{' '}
-                        <span className="text-destructive">*</span>
+                            {_("{0}", [schemaField.description || 'Fields'])}{' '}
+                        <FormRequiredIndicator className="ms-0.5" />
                     </FormLabel>
                     <FormControl>
                         <SearchableSelect
                             value=""
                             onChange={(value) => setFieldMap({ field: value })}
-                            placeholder={`Select ${schemaField.description || 'field'}`}
+                                placeholder={_("Select {0}", [_("{0}", [schemaField.description ?? 'field'])])}
                             isSearchable
                                 options={fieldOptions}
                         />

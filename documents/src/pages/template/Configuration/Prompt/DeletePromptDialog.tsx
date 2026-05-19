@@ -4,6 +4,7 @@ import ErrorBanner from "@/components/ui/error-banner"
 import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
 import { useFrappePostCall } from "frappe-react-sdk"
 import { toast } from "sonner"
+import _ from "@/lib/translate"
 
 export const DeletePromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateID }: { isOpen: boolean, onClose: () => void, prompt: FormTemplatePrompts, onRefresh: () => void, templateID: string }) => {
     const { call, loading, error } = useFrappePostCall('pdf_forms.api.form_template.remove_prompt_from_form_template')
@@ -13,12 +14,12 @@ export const DeletePromptDialog = ({ isOpen, onClose, prompt, onRefresh, templat
             prompt: prompt,
         })
             .then(() => {
-                toast.success("Prompt deleted successfully")
+                toast.success(_("Prompt deleted successfully"))
                 onRefresh()
                 onClose()
             })
             .catch((error) => {
-                toast.error("Failed to delete prompt")
+                toast.error(_("Failed to delete prompt"))
                 console.error(error)
             })
     }
@@ -26,20 +27,20 @@ export const DeletePromptDialog = ({ isOpen, onClose, prompt, onRefresh, templat
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Delete Prompt</DialogTitle>
+                    <DialogTitle>{_("Delete Prompt")}</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col gap-4">
                     {error && <ErrorBanner error={error} />}
                     <DialogDescription>
-                        <p>Are you sure you want to delete the prompt <span className="font-bold">{prompt.label}</span>?</p>
+                        <p>{_("Are you sure you want to delete the prompt {0}?", [_("{0}", [prompt.label])])}</p>
                     </DialogDescription>
                 </div>
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={onClose}>
-                        Cancel
+                    <Button type="button" variant="ghost" onClick={onClose} title={_("Cancel")}>
+                        {_("Cancel")}
                     </Button>
-                    <Button variant={"destructive"} disabled={loading} onClick={onSubmit}>
-                        {loading ? "Deleting..." : "Delete"}
+                    <Button variant="solid" theme="red" disabled={loading} onClick={onSubmit} title={_("Delete")}>
+                        {loading ? _("Deleting...") : _("Delete")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

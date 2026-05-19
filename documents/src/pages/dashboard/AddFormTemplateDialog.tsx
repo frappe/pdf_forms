@@ -12,9 +12,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { FileDropzone } from '@/components/ui/file-dropzone'
 import { DataField, LinkFormField, SmallTextField } from '@/components/ui/form-elements'
-import { FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form'
+import { FormField, FormItem, FormControl, FormLabel, FormMessage, FormRequiredIndicator } from '@/components/ui/form'
+import { cn } from '@/lib/utils'
 import ErrorBanner from '@/components/ui/error-banner'
 import FileUploadBanner from '@/components/common/FileUploadBanner'
+import _ from '@/lib/translate'
 
 const EMPTY_FILES: File[] = []
 
@@ -78,11 +80,11 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                 return updateDoc('Form Template', docname, { file: fileUrl })
             })
             .then(() => {
-                toast.success('Form template created successfully')
+                toast.success(_("Form template created successfully"))
                 handleClose(true)
             })
             .catch(() => {
-                toast.error('Failed to create form template')
+                toast.error(_("Failed to create form template"))
             })
     }
 
@@ -102,23 +104,22 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                 <FormProvider {...methods}>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <DialogHeader>
-                            <DialogTitle>Add Form Template</DialogTitle>
+                            <DialogTitle>{_("Add Form Template")}</DialogTitle>
                             <DialogDescription>
-                                Upload a PDF to create a new form template. You can annotate and
-                                configure fields after creation.
+                                {_("Upload a PDF to create a new form template. You can annotate and configure fields after creation.")}
                             </DialogDescription>
                         </DialogHeader>
 
                         <div className="flex flex-col gap-4 py-6">
-                            {uploading && uploadProgress ? <FileUploadBanner uploadProgress={uploadProgress} />
+                            {uploading && uploadProgress ? <FileUploadBanner uploadProgress={uploadProgress} label={files.length > 0 ? files[0].name : _('Uploading...')} />
                                 : <FormField
                                 control={control}
                                 name="files"
-                                rules={{ required: 'Please add a PDF file' }}
+                                    rules={{ required: _('Please add a PDF file') }}
                                     render={({ field, fieldState }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            PDF File <span className="text-destructive">*</span>
+                                                {_("PDF File")} <FormRequiredIndicator className="ms-0.5" />
                                         </FormLabel>
                                         <FormControl>
                                             <FileDropzone
@@ -131,8 +132,11 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                                                     )
                                                 }
                                                 accept={{ 'application/pdf': ['.pdf'] }}
-                                                maxFiles={1}
-                                                className={fieldState.error ? 'border-destructive border' : undefined}
+                                                    multiple={false}
+                                                className={cn(
+                                                    fieldState.error &&
+                                                        'border-outline-red-3 shadow-focus-red'
+                                                )}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -148,16 +152,21 @@ export const AddFormTemplateDialog = ({ isOpen, onClose }: AddFormTemplateDialog
                             <Button
                                 type="button"
                                 variant="ghost"
+                                theme="gray"
                                 onClick={() => handleClose()}
                                 disabled={isLoading}
+                                title={_("Cancel")}
                             >
-                                Cancel
+                                {_("Cancel")}
                             </Button>
                             <Button
                                 type="submit"
+                                variant="solid"
+                                theme="gray"
                                 disabled={isLoading}
+                                title={_("Create")}
                             >
-                                {isLoading ? 'Creating…' : 'Create'}
+                                {isLoading ? _('Creating…') : _('Create')}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -172,11 +181,11 @@ const FormTemplateFormFields = ({ isEdit = false }: { isEdit?: boolean }) => {
         <div className="flex flex-col gap-4">
             <DataField
                 name="template_name"
-                label="Template Name"
+                label={_("Template Name")}
                 isRequired
                 readOnly={isEdit}
-                rules={{ required: 'Template name is required', maxLength: { value: 100, message: 'Maximum 100 characters' } }}
-                inputProps={{ placeholder: 'eg: User Appointment Letter' }}
+                rules={{ required: _('Template name is required'), maxLength: { value: 100, message: _('Maximum 100 characters') } }}
+                inputProps={{ placeholder: _('e.g. User Appointment Letter') }}
             />
 
             {/* <SelectFormField
@@ -192,17 +201,18 @@ const FormTemplateFormFields = ({ isEdit = false }: { isEdit?: boolean }) => {
 
             <LinkFormField
                 name="source"
-                label="Source"
+                label={_("Source")}
                 doctype="DocType"
-                placeholder='Select a source'
+                placeholder={_('Select a source')}
                 isRequired
                 readOnly={isEdit}
-                rules={{ required: 'Source is required' }}
+                useInForm={true}
+                rules={{ required: _('Source is required') }}
             />
 
             <SmallTextField
                 name="template_description"
-                label="Description"
+                label={_("Description")}
             />
         </div>
     )

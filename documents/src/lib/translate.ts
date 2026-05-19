@@ -5,16 +5,14 @@ function _(txt: string, replace?: string[], context = null) {
     let translated_text = "";
 
     const key = txt; // txt.replace(/\n/g, "");
-    // @ts-expect-error expected
-    if (window.frappe) {
+    const messages = window.frappe?._messages as Record<string, string> | undefined
+    if (messages) {
         if (context) {
-            // @ts-expect-error expected
-            translated_text = window.frappe._messages[`${key}:${context}`];
+            translated_text = messages[`${key}:${context}`] ?? ""
         }
 
         if (!translated_text) {
-            // @ts-expect-error expected
-            translated_text = window.frappe?._messages?.[key] || txt;
+            translated_text = messages[key] ?? txt
         }
 
     } else {

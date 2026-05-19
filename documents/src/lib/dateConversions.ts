@@ -6,7 +6,6 @@ export const FRAPPE_DATETIME_FORMAT = 'YYYY-MM-DD HH:mm:ss'
 export const FRAPPE_DATE_FORMAT = 'YYYY-MM-DD'
 export const FRAPPE_TIME_FORMAT = 'HH:mm:ss'
 const DEFAULT_TIME_ZONE = 'America/Chicago'
-// @ts-expect-error - window.frappe may not be defined in all contexts
 export const SYSTEM_TIMEZONE = window.frappe?.boot?.time_zone?.system || DEFAULT_TIME_ZONE
 
 /**
@@ -296,9 +295,7 @@ export const convertFrappeTimestampToTimeAgo = (timestamp?: string, withoutSuffi
 }
 
 export const convertFrappeTimestampToUserTimezone = (timestamp: string): Moment => {
-    // @ts-expect-error - window.frappe may not be defined in all contexts
     const systemTimezone = window.frappe?.boot?.time_zone?.system
-    // @ts-expect-error - window.frappe may not be defined in all contexts
     const userTimezone = window.frappe?.boot?.time_zone?.user
 
     if (systemTimezone && userTimezone) {

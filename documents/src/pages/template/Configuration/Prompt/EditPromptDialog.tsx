@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PromptForm } from "./PromptForm";
 import { Button } from "@/components/ui/button";
 import ErrorBanner from "@/components/ui/error-banner";
+import _ from "@/lib/translate";
 
 export const EditPromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateID }: { isOpen: boolean, onClose: () => void, prompt: FormTemplatePrompts, onRefresh: () => void, templateID: string }) => {
     const methods = useForm<FormTemplatePrompts>({
@@ -19,11 +20,11 @@ export const EditPromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateI
             form_template_id: templateID,
             prompt: data,
         }).then(() => {
-            toast.success("Prompt updated successfully")
+            toast.success(_("Prompt updated successfully"))
             onRefresh()
             onClose()
         }).catch((error) => {
-            toast.error("Failed to update prompt")
+            toast.error(_("Failed to update prompt"))
             console.error(error)
         })
     }
@@ -31,7 +32,7 @@ export const EditPromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateI
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit Prompt</DialogTitle>
+                    <DialogTitle>{_("Edit Prompt")}</DialogTitle>
                 </DialogHeader>
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -41,11 +42,11 @@ export const EditPromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateI
 
 
                             <DialogFooter>
-                                <Button type="button" variant="outline" onClick={onClose}>
-                                    Cancel
+                                <Button type="button" variant="ghost" onClick={onClose} title={_("Cancel")}>
+                                    {_("Cancel")}
                                 </Button>
-                                <Button type="submit" disabled={loading}>
-                                    {loading ? "Updating..." : "Update"}
+                                <Button type="submit" variant="solid" disabled={loading} title={_("Update")}>
+                                    {loading ? _("Updating...") : _("Update")}
                                 </Button>
 
                             </DialogFooter>

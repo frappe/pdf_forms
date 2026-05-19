@@ -74,6 +74,18 @@ def get_annotations(form_template_id: str) -> list[dict[str, Any]]:
 	]
 
 
+@frappe.whitelist()
+def get_for_template_images(form_template_id: str) -> list[dict[str, Any]]:
+	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+
+	# return form_template_images by sorting by page_index
+	form_template_images = sorted(
+		form_template.form_template_image,
+		key=lambda r: r.page_index,
+	)
+	return form_template_images
+
+
 @frappe.whitelist(methods=["POST"])
 def update_form_template_fields(
 	form_template_id: str,
@@ -167,14 +179,6 @@ def update_annotation(form_template_id: str, annotations: list[dict[str, Any]]) 
 
 	form_template.save()
 
-	frappe.publish_realtime(
-		"annotations_updated",
-		{"form_template_id": form_template_id},
-		doctype="Form Template",
-		docname=form_template_id,
-		after_commit=True,
-	)
-
 	return "Success"
 
 
@@ -192,11 +196,10 @@ def delete_annotation(form_template_id: str, annotation_id: str) -> str:
 	form_template.save()
 
 	frappe.publish_realtime(
-		"annotations_updated",
-		{"form_template_id": form_template_id},
+		"annotations_deleted",
+		{"form_template_id": form_template_id, "annotation_id": annotation_id},
 		doctype="Form Template",
 		docname=form_template_id,
-		after_commit=True,
 	)
 
 	return "Success"

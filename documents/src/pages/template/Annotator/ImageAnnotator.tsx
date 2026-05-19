@@ -8,6 +8,7 @@ import type { Annotation } from '@/types/Annotation';
 import { Button } from '@/components/ui/button';
 import { DocumentImageSettingModal } from './DocumentImageSettingModal';
 import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Settings, ArrowLeft } from 'lucide-react';
+import _ from '@/lib/translate';
 
 
 interface AnnotationLabelMap {
@@ -44,6 +45,8 @@ interface Props {
      * Required when leaving the documents SPA to Frappe Desk (basename would break &lt;Link to="/app/..."&gt;).
      */
     backToExternal?: boolean,
+    /** Increment after a successful delete to reset pan/zoom to the default (full-page) view. */
+    resetZoomNonce?: number,
 }
 
 function getTooltipText(annotationId: string, labels?: Record<string, AnnotationLabelMap>): string | null {
@@ -52,11 +55,12 @@ function getTooltipText(annotationId: string, labels?: Record<string, Annotation
     return l.field_label?.trim() || l.field_name?.trim() || null
 }
 
-export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onDualView, viewMode, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, ...props }: Props) => {
+export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, resetZoomNonce = 0, ...props }: Props) => {
 
     const [currentPage, setCurrentPage] = useState(0);
 
     const mounted = useRef(false);
+    const lastResetZoomNonce = useRef(0);
 
     const [annotator, setAnnotator] = useState<any>(null);
 
@@ -145,6 +149,12 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
 
         }
     }, [annotator])
+
+    useEffect(() => {
+        if (!viewer || !resetZoomNonce || resetZoomNonce <= lastResetZoomNonce.current) return
+        lastResetZoomNonce.current = resetZoomNonce
+        viewer.viewport.goHome(true)
+    }, [resetZoomNonce, viewer])
 
     useEffect(() => {
         if (annotator && annotations) {
@@ -393,11 +403,11 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
     return (
         <div className="relative w-full" {...props}>
             {showToolbar && (
-                <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto">
-                    <div className="flex items-stretch gap-0 bg-gray-100 w-full shadow-sm justify-between rounded-t-lg">
-                        <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200">
+                <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto border-l border-r border-outline-gray-2">
+                    <div className="flex items-stretch gap-0 bg-surface-gray-1 w-full shadow-sm justify-between p-1">
+                        <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-e [&>*:not(:last-child)]:border-outline-gray-2">
                             {backTo && (
-                                <Button variant="ghost" size="icon" aria-label={backLabel} title={backLabel} className="rounded-none" asChild>
+                                <Button variant="ghost" theme="gray" isIconButton size="md" aria-label={backLabel} title={backLabel} className="rounded-none" asChild>
                                     {backToExternal ? (
                                         <a href={backTo}>
                                             <ArrowLeft className="size-4" />
@@ -411,9 +421,11 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             )}
                             <Button
                                 variant="ghost"
-                                size="icon"
-                                aria-label="Full Screen"
-                                title="Full Screen"
+                                theme="gray"
+                                isIconButton
+                                size="md"
+                                aria-label={_("Full Screen")}
+                                title={_("Full Screen")}
                                 onClick={fullScreen}
                                 className="rounded-none"
                             >
@@ -422,33 +434,41 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             <div className="flex items-center gap-0">
                                 <Button
                                     variant="ghost"
-                                    size="icon"
-                                    aria-label="Previous Page"
+                                    theme="gray"
+                                    isIconButton
+                                    size="md"
+                                    aria-label={_("Previous Page")}
                                     disabled={currentPage === 0}
                                     onClick={prevPage}
                                     className="rounded-none"
+                                    title={_("Previous Page")}
                                 >
                                     <ChevronLeft className="size-4" />
                                 </Button>
                                 <div className="w-[70px] text-center">
-                                    <span className="text-xs">Page {currentPage + 1} of {images.length}</span>
+                                    <span className="text-xs">{_("Page")} {currentPage + 1} {_("of")} {images.length}</span>
                                 </div>
                                 <Button
                                     variant="ghost"
-                                    size="icon"
-                                    aria-label="Next Page"
+                                    theme="gray"
+                                    isIconButton
+                                    size="md"
+                                    aria-label={_("Next Page")}
                                     disabled={currentPage === images.length - 1}
                                     onClick={nextPage}
                                     className="rounded-none"
+                                    title={_("Next Page")}
                                 >
                                     <ChevronRight className="size-4" />
                                 </Button>
                             </div>
                             <Button
                                 variant="ghost"
-                                size="icon"
-                                aria-label="Zoom In"
-                                title="Zoom In"
+                                theme="gray"
+                                isIconButton
+                                size="md"
+                                aria-label={_("Zoom In")}
+                                title={_("Zoom In")}
                                 onClick={zoomIn}
                                 className="rounded-none"
                             >
@@ -456,9 +476,11 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             </Button>
                             <Button
                                 variant="ghost"
-                                size="icon"
-                                aria-label="Zoom Out"
-                                title="Zoom Out"
+                                theme="gray"
+                                isIconButton
+                                size="md"
+                                aria-label={_("Zoom Out")}
+                                title={_("Zoom Out")}
                                 onClick={zoomOut}
                                 className="rounded-none"
                             >
@@ -466,7 +488,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                             </Button>
                         </div>
                         {customButtons && (
-                            <div className="flex items-stretch gap-0 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200">
+                            <div className="flex items-stretch gap-0 [&>*:not(:last-child)]:border-e [&>*:not(:last-child)]:border-outline-gray-2">
                                 {customButtons}
                             </div>
                         )}
@@ -478,16 +500,18 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
             )}
 
             <div
-                className="relative pt-10 h-[70vh] md:h-[75vh] lg:h-screen border border-gray-100 w-full"
+                className="relative pt-10 h-[70vh] md:h-[75vh] lg:h-screen border border-outline-gray-2 w-full"
                 style={annotatorImageStyles}
             >
                 <Button
                     variant="outline"
                     size="sm"
                     type="button"
-                    aria-label="Settings"
+                    aria-label={_("Settings")}
+                    title={_("Settings")}
                     onClick={onOpen}
-                    className="absolute right-2 top-11 z-50"
+                    isIconButton
+                    className="absolute right-2 top-12 z-50"
                 >
                     <Settings className="size-4" />
                 </Button>
@@ -510,7 +534,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                         {tooltip.text}
                     </div>
                 )}
-                <div className="absolute bottom-2 left-1 bg-black/80 px-4 py-1 text-white rounded-md shadow-md">
+                <div className="absolute bottom-2 left-1 bg-black/80 px-3 py-1 text-white rounded-md shadow-md">
                     {NUMBER_OF_ANNOTATIONS}
                 </div>
             </div>

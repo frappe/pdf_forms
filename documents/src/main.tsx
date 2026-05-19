@@ -11,17 +11,14 @@ if (import.meta.env.DEV) {
   })
     .then(response => response.json())
     .then((values) => {
-      const v = JSON.parse(values.message)
-      // @ts-expect-error - frappe will be available
+      const v = values.message;
+      const boot = typeof v === 'string' ? JSON.parse(v) : v;
       if (!window.frappe) window.frappe = {};
-      //@ts-expect-error - frappe will be available
-      frappe.boot = v
+      frappe.boot = boot;
       //@ts-expect-error - frappe will be available
       frappe._messages = frappe.boot["__messages"];
       //@ts-expect-error - frappe will be available
-      if (frappe.boot?.docs) {
-        frappe.model.sync(frappe.boot.docs);
-      }
+      frappe.model.sync(frappe.boot.docs);
       createRoot(document.getElementById('root') as HTMLElement).render(
         <StrictMode>
           <App />
@@ -35,9 +32,7 @@ if (import.meta.env.DEV) {
 
 } else {
   //@ts-expect-error - frappe will be available
-  if (window.frappe?.boot?.docs) {
-    frappe.model.sync(frappe.boot.docs);
-  }
+  frappe.model.sync(frappe.boot.docs);
   createRoot(document.getElementById('root') as HTMLElement).render(
     <StrictMode>
       <App />

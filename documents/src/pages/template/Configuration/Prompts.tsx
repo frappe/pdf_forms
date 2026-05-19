@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { CreatePromptDialog } from './Prompt/CreatePromptDialog'
 import { EditPromptDialog } from './Prompt/EditPromptDialog'
 import { DeletePromptDialog } from './Prompt/DeletePromptDialog'
+import _ from '@/lib/translate'
 
 export const Prompts = ({ prompts, templateID, onRefresh }: {
     prompts: FormTemplatePrompts[]
@@ -42,19 +43,19 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
             <div className="flex flex-col h-full min-h-[200px]">
                 {templateID && (
                     <div className="flex justify-end py-2 shrink-0">
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                        <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)} title={_("Add Prompt")}>
                             <Plus className="size-4" />
-                            Add prompt
+                            {_("Add Prompt")}
                         </Button>
                     </div>
                 )}
                 <div className="flex flex-col items-center justify-center py-12 text-center flex-1 overflow-auto">
-                    <MessageSquareText className="size-12 text-muted-foreground/50 mb-4" />
-                    <p className="text-sm text-muted-foreground">
-                        No prompts configured for this template.
+                    <MessageSquareText className="size-12 text-ink-gray-5 opacity-50 mb-4" />
+                    <p className="text-sm text-ink-gray-5">
+                        {_("No prompts configured for this template.")}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        Prompts allow you to collect additional input when filling the form.
+                    <p className="text-xs text-ink-gray-5 mt-1">
+                        {_("Prompts allow you to collect additional input when filling the form.")}
                     </p>
                 </div>
                 {templateID && (
@@ -65,31 +66,31 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
     }
 
     return (
-        <div className="flex flex-col gap-2 px-2">
+        <div className="flex flex-col gap-2">
             {templateID && (
                 <div className="flex justify-end py-2">
-                    <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                    <Button size="sm" variant="solid" theme="gray" onClick={() => setIsCreateOpen(true)} title="Add Prompt">
                         <Plus className="size-4" />
-                        Add prompt
+                        {_("Add Prompt")}
                     </Button>
                 </div>
             )}
-            <div className="overflow-y-auto px-2 flex flex-col gap-2" style={{ height: 'calc(100vh - 210px)' }}>
+            <div className="overflow-y-auto flex flex-col gap-2 max-h-[85vh]">
                 {prompts.map((prompt, index) => (
                     <div
                         key={prompt.name || index}
-                        className="border border-border rounded-lg px-3 py-2 bg-card hover:shadow-sm transition-shadow"
+                        className="border border-outline-gray-2 rounded-lg px-3 py-2 bg-surface-cards hover:shadow-sm transition-shadow"
                     >
                         {/* Header row */}
                         <div className="flex items-start justify-between gap-2 mb-0.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                                 <h4 className="font-medium text-sm">{prompt.label}</h4>
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal">
-                                    {prompt.type || 'Text'}
+                                <Badge variant="subtle" theme="gray" className="text-[10px] px-1.5 py-0 font-normal">
+                                    {_("{0}", [prompt.type || _("Text")])}
                                 </Badge>
                                 {prompt.mandatory === 1 && (
-                                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0 font-normal">
-                                        Required
+                                    <Badge variant="solid" theme="red" className="text-[10px] px-1.5 py-0 font-normal">
+                                        {_("Required")}
                                     </Badge>
                                 )}
                             </div>
@@ -97,20 +98,24 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                    theme="gray"
+                                    size="sm"
+                                    isIconButton
                                     onClick={() => onEdit(prompt)}
-                                    aria-label="Edit prompt"
+                                    aria-label={_("Edit prompt")}
+                                    title={_("Edit prompt")}
                                 >
                                     <Pencil className="size-3.5" />
                                 </Button>
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                    theme="red"
+                                    size="sm"
+                                    isIconButton
                                     onClick={() => onDelete(prompt)}
-                                    aria-label="Delete prompt"
+                                    aria-label={_("Delete prompt")}
+                                    title={_("Delete prompt")}
                                 >
                                     <Trash2 className="size-3.5" />
                                 </Button>
@@ -118,34 +123,36 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                         </div>
 
                         {/* Field name */}
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <code className="bg-muted px-1 py-0.5 rounded text-[11px]">{prompt.field_name}</code>
+                        <div className="flex items-center gap-1 text-xs text-ink-gray-5">
+                            <code className="bg-surface-gray-2 px-1 py-0.5 rounded text-[11px]">{prompt.field_name}</code>
                             <Button
                                 type="button"
                                 variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                theme="gray"
+                                size="sm"
+                                isIconButton
                                 onClick={() => {
                                     void navigator.clipboard.writeText(prompt.field_name).then(() => {
-                                        toast.success('Copied to clipboard')
+                                        toast.success(_("Copied to clipboard"))
                                     }).catch(() => {
-                                        toast.error('Failed to copy')
+                                        toast.error(_("Failed to copy"))
                                     })
                                 }}
-                                aria-label="Copy field name"
-                        >
+                                aria-label={_("Copy field name")}
+                                title={_("Copy field name")}
+                            >
                                 <Copy className="size-3" />
                             </Button>
                         </div>
 
                         {/* Question */}
                         {prompt.description && (
-                            <div className="mt-2 pt-2 border-t border-border">
-                                <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-0.5">
-                                    Description
+                            <div className="mt-2 pt-2 border-t border-outline-gray-2">
+                                <p className="text-[11px] text-ink-gray-5 uppercase tracking-wide mb-0.5">
+                                    {_("Description")}
                                 </p>
-                                <p className="text-xs text-foreground whitespace-pre-wrap leading-tight">
-                                    {prompt.description}
+                                <p className="text-xs text-ink-gray-8 whitespace-pre-wrap leading-tight">
+                                    {_("{0}", [prompt.description])}
                                 </p>
                             </div>
                         )}

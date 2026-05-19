@@ -20,6 +20,7 @@ import {
 import { CodeEditorFormField, DataField } from "@/components/ui/form-elements"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
+import _ from "@/lib/translate"
 
 interface Props {
     isOpen: boolean
@@ -74,7 +75,7 @@ export const SettingPageModalContent = ({
 
     const onSubmit = (value: SettingFields) => {
         if (!data.parent) {
-            toast.error("Unable to update settings: missing form template id")
+            toast.error(_("Unable to update settings: missing form template ID"))
             return
         }
 
@@ -87,12 +88,12 @@ export const SettingPageModalContent = ({
             base_index: value.base_index,
         })
             .then(() => {
-                toast.success("Settings Updated", { duration: 2000 })
+                toast.success(_("Settings updated"))
                 onUpdated?.()
                 onClose()
             })
             .catch((submitError: { message?: string }) => {
-                toast.error("Failed to update settings", {
+                toast.error(_("Failed to update settings"), {
                     description: submitError?.message,
                 })
             })
@@ -104,9 +105,9 @@ export const SettingPageModalContent = ({
         <FormProvider {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <DialogHeader>
-                    <DialogTitle>Settings</DialogTitle>
+                    <DialogTitle>{_("Settings")}</DialogTitle>
                 </DialogHeader>
-                <div className="flex flex-col gap-4 py-4">
+                <div className="flex flex-col gap-4">
                     {error && <ErrorBanner error={error} />}
                     <div className="flex flex-col gap-4">
                         <FormField
@@ -121,53 +122,57 @@ export const SettingPageModalContent = ({
                                         />
                                     </FormControl>
                                     <div className="space-y-1 leading-none">
-                                        <FormLabel>Repeat Page</FormLabel>
+                                        <FormLabel>{_("Repeat Page")}</FormLabel>
                                     </div>
                                 </FormItem>
                             )}
                         />
-                        {repeatPage && (
-                            <div className="flex flex-col gap-4">
-                                <DataField
-                                    name="repeat_after"
-                                    label="Repeat After"
-                                    isRequired
-                                    rules={{ required: "Repeat After is required" }}
-                                    formDescription="Repeat after this page, page index starts from 0."
-                                    inputProps={{ type: "number", min: 0 }}
-                                />
-                                <CodeEditorFormField
-                                    name="copies"
-                                    label="Copies"
-                                    isRequired
-                                    rules={{ required: "Copies is required" }}
-                                    formDescription="Use Number / Jinja template to generate copies."
-                                    editorProps={{
-                                        placeholder: "eg: {{ frappe.utils.date_diff(end_date, start_date) }}",
-                                    }}
-                                />
-                                <DataField
-                                    name="base_index"
-                                    label="Base Index"
-                                    isRequired
-                                    rules={{ required: "Base Index is required" }}
-                                    formDescription="Base index for the copies, it is useful for child table index."
-                                    inputProps={{ type: "number", min: 0 }}
-                                />
-                            </div>
-                        )}
+                        <div className="flex flex-col gap-4">
+                            <DataField
+                                name="repeat_after"
+                                label={_("Repeat After")}
+                                disabled={!repeatPage}
+                                isRequired
+                                rules={{ required: _("Repeat After is required") }}
+                                formDescription={_("Repeat after this page. Page indices start at 0.")}
+                                inputProps={{ type: "number", min: 0 }}
+                            />
+                            <CodeEditorFormField
+                                name="copies"
+                                label={_("Copies")}
+                                disabled={!repeatPage}
+                                isRequired
+                                rules={{ required: _("Copies is required") }}
+                                formDescription={_("Use a number or a Jinja template to define how many copies to generate.")}
+                                editorProps={{
+                                    placeholder: _('e.g. {{ frappe.utils.date_diff(end_date, start_date) }}'),
+                                }}
+                            />
+                            <DataField
+                                name="base_index"
+                                label={_("Base Index")}
+                                disabled={!repeatPage}
+                                isRequired
+                                rules={{ required: _("Base Index is required") }}
+                                formDescription={_("Base index for copies; useful for child table row indexing.")}
+                                inputProps={{ type: "number", min: 0 }}
+                            />
+                        </div>
                     </div>
                 </div>
                 <DialogFooter showCloseButton={false} className="gap-2">
-                    <Button type="button" variant="ghost" onClick={onClose}>
-                        Close
-                    </Button>
-                    <Button
-                        type="submit"
-                        onClick={methods.handleSubmit(onSubmit)}
-                        disabled={loading}
-                    >
-                        {loading ? "Saving..." : "Save"}
+                    <Button type="button" variant="ghost" theme="gray" onClick={onClose} title={_("Close")}>
+                        {_("Close")}
+                </Button>
+                <Button
+                    type="submit"
+                    variant="solid"
+                    theme="gray"
+                    onClick={methods.handleSubmit(onSubmit)}
+                    disabled={loading}
+                        title={_("Save")}
+                >
+                        {loading ? _("Saving...") : _("Save")}
                     </Button>
                 </DialogFooter>
             </form>

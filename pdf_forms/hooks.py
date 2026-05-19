@@ -248,6 +248,6 @@ export_python_type_annotations = True
 
 
 website_route_rules = [
-	{"from_route": "/pdf_forms", "to_route": "documents"},
-	{"from_route": "/pdf_forms/<path:app_path>", "to_route": "documents"},
+	{"from_route": "/pdf_forms", "to_route": "pdf_forms"},
+	{"from_route": "/pdf_forms/<path:app_path>", "to_route": "pdf_forms"},
 ]

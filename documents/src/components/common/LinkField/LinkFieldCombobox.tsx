@@ -213,24 +213,39 @@ const LinkFieldCombobox = ({
 
     const items = filterFn ? data?.message?.slice(0, 50).filter((item) => filterFn(item, searchInput)) : data?.message
 
+    /** DocType links can surface the string "DocType" when unset — treat like empty so placeholder matches Input. */
+    const showLinkPlaceholder = !value || (doctype === 'DocType' && linkTitle === 'DocType')
+    const triggerLabel = showLinkPlaceholder ? (placeholder ?? '') : linkTitle
+
     return (
         <Popover open={open} onOpenChange={onOpenChange} modal={true}>
             <PopoverTrigger asChild>
                 {useInForm ? <FormControl>
                     <Button
-                        variant="outline"
+                        variant="subtle"
+                        theme="gray"
                         role="combobox"
                         ref={buttonRef}
                         tabIndex={0}
                         disabled={disabled || readOnly}
                         aria-expanded={open}
                         aria-readonly={readOnly}
-                        className={cn("w-full justify-between font-normal group",
-                            readOnly ? "bg-muted" : ""
-                            , buttonClassName)}>
-                        {linkTitle !== "DocType" ? linkTitle : placeholder || placeholder}
+                        size="md"
+                        className={cn(
+                            'group w-full justify-between border border-transparent font-normal',
+                            readOnly ? 'bg-surface-gray-1' : '',
+                            buttonClassName,
+                        )}>
+                        <span
+                            className={cn(
+                                'min-w-0 flex-1 truncate text-start',
+                                showLinkPlaceholder ? 'text-ink-gray-4' : 'text-ink-gray-7',
+                            )}
+                        >
+                            {triggerLabel}
+                        </span>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex shrink-0 items-center gap-1">
                             {value && <a href={`/app/${slug(doctype)}/${value}`} target="_blank" className="group-hover:block hidden">
                                 <ExternalLink className="h-4 w-4 shrink-0 opacity-50" />
                             </a>}
@@ -239,15 +254,26 @@ const LinkFieldCombobox = ({
                     </Button>
                 </FormControl>
                     : <Button
-                        variant="outline"
+                        variant="subtle"
+                        theme="gray"
                         role="combobox"
                         ref={buttonRef}
                         disabled={disabled}
                         aria-expanded={open}
-                        className={cn("w-full justify-between font-normal",
-                            readOnly ? "bg-muted" : ""
-                            , buttonClassName)}>
-                        {value || placeholder}
+                        className={cn(
+                            'w-full justify-between border border-transparent font-normal',
+                            readOnly ? 'bg-surface-gray-1' : '',
+                            buttonClassName,
+                        )}
+                    >
+                        <span
+                            className={cn(
+                                'min-w-0 flex-1 truncate text-start',
+                                showLinkPlaceholder ? 'text-ink-gray-4' : 'text-ink-gray-7',
+                            )}
+                        >
+                            {triggerLabel}
+                        </span>
 
                         <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>}
@@ -264,7 +290,7 @@ const LinkFieldCombobox = ({
                                     <span className="font-medium">
                                         {result.label || result.value}
                                     </span>
-                                    {result.description && <span className="text-xs text-muted-foreground">
+                                    {result.description && <span className="text-xs text-ink-gray-5">
                                         {result.description}
                                     </span>}
                                 </CommandItem>
