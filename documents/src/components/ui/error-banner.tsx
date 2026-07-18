@@ -1,10 +1,11 @@
-import { getErrorMessages } from '@/lib/frappe'
-import { type FrappeError } from 'frappe-react-sdk'
-import { Alert, AlertDescription, type AlertProps, AlertTitle } from '@/components/ui/alert'
+import { getErrorMessages } from '@lib/frappe'
+import type { FrappeError } from 'frappe-react-sdk'
+import { Alert, AlertDescription, type AlertProps, AlertTitle } from '@components/ui/alert'
 import { AlertCircle } from 'lucide-react'
-import MarkdownRenderer from '@/components/ui/markdown'
-import { useMemo } from 'react'
-import _ from '@/lib/translate'
+import MarkdownRenderer from '@components/ui/markdown'
+import _ from '@lib/translate'
+import { ReactNode, useMemo } from 'react'
+import { toast, type ExternalToast } from 'sonner'
 
 type ErrorBannerProps = AlertProps & {
     error?: FrappeError | null,
@@ -18,20 +19,8 @@ interface ParsedErrorMessage {
 }
 
 const parseHeading = (message?: ParsedErrorMessage) => {
-    if (message?.title === 'Message' || message?.title === 'Error') return (_("There was an error."))
+    if (message?.title === 'Message' || message?.title === 'Error') return "There was an error."
     return message?.title
-}
-
-const wrapLooseListItemsWithUl = (html: string): string => {
-    // Regex matches consecutive <li>...</li> blocks not wrapped in <ul> or <ol>
-    // It wraps them in a <ul> if not already wrapped.
-    return html.replace(/(?:^|[^>])((<li[\s\S]*?<\/li>)+)(?![\s\S]*?<\/ul>)(?![\s\S]*?<\/ol>)/g, (match, p1) => {
-        // Check if the match already has <ul> or <ol> wrapping (simple check)
-        if (/^<ul>/.test(p1) || /^<ol>/.test(p1)) {
-            return match // Already wrapped, keep as is
-        }
-        return match.replace(p1, `<ul>${p1}</ul>`)
-    })
 }
 
 const ErrorBanner = ({ error, overrideHeading, ...props }: ErrorBannerProps) => {
@@ -43,24 +32,63 @@ const ErrorBanner = ({ error, overrideHeading, ...props }: ErrorBannerProps) => 
     // _server_messages: Array of messages - useful for showing to user
     // console.log(JSON.parse(error?._server_messages!))
 
-    const messages = useMemo(() => {
-        return getErrorMessages(error)
-    }, [error])
+    const { heading, descriptions, theme }:
+        { heading: string, descriptions: string[], theme: AlertProps['theme'] } = useMemo(() => {
 
-    if (!error) return null
+            const messages = getErrorMessages(error)
+
+            const theme = messages[0]?.indicator === 'yellow' ? 'amber' : "red"
+
+            let heading = "There was an error."
+
+            let descriptions: string[] = []
+
+            if (overrideHeading) {
+                heading = overrideHeading
+            }
+            // If there's a generic error, then use the first message as the heading, and description will be the rest of the messages
+            if (!overrideHeading && (messages[0]?.title === 'Message' || messages[0]?.title === 'Error')) {
+                heading = messages[0]?.message
+                descriptions = messages.slice(1).map((m) => m.message)
+            } else {
+                // Else if there's a title, then use it as the heading and all message descriptions are added
+                heading = messages[0]?.title ?? "There was an error."
+                descriptions = messages.map((m) => m.message)
+            }
+            return {
+                theme,
+                heading,
+                descriptions
+
+            }
+
+        }, [overrideHeading])
 
     return (
-        <Alert theme={messages[0]?.indicator === 'yellow' ? 'amber' : "red"} {...props}>
+        <Alert theme={theme} {...props}>
             <AlertCircle />
-            <AlertTitle>{overrideHeading ?? parseHeading(messages[0])}</AlertTitle>
-            <AlertDescription>
-                {messages.map((m, i) => {
-                    const safeMessage = wrapLooseListItemsWithUl(m.message)
-                    return <MarkdownRenderer content={safeMessage} key={i} />
-                })}
-            </AlertDescription>
+            <AlertTitle><MarkdownRenderer content={heading} /></AlertTitle>
+            {descriptions.length > 0 && <AlertDescription>
+                {descriptions.map((d, i) => <MarkdownRenderer content={d} key={i} />)}
+            </AlertDescription>}
         </Alert>
     )
+}
+
+export const errorResponseToast = (title: string, error?: FrappeError | null, options?: ExternalToast) => {
+    toast.error(title, {
+        description: getErrorMessageAsMarkdown(error),
+        ...options,
+    })
+}
+
+export const getErrorMessageAsMarkdown = (error?: FrappeError | null): ReactNode => {
+    const messages = getErrorMessages(error)
+    return <>
+        {messages.map((m, i) => {
+            return <MarkdownRenderer content={m.message} key={i} />
+        })}
+    </>
 }
 
 export default ErrorBanner

@@ -1,22 +1,22 @@
 import { useFrappeGetCall } from "frappe-react-sdk"
 import { useCallback, useMemo, useState } from "react"
-import LinkFieldCombobox from "@/components/common/LinkField/LinkFieldCombobox"
-import { Editor } from "@/components/common/Editor/Editor"
-import { Button } from "@/components/ui/button"
+import LinkFieldCombobox from "@components/common/LinkField/LinkFieldCombobox"
+import { Editor } from "@components/common/Editor/Editor"
+import { Button } from "@components/ui/button"
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@components/ui/accordion"
+import { Label } from "@components/ui/label"
+import { Input } from "@components/ui/input"
+import { Checkbox } from "@components/ui/checkbox"
 import { FileJson, Printer } from "lucide-react"
-import { web_url } from "@/config/socket"
-import ErrorBanner from "@/components/ui/error-banner"
-import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
-import _ from "@/lib/translate"
+import { web_url } from "@config/socket"
+import ErrorBanner from "@components/ui/error-banner"
+import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts"
+import _ from "@lib/translate"
 
 export interface PreviewProps {
     templateID: string

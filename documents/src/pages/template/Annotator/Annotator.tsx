@@ -1,14 +1,14 @@
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import ErrorBanner from '@/components/ui/error-banner'
-import { useAnnotationFocus } from '@/hooks/useAnnotationFocus'
-import type { Annotation, AnnotationBodyElement } from '@/types/Annotation'
-import type { FormTemplateImage } from '@/types/FormPrinter/FormTemplateImage'
+import { Alert, AlertTitle, AlertDescription } from '@components/ui/alert'
+import ErrorBanner from '@components/ui/error-banner'
+import { useAnnotationFocus } from '@hooks/useAnnotationFocus'
+import type { Annotation, AnnotationBodyElement } from '@types/Annotation'
+import type { FormTemplateImage } from '@types/FormPrinter/FormTemplateImage'
 import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetCall, useFrappePostCall } from 'frappe-react-sdk'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ImageAnnotator } from './ImageAnnotator'
 import { AnnotationDeleteModal } from './AnnotationDeleteModal'
 import { AnnotationSyncState } from './AnnotationSyncState'
-import _ from '@/lib/translate'
+import _ from '@lib/translate'
 
 interface GetTemplateFieldResponse {
     name: string,

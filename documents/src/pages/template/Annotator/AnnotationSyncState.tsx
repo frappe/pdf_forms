@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSWRConfig } from 'frappe-react-sdk'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button } from '@components/ui/button'
 import { motion } from 'framer-motion'
 import { RefreshCw, CheckCircle2 } from 'lucide-react'
-import _ from '@/lib/translate'
+import _ from '@lib/translate'
 
 interface Props {
     syncing: boolean,

@@ -1,21 +1,21 @@
 import { type FieldValues, type RegisterOptions, useFormContext } from "react-hook-form"
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, FormRequiredIndicator } from "@/components/ui/form"
-import _ from "@/lib/translate"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, FormRequiredIndicator } from "@components/ui/form"
+import _ from "@lib/translate"
 import { Input } from "./input"
 import { type ComponentProps, useState } from "react"
 import { parseDate } from "chrono-node"
-import { formatDate, getUserDateFormat, toDate } from "@/lib/date"
+import { formatDate, getUserDateFormat, toDate } from "@lib/date"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Button } from "./button"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "./calendar"
 import dayjs from "dayjs"
 import { Textarea } from "./textarea"
+import LinkFieldCombobox, { type LinkFieldComboboxProps } from "@components/common/LinkField/LinkFieldCombobox"
 import { Select, SelectContent, SelectTrigger, SelectValue } from "./select"
-import type { LinkFieldComboboxProps } from "../common/LinkField/LinkFieldCombobox"
-import LinkFieldCombobox from "../common/LinkField/LinkFieldCombobox"
+import { Switch } from "./switch"
 import type { IAceEditorProps } from "react-ace"
-import { FormCodeEditor } from "@/components/common/Editor/FormCodeEditor"
+import { FormCodeEditor } from "@components/common/Editor/FormCodeEditor"
 
 interface FormElementProps {
     name: string,
@@ -56,10 +56,9 @@ export const DataField = ({ name, rules, label, isRequired, formDescription, inp
 
 interface SelectFieldProps extends FormElementProps {
     children: React.ReactNode
-    placeholder?: string
 }
 
-export const SelectFormField = ({ name, rules, label, isRequired, formDescription, hideLabel, children, disabled, readOnly, placeholder }: SelectFieldProps) => {
+export const SelectFormField = ({ name, rules, label, isRequired, formDescription, hideLabel, children, disabled, readOnly }: SelectFieldProps) => {
 
     const { control } = useFormContext()
 
@@ -75,7 +74,7 @@ export const SelectFormField = ({ name, rules, label, isRequired, formDescriptio
                     <Select onValueChange={field.onChange} value={field.value} disabled={disabled || readOnly} aria-readonly={readOnly}>
                         <FormControl>
                             <SelectTrigger className="w-full">
-                                <SelectValue placeholder={placeholder} />
+                                <SelectValue />
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -150,9 +149,11 @@ export const DateField = ({ name, rules, label, isRequired, formDescription, inp
                     <Button
                         id="date-picker-button"
                         variant="ghost"
-                        className="absolute top-1/2 ltr:right-2 rtl:left-2 size-6 -translate-y-1/2"
+                        size="xs"
+                        isIconButton
+                        className="absolute top-1/2 ltr:right-2 rtl:left-2 -translate-y-1/2"
                     >
-                        <CalendarIcon className="size-3.5" />
+                        <CalendarIcon />
                         <span className="sr-only">{_("Select date")}</span>
                     </Button>
                 </PopoverTrigger>
@@ -236,6 +237,44 @@ export const LinkFormField = ({ name, rules, label, isRequired, formDescription,
                 <LinkFieldCombobox {...inputProps} value={field.value} onChange={field.onChange} useInForm disabled={disabled} readOnly={readOnly} />
                 {formDescription && <FormDescription>{formDescription}</FormDescription>}
                 <FormMessage />
+            </FormItem>
+        )}
+    />
+}
+
+interface SwitchFieldProps extends Omit<FormElementProps, "isRequired"> {
+    /** Stored as Frappe's 0 | 1 (not boolean). */
+    intValue?: boolean
+}
+
+/**
+ * A labelled switch row (label + description on the left, Switch on the right) —
+ * the standard on/off settings control. `intValue` stores Frappe's 0 | 1 rather
+ * than a boolean (the shape Raven Settings and most doctypes use).
+ */
+export const SwitchFormField = ({ name, rules, label, formDescription, disabled, readOnly, intValue = true }: SwitchFieldProps) => {
+
+    const { control } = useFormContext()
+
+    return <FormField
+        control={control}
+        name={name}
+        disabled={disabled}
+        rules={rules}
+        render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between gap-4">
+                <div className="space-y-0.5">
+                    <FormLabel>{label}</FormLabel>
+                    {formDescription && <FormDescription>{formDescription}</FormDescription>}
+                </div>
+                <FormControl>
+                    <Switch
+                        size="md"
+                        checked={intValue ? Boolean(field.value) : field.value}
+                        disabled={disabled || readOnly}
+                        onCheckedChange={(checked) => field.onChange(intValue ? (checked ? 1 : 0) : checked)}
+                    />
+                </FormControl>
             </FormItem>
         )}
     />

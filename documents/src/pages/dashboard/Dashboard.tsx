@@ -1,9 +1,9 @@
-import { useDebounce } from "@/hooks/useDebounce"
-import { usePaginationWithDoctype } from "@/hooks/usePagination"
+import { useDebounce } from "@hooks/useDebounce"
+import { usePaginationWithDoctype } from "@hooks/usePagination"
 import { useFrappeDocTypeEventListener, useFrappeEventListener, useFrappeGetDocList, useFrappePostCall } from "frappe-react-sdk"
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -13,16 +13,16 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import ErrorBanner from "@/components/ui/error-banner"
+} from "@components/ui/alert-dialog"
+import ErrorBanner from "@components/ui/error-banner"
 import { Plus, Trash2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Filter } from "frappe-react-sdk"
-import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
+import type { FormTemplate } from "@types/FormPrinter/FormTemplate"
 import { FormTemplateTable } from "./FormTemplateTable"
 import { AddFormTemplateDialog } from "./AddFormTemplateDialog"
-import _ from "@/lib/translate"
-import { getErrorMessages } from "@/lib/frappe"
+import _ from "@lib/translate"
+import { getErrorMessages } from "@lib/frappe"
 
 export const Dashboard = () => {
 

@@ -1,15 +1,15 @@
 import { useFrappeDocTypeEventListener, useFrappeDocumentEventListener, useFrappeEventListener, useFrappeGetDoc } from "frappe-react-sdk"
 import { useAnnotationFocus } from "../../../hooks/useAnnotationFocus"
-import type { FormTemplateField } from "@/types/FormPrinter/FormTemplateField"
-import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import ErrorBanner from "@/components/ui/error-banner"
+import type { FormTemplateField } from "@types/FormPrinter/FormTemplateField"
+import type { FormTemplate } from "@types/FormPrinter/FormTemplate"
+import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs"
+import ErrorBanner from "@components/ui/error-banner"
 import { Configurations, PromptsContent } from "../Configuration/Configurations"
 import { FieldsTable } from "./FieldsTable"
 import { Preview } from "./Preview"
 import { useMemo } from "react"
-import _ from "@/lib/translate"
+import _ from "@lib/translate"
 
 interface DocumentFormProps {
     templateID: string,

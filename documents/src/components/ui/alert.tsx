@@ -1,22 +1,26 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@lib/utils"
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3.5 text-base grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-1 [&>svg]:text-current",
+  // Icon alignment: the svg sits in row 1 beside the title, so `self-center`
+  // centers it against the title's line box exactly — unlike shadcn's stock
+  // translate-y nudge, which was tuned for a different type scale and sat the
+  // icon a few px low against Espresso's p-base (14px × 1.5 = 21px line).
+  "relative w-full rounded-md border px-4 py-3.5 text-base grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:self-center [&>svg]:text-current",
   {
     variants: {
       variant: {
-        subtle: "bg-surface-white",
+        subtle: "bg-surface-base",
         outline: "border border-outline-gray-3",
       },
       theme: {
         gray: "text-ink-gray-8",
-        blue: "text-ink-blue-3",
-        green: "text-ink-green-3",
-        red: "text-ink-red-3",
-        amber: "text-ink-amber-3",
+        blue: "text-ink-blue-6",
+        green: "text-ink-green-6",
+        red: "text-ink-red-6",
+        amber: "text-ink-amber-6",
       }
     },
     compoundVariants: [
@@ -45,7 +49,13 @@ const alertVariants = cva(
         theme: "amber",
         variant: "subtle",
         className: "bg-surface-amber-2 border-surface-amber-2"
-      }
+      },
+      {
+        theme: "red",
+        variant: "outline",
+        className: "border-outline-red-3"
+      },
+      // TODO: Add outline classes
     ],
     defaultVariants: {
       variant: "subtle",
@@ -77,7 +87,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="alert-title"
       className={cn(
-        "col-start-2 min-h-4 text-ink-gray-8 font-medium text-p-base",
+        "col-start-2 min-h-4 text-ink-gray-9 text-p-base-medium",
         className
       )}
       {...props}

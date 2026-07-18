@@ -1,6 +1,6 @@
 import { memo } from "react"
 import { Link } from "react-router-dom"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Checkbox } from "@components/ui/checkbox"
 import {
     Table,
     TableBody,
@@ -8,12 +8,12 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
+} from "@components/ui/table"
 import { FileText, Loader2 } from "lucide-react"
-import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
-import { convertFrappeDateStringToTimeAgo } from "@/lib/dateConversions"
-import { Skeleton } from "@/components/ui/skeleton"
-import _ from "@/lib/translate"
+import type { FormTemplate } from "@types/FormPrinter/FormTemplate"
+import { convertFrappeDateStringToTimeAgo } from "@lib/dateConversions"
+import { Skeleton } from "@components/ui/skeleton"
+import _ from "@lib/translate"
 
 interface FormTemplateTableProps {
     data: FormTemplate[]

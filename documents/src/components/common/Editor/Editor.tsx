@@ -6,11 +6,11 @@ import "ace-builds/src-noconflict/ext-language_tools"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { web_url } from "../../../config/socket"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Button } from "@components/ui/button"
+import { cn } from "@lib/utils"
 import { Copy, Printer } from "lucide-react"
-import { useTheme } from "@/components/ui/theme-provider"
-import { aceEditorTheme } from "@/components/common/Editor/ace-theme"
+import { useTheme } from "@components/ui/theme-provider"
+import { aceEditorTheme } from "@components/common/Editor/ace-theme"
 
 export interface EditorProps extends IAceEditorProps {
     jsonValue: Record<string, unknown>

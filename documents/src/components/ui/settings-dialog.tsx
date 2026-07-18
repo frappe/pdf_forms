@@ -1,7 +1,8 @@
 import * as React from "react"
 import { Tabs as TabsPrimitive, Dialog as DialogPrimitive } from "radix-ui"
-import { cn } from "@/lib/utils"
+import { cn } from "@lib/utils"
 import { DialogContent } from "./dialog"
+import { Label } from "./label"
 
 /**
  * Sample Usage:
@@ -69,7 +70,7 @@ function SettingsDialog({
                     data-slot="settings-dialog"
                     orientation="vertical"
                     className={cn(
-                        "flex h-[calc(100vh-8rem)] bg-surface-menu-bar",
+                        "flex h-[calc(100vh-8rem)] bg-surface-sidebar",
                         className
                     )}
                     {...props}
@@ -89,7 +90,7 @@ function SettingsTabs({
         <TabsPrimitive.List
             data-slot="settings-tabs"
             className={cn(
-                "flex flex-col w-56 bg-surface-menu-bar rounded-s-lg shrink-0 overflow-y-auto m-1",
+                "flex flex-col w-56 bg-surface-sidebar rounded-s-lg shrink-0 overflow-y-auto m-1",
                 className
             )}
             {...props}
@@ -110,7 +111,7 @@ function SettingsTabGroup({
     return (
         <div data-slot="settings-tab-group" className={className} {...props}>
             {header && (
-                <div className="h-7.5 px-2 py-[7px] my-[3px] flex cursor-default gap-1.5 text-xs font-medium text-ink-gray-5 transition-all duration-300 ease-in-out sticky top-0 z-10 bg-surface-menu-bar">
+                <div className="h-7.5 px-2 py-[7px] my-[3px] flex cursor-default gap-1.5 text-xs-medium text-ink-gray-5 transition-all duration-300 ease-in-out sticky top-0 z-10 bg-surface-sidebar dark:bg-surface-elevation-1">
                     <span>{header}</span>
                 </div>
             )}
@@ -135,9 +136,9 @@ function SettingsTabItem({
         <TabsPrimitive.Trigger
             data-slot="settings-tab-item"
             className={cn(
-                "flex h-7.5 cursor-pointer items-center rounded text-ink-gray-6 duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-outline-gray-3 w-full",
+                "flex h-7.5 cursor-pointer items-center rounded text-ink-gray-6 duration-300 ease-in-out focus-visible:focus-ring w-full",
                 "hover:bg-surface-gray-3",
-                "data-[state=active]:bg-surface-selected data-[state=active]:shadow-sm data-[state=active]:hover:bg-surface-selected",
+                "data-[state=active]:bg-surface-elevation-3 data-[state=active]:shadow-sm data-[state=active]:hover:bg-surface-elevation-3",
                 className
             )}
             {...props}
@@ -171,7 +172,7 @@ function SettingsPanels({
         <div
             data-slot="settings-panels"
             className={cn(
-                "flex flex-col flex-1 overflow-y-auto bg-surface-modal",
+                "flex flex-col flex-1 overflow-y-auto bg-surface-base",
                 className
             )}
             {...props}
@@ -231,7 +232,7 @@ function SettingsPanelTitle({
     return (
         <DialogPrimitive.Title
             data-slot="dialog-title"
-            className={cn("flex gap-2 text-xl font-semibold leading-none h-5", className)}
+            className={cn("flex gap-2 text-xl-semibold text-ink-gray-8 leading-none h-5", className)}
             {...props}
         />
     )
@@ -259,6 +260,30 @@ function SettingsPanelContent({
     )
 }
 
+/** Common components for forms */
+
+/** Used to render a row in a form in the settings panel */
+const SettingsFormRow = (props: React.ComponentProps<"div">) => {
+    return <div className="flex justify-between items-center gap-8 py-3" {...props} />
+}
+
+/** Used to render a label for a form field in the settings panel */
+const SettingsFormLabel = (props: React.ComponentProps<typeof Label>) => {
+    return (
+        <Label
+            htmlFor="filter_recent_activity"
+            className="text-p-base text-ink-gray-8"
+            {...props} />
+    )
+}
+
+/** Used to render a description for a form field in the settings panel */
+const SettingsFormDescription = (props: React.ComponentProps<"p">) => {
+    return (
+        <p className="text-p-sm text-ink-gray-5" {...props} />
+    )
+}
+
 export {
     SettingsDialog,
     SettingsTabs,
@@ -269,5 +294,8 @@ export {
     SettingsPanelHeader,
     SettingsPanelTitle,
     SettingsPanelDescription,
-    SettingsPanelContent
+    SettingsPanelContent,
+    SettingsFormRow,
+    SettingsFormLabel,
+    SettingsFormDescription
 }

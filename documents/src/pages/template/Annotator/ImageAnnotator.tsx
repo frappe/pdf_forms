@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import OpenSeaDragon from "openseadragon";
 import Annotorious from '@recogito/annotorious-openseadragon';
 import '@recogito/annotorious-openseadragon/dist/annotorious.min.css';
-import type { FormTemplateImage } from '@/types/FormPrinter/FormTemplateImage';
-import type { Annotation } from '@/types/Annotation';
-import { Button } from '@/components/ui/button';
+import type { FormTemplateImage } from '@types/FormPrinter/FormTemplateImage';
+import type { Annotation } from '@types/Annotation';
+import { Button } from '@components/ui/button';
 import { DocumentImageSettingModal } from './DocumentImageSettingModal';
 import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Settings, ArrowLeft } from 'lucide-react';
-import _ from '@/lib/translate';
+import _ from '@lib/translate';
 
 
 interface AnnotationLabelMap {

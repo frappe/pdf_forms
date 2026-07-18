@@ -1,17 +1,17 @@
-import { getSystemDefault, slug } from "@/lib/frappe";
+import { getSystemDefault, slug } from "@lib/frappe";
 import { type Filter, useFrappeGetCall } from "frappe-react-sdk"
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { canCreateDocument } from "@/lib/permissions";
+import { canCreateDocument } from "@lib/permissions";
 import { useDebounceValue } from "usehooks-ts";
 import { ChevronsUpDownIcon, ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
-import _ from "@/lib/translate";
-import { useGetDoctypeMeta } from "@/hooks/useGetDoctypeMeta";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FormControl } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import ErrorBanner from "@/components/ui/error-banner";
+import { cn } from "@lib/utils";
+import _ from "@lib/translate";
+import { useGetDoctypeMeta } from "@hooks/useGetDoctypeMeta";
+import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
+import { FormControl } from "@components/ui/form";
+import { Button } from "@components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@components/ui/command";
+import ErrorBanner from "@components/ui/error-banner";
 
 export interface ResultItem {
     value: string,

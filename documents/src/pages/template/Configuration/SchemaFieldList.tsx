@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { web_url } from '@/config/socket';
+import { web_url } from '@config/socket';
 import type { SchemaField } from './Configurations';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Badge } from '@components/ui/badge';
+import { Button } from '@components/ui/button';
+import { cn } from '@lib/utils';
 import { ChevronDown, Download, Copy } from 'lucide-react';
 import { toast } from 'sonner';
-import _ from '@/lib/translate';
+import _ from '@lib/translate';
 
 const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ schema, source }) => {
     const { templateID } = useParams<{ templateID: string }>();

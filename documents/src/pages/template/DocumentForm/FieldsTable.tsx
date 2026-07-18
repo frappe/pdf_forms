@@ -4,14 +4,14 @@ import { useFrappePostCall } from "frappe-react-sdk"
 import type { KeyedMutator } from 'swr'
 import { useBoolean } from "usehooks-ts"
 import { useCopyToClipboardHotkey, usePasteFromClipboardHotkey, useSaveHotkey } from "../../../hooks/useReactHotKeys"
-import type { FormTemplateField } from "@/types/FormPrinter/FormTemplateField"
+import type { FormTemplateField } from "@types/FormPrinter/FormTemplateField"
 import { toast } from "sonner"
-import { FormField, FormControl, FormItem, FormMessage } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { SelectItem } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { DataField, SelectFormField } from "@/components/ui/form-elements"
+import { FormField, FormControl, FormItem, FormMessage } from "@components/ui/form"
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { SelectItem } from "@components/ui/select"
+import { Checkbox } from "@components/ui/checkbox"
+import { DataField, SelectFormField } from "@components/ui/form-elements"
 import {
     Table,
     TableBody,
@@ -19,25 +19,25 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
+} from "@components/ui/table"
+import { InputGroup, InputGroupInput } from "@components/ui/input-group"
 import { Pencil, Trash2, Search, ChevronLeft, ChevronRight, X, Download, Upload } from "lucide-react"
-import { AnnotationDeleteModal } from "@/pages/template/Annotator/AnnotationDeleteModal"
+import { AnnotationDeleteModal } from "@pages/template/Annotator/AnnotationDeleteModal"
 import {
     Dialog,
     DialogContent,
     DialogClose,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+} from "@components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@components/ui/tooltip"
 import { FieldEditForm } from "./FieldEditForm"
-import { SpinnerLoader } from "@/components/common/FullPageLoader/SpinnerLoader"
-import ErrorBanner from "@/components/ui/error-banner"
+import { SpinnerLoader } from "@components/common/FullPageLoader/SpinnerLoader"
+import ErrorBanner from "@components/ui/error-banner"
 import { useHotkeys } from "react-hotkeys-hook"
-import { CREATE_DEFAULT_OPTIONS } from "@/hooks/useReactHotKeys"
-import { getKeyboardMetaKeyString } from "@/lib/utils"
-import _ from "@/lib/translate"
+import { CREATE_DEFAULT_OPTIONS } from "@hooks/useReactHotKeys"
+import { getKeyboardMetaKeyString } from "@lib/utils"
+import _ from "@lib/translate"
 
 interface FieldsListProps {
     data: {

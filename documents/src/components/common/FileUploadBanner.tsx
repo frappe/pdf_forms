@@ -1,7 +1,7 @@
 import { CheckCircle } from 'lucide-react'
 import { Progress } from '../ui/progress'
-import { cn } from '@/lib/utils'
-import _ from '@/lib/translate'
+import { cn } from '@lib/utils'
+import _ from '@lib/translate'
 
 type FileUploadBannerProps = {
     uploadProgress: number

@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import type { FormTemplatePrompts } from '@/types/FormPrinter/FormTemplatePrompts'
+import type { FormTemplatePrompts } from '@types/FormPrinter/FormTemplatePrompts'
 import { MessageSquareText, Pencil, Trash2, Copy, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '@components/ui/button'
+import { Badge } from '@components/ui/badge'
 import { toast } from 'sonner'
 import { CreatePromptDialog } from './Prompt/CreatePromptDialog'
 import { EditPromptDialog } from './Prompt/EditPromptDialog'
 import { DeletePromptDialog } from './Prompt/DeletePromptDialog'
-import _ from '@/lib/translate'
+import _ from '@lib/translate'
 
 export const Prompts = ({ prompts, templateID, onRefresh }: {
     prompts: FormTemplatePrompts[]

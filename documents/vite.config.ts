@@ -13,7 +13,14 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			'@': path.resolve(__dirname, 'src')
+			'@': path.resolve(__dirname, 'src'),
+			'@components': path.resolve(__dirname, 'src/components'),
+			'@lib': path.resolve(__dirname, 'src/lib'),
+			'@hooks': path.resolve(__dirname, 'src/hooks'),
+			'@pages': path.resolve(__dirname, 'src/pages'),
+			'@types': path.resolve(__dirname, 'src/types'),
+			'@providers': path.resolve(__dirname, 'src/providers'),
+			'@config': path.resolve(__dirname, 'src/config'),
 		}
 	},
 	build: {

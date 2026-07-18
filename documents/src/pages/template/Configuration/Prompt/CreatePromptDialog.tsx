@@ -1,12 +1,12 @@
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@components/ui/dialog"
+import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts"
 import { useFrappePostCall } from "frappe-react-sdk"
 import { toast } from "sonner"
 import { PromptForm } from "./PromptForm"
 import { FormProvider, useForm } from "react-hook-form"
-import ErrorBanner from "@/components/ui/error-banner"
-import { Button } from "@/components/ui/button"
-import _ from "@/lib/translate"
+import ErrorBanner from "@components/ui/error-banner"
+import { Button } from "@components/ui/button"
+import _ from "@lib/translate"
 
 export const CreatePromptDialog = ({ isOpen, onClose, templateID, onRefresh }: { isOpen: boolean, onClose: () => void, templateID: string, onRefresh: () => void }) => {
 

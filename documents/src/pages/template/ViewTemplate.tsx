@@ -2,12 +2,12 @@ import { useParams } from 'react-router-dom'
 import { Annotator } from './Annotator/Annotator'
 import { DocumentForm } from './DocumentForm/DocumentForm'
 import { useFrappeEventListener, useFrappeGetDoc } from 'frappe-react-sdk'
-import ErrorBanner from '@/components/ui/error-banner'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import ErrorBanner from '@components/ui/error-banner'
+import { Skeleton } from '@components/ui/skeleton'
+import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert'
+import { Button } from '@components/ui/button'
 import { useState } from 'react'
-import _ from '@/lib/translate'
+import _ from '@lib/translate'
 
 const ViewTemplateLoader = () => {
     return (

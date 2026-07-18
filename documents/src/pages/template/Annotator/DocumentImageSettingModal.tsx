@@ -1,26 +1,26 @@
 import { useFrappePostCall } from "frappe-react-sdk"
 import { FormProvider, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
-import type { FormTemplateImage } from "@/types/FormPrinter/FormTemplateImage"
-import { FullPageLoader } from "@/components/common/FullPageLoader/FullPageLoader"
-import ErrorBanner from "@/components/ui/error-banner"
+import type { FormTemplateImage } from "@types/FormPrinter/FormTemplateImage"
+import { FullPageLoader } from "@components/common/FullPageLoader/FullPageLoader"
+import ErrorBanner from "@components/ui/error-banner"
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogFooter,
-} from "@/components/ui/dialog"
+} from "@components/ui/dialog"
 import {
     FormField,
     FormItem,
     FormLabel,
     FormControl,
-} from "@/components/ui/form"
-import { CodeEditorFormField, DataField } from "@/components/ui/form-elements"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import _ from "@/lib/translate"
+} from "@components/ui/form"
+import { CodeEditorFormField, DataField } from "@components/ui/form-elements"
+import { Checkbox } from "@components/ui/checkbox"
+import { Button } from "@components/ui/button"
+import _ from "@lib/translate"
 
 interface Props {
     isOpen: boolean

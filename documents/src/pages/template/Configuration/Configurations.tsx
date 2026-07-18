@@ -1,10 +1,10 @@
-import { FullPageLoader } from "@/components/common/FullPageLoader/FullPageLoader"
-import ErrorBanner from "@/components/ui/error-banner"
+import { FullPageLoader } from "@components/common/FullPageLoader/FullPageLoader"
+import ErrorBanner from "@components/ui/error-banner"
 import { useFrappeGetCall } from "frappe-react-sdk"
 import { useParams } from "react-router-dom"
 import SchemaFieldList from "./SchemaFieldList"
 import { Prompts } from "./Prompts"
-import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
+import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts"
 
 
 export interface ConfigData {

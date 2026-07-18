@@ -10,10 +10,10 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+} from '@components/ui/alert-dialog'
 import { Loader2 } from 'lucide-react'
-import ErrorBanner from '@/components/ui/error-banner'
-import _ from '@/lib/translate'
+import ErrorBanner from '@components/ui/error-banner'
+import _ from '@lib/translate'
 
 interface Props {
     annotationID: string | null,
