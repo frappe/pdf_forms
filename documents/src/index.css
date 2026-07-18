@@ -44,6 +44,27 @@
   }
 }
 
+/* Page title strip (PageHeader): 16px on mobile, 14px on desktop.
+
+   Same trap as text-content, and worth spelling out: the per-weight Espresso
+   classes (.text-base-medium, .text-xl-medium, …) are plain rules in
+   `@layer components` in styles/espresso-typography.css — they are NOT
+   `@utility`, so Tailwind generates no variants for them. `md:text-base-medium`
+   silently produces no rule at all, and the unprefixed class wins at every
+   width. Hence a real @utility with an explicit nested @media. */
+@utility text-page-title {
+  font-size: var(--text-xl);
+  /* mobile 16px */
+  font-weight: var(--font-weight-medium);
+  line-height: 1.15;
+  letter-spacing: 0.015em;
+
+  @media (width >=48rem) {
+    font-size: var(--text-base);
+    /* desktop 14px */
+  }
+}
+
 /* Mobile page-stack transition: a stacked layer (an open chat/thread over its list)
    slides in from the right like a native push. The layers stay mounted and toggle
    `hidden` — browsers restart CSS animations when display flips from none, so the
