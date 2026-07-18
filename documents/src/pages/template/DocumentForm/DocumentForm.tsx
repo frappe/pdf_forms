@@ -91,8 +91,8 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
     }
     if (!error && formTemplate && fields.length > 0) return (
         <div>
-            <Tabs defaultValue="map-fields" className="w-full py-3 px-2">
-                <TabsList variant="underline" size="sm" className="grid w-full grid-cols-4">
+            <Tabs defaultValue="map-fields" className="w-full py-3 px-5">
+                <TabsList variant="subtle" size="md" className="w-full">
                     <TabsTrigger value="map-fields">{_("Mapping Fields")}</TabsTrigger>
                     <TabsTrigger value="fields">{_("Fields")}</TabsTrigger>
                     <TabsTrigger value="prompts">{_("Prompts")}</TabsTrigger>

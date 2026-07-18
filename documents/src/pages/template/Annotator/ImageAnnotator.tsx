@@ -405,9 +405,9 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
             {showToolbar && (
                 <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto border-l border-r border-outline-gray-2">
                     <div className="flex items-stretch gap-0 bg-surface-gray-1 w-full shadow-sm justify-between p-1">
-                        <div className="flex items-center gap-0 [&>*:not(:last-child)]:border-e [&>*:not(:last-child)]:border-outline-gray-2">
+                        <div className="flex items-center gap-1">
                             {backTo && (
-                                <Button variant="ghost" theme="gray" isIconButton size="md" aria-label={backLabel} title={backLabel} className="rounded-none" asChild>
+                                <Button variant="ghost" theme="gray" isIconButton size="md" aria-label={backLabel} title={backLabel} asChild>
                                     {backToExternal ? (
                                         <a href={backTo}>
                                             <ArrowLeft className="size-4" />
@@ -427,7 +427,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                 aria-label={_("Full Screen")}
                                 title={_("Full Screen")}
                                 onClick={fullScreen}
-                                className="rounded-none"
+                               
                             >
                                 <Maximize className="size-4" />
                             </Button>
@@ -440,7 +440,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                     aria-label={_("Previous Page")}
                                     disabled={currentPage === 0}
                                     onClick={prevPage}
-                                    className="rounded-none"
+                                   
                                     title={_("Previous Page")}
                                 >
                                     <ChevronLeft className="size-4" />
@@ -456,7 +456,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                     aria-label={_("Next Page")}
                                     disabled={currentPage === images.length - 1}
                                     onClick={nextPage}
-                                    className="rounded-none"
+                                   
                                     title={_("Next Page")}
                                 >
                                     <ChevronRight className="size-4" />
@@ -470,7 +470,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                 aria-label={_("Zoom In")}
                                 title={_("Zoom In")}
                                 onClick={zoomIn}
-                                className="rounded-none"
+                               
                             >
                                 <ZoomIn className="size-4" />
                             </Button>
@@ -482,7 +482,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                 aria-label={_("Zoom Out")}
                                 title={_("Zoom Out")}
                                 onClick={zoomOut}
-                                className="rounded-none"
+                               
                             >
                                 <ZoomOut className="size-4" />
                             </Button>

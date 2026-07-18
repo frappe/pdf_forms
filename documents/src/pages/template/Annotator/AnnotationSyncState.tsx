@@ -62,24 +62,21 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                     exit={{ opacity: 0 }}
                     data-testid='sync-button'
                 >
-                    <Button 
-                        className="rounded-none h-full" 
-                        size="sm" 
-                        onClick={update} 
+                    <Button
+                        size="sm"
+                        onClick={update}
                         variant={highlightSyncButton ? 'solid' : 'subtle'}
                         theme="gray"
                         title={_("Force Update")}
                     >
-                        <div className="flex items-center">
-                            <motion.div 
-                                animate={{ rotate: 360 }} 
-                                initial={{ rotate: 0 }} 
-                                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                            >
-                                <RefreshCw className="size-4" />
-                            </motion.div>
-                            <span className="ml-2">{_("Sync")}</span>
-                        </div>
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            initial={{ rotate: 0 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                        >
+                            <RefreshCw className="size-4" />
+                        </motion.div>
+                        {_("Sync")}
                     </Button>
                 </motion.div>
             ) : (
@@ -90,17 +87,14 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                     style={{ height: '100%' }}
                     data-testid='sync-button'
                 >
-                    <Button 
-                        size="sm" 
+                    <Button
+                        size="sm"
                         variant="ghost"
                         theme="gray"
-                        className="h-full rounded-none"
-                            title={_("Sync")}
+                        title={_("Sync")}
                     >
-                        <div className="flex items-center">
-                            <CheckCircle2 className="size-4" />
-                                <span className="ml-2">{_("Sync")}</span>
-                        </div>
+                        <CheckCircle2 className="size-4" />
+                        {_("Sync")}
                     </Button>
                 </motion.div>
             )}

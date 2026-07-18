@@ -76,7 +76,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                 <TableBody>
                     {isLoading && data.length === 0 ? (
                         Array.from({ length: 8 }).map((_, index) => (
-                            <TableRow key={index} className="h-12">
+                            <TableRow key={index} className="h-9">
                                 <TableCell>
                                     <Checkbox disabled />
                                 </TableCell>
@@ -120,7 +120,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                             <TableRow
                                 key={row.name}
                                 data-state={selectedRows.has(row.name) ? "selected" : undefined}
-                                className="h-12"
+                                className="h-9"
                             >
                                 <TableCell>
                                     <Checkbox

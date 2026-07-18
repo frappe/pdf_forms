@@ -18,11 +18,12 @@ import ErrorBanner from "@components/ui/error-banner"
 import { Plus, Trash2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Filter } from "frappe-react-sdk"
-import type { FormTemplate } from "@types/FormPrinter/FormTemplate"
+import { PageHeader } from "@components/layout/PageHeader"
 import { FormTemplateTable } from "./FormTemplateTable"
 import { AddFormTemplateDialog } from "./AddFormTemplateDialog"
 import _ from "@lib/translate"
 import { getErrorMessages } from "@lib/frappe"
+import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 
 export const Dashboard = () => {
 
@@ -150,13 +151,12 @@ export const Dashboard = () => {
     return (
         <div className="flex flex-col h-screen gap-4 px-6">
             {/* Header */}
-            <div className="flex items-center justify-between  py-4 border-b">
-                <h1 className="text-xl font-semibold">Form Template</h1>
-                <Button onClick={onOpen} variant="solid" theme="gray" size="md" title={_("Add Form Template")}>
+            <PageHeader title={_("Form Template")} className="md:border-b px-0 py-4">
+                <Button onClick={onOpen} variant="solid" theme="gray" size="md" title={_("Add Form Template")} className="ml-auto">
                     <Plus className="size-4" />
                     {_("Add Form Template")}
                 </Button>
-            </div>
+            </PageHeader>
 
             {/* Filters */}
             <div className="flex items-center w-full gap-3 justify-between">
