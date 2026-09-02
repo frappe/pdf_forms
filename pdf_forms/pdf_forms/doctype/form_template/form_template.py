@@ -100,6 +100,19 @@ class FormTemplate(Document):
 				"print_format_name": self.template_name,
 				"print_format_for": "DocType",
 				"standard": "No",
+				# This format is rendered by pdf_forms' own overrides
+				# (api.print_format.download_pdf / get_html_and_style), never by
+				# Frappe's HTML print-format builder. Without this flag Frappe
+				# treats it as a "builder beta" format and forces
+				# pdf_generator="chrome", which fails on sites where that is not
+				# an allowed option — breaking template creation outright.
+				"custom_format": 1,
+				# Mandatory alongside custom_format, but never rendered: both the
+				# PDF and the print preview come from the uploaded template.
+				"html": (
+					"<!-- Rendered by PDF Forms from the uploaded PDF template. -->"
+					'<div class="text-muted">This print format is generated from a PDF form template.</div>'
+				),
 				"doc_type": self.source,
 				"module": module,
 				"form_template": self.name,
