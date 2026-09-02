@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@components/ui/dialog"
 import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts"
 import { useFrappePostCall } from "frappe-react-sdk"
 import { toast } from "sonner"
@@ -39,6 +39,7 @@ export const CreatePromptDialog = ({ isOpen, onClose, templateID, onRefresh }: {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{_("Create Prompt")}</DialogTitle>
+                    <DialogDescription className="sr-only">{_("Define a prompt users fill in when printing this template.")}</DialogDescription>
                 </DialogHeader>
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>

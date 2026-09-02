@@ -4,11 +4,17 @@ import { useTheme } from "@components/ui/theme-provider"
 import { Spinner } from "./spinner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-    const { theme = "system" } = useTheme()
+    const { theme = "Automatic" } = useTheme()
+
+    // Sonner only understands lowercase "light" | "dark" | "system"; the app's
+    // ThemeProvider speaks Frappe's "Light" | "Dark" | "Automatic". An unmatched
+    // value leaves data-sonner-theme unstyled — toasts render transparent.
+    const sonnerTheme: ToasterProps["theme"] =
+        theme === "Dark" ? "dark" : theme === "Light" ? "light" : "system"
 
     return (
         <Sonner
-            theme={theme}
+            theme={sonnerTheme}
             className="toaster group"
             position="bottom-right"
             icons={{

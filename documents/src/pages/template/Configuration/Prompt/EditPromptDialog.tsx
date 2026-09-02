@@ -1,5 +1,5 @@
 import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@components/ui/dialog";
 import { FormProvider, useForm } from "react-hook-form";
 import { useFrappePostCall } from "frappe-react-sdk";
 import { toast } from "sonner";
@@ -33,6 +33,7 @@ export const EditPromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateI
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{_("Edit Prompt")}</DialogTitle>
+                    <DialogDescription className="sr-only">{_("Update this prompt's label, type and requirement.")}</DialogDescription>
                 </DialogHeader>
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>

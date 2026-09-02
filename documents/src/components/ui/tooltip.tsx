@@ -53,4 +53,26 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+/**
+ * Convenience for icon-only buttons: wraps the single child as a styled-tooltip
+ * trigger. Use INSTEAD of the native `title` attribute (never both — double
+ * tooltips). Needs a TooltipProvider ancestor (mounted globally in App).
+ */
+function WithTooltip({
+  tip,
+  side,
+  children,
+}: {
+  tip: React.ReactNode
+  side?: "top" | "right" | "bottom" | "left"
+  children: React.ReactElement
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side={side}>{tip}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, WithTooltip }

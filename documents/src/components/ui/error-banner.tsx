@@ -3,24 +3,12 @@ import type { FrappeError } from 'frappe-react-sdk'
 import { Alert, AlertDescription, type AlertProps, AlertTitle } from '@components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import MarkdownRenderer from '@components/ui/markdown'
-import _ from '@lib/translate'
-import { ReactNode, useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { toast, type ExternalToast } from 'sonner'
 
 type ErrorBannerProps = AlertProps & {
     error?: FrappeError | null,
     overrideHeading?: string,
-}
-
-interface ParsedErrorMessage {
-    message: string,
-    title?: string,
-    indicator?: string,
-}
-
-const parseHeading = (message?: ParsedErrorMessage) => {
-    if (message?.title === 'Message' || message?.title === 'Error') return "There was an error."
-    return message?.title
 }
 
 const ErrorBanner = ({ error, overrideHeading, ...props }: ErrorBannerProps) => {
@@ -62,7 +50,9 @@ const ErrorBanner = ({ error, overrideHeading, ...props }: ErrorBannerProps) => 
 
             }
 
-        }, [overrideHeading])
+        }, [error, overrideHeading])
+
+    if (!error) return null
 
     return (
         <Alert theme={theme} {...props}>

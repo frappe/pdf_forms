@@ -2,6 +2,7 @@ import { FrappeProvider } from 'frappe-react-sdk'
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom'
 import { UserProvider } from '@providers/UserProvider'
 import { ThemeProvider } from '@components/ui/theme-provider'
+import { TooltipProvider } from '@components/ui/tooltip'
 import { Toaster } from '@components/ui/sonner'
 import { useEffect } from 'react'
 import { ViewTemplate } from './pages/template/ViewTemplate'
@@ -54,10 +55,14 @@ function App() {
 			siteName={getSiteName()}
 		>
 			<ThemeProvider defaultTheme={window.frappe?.boot?.desk_theme ?? 'Automatic'}>
-				<UserProvider>
-					<Toaster richColors />
-					<RouterProvider router={router} />
-				</UserProvider>
+				<TooltipProvider>
+					<UserProvider>
+						{/* No richColors: toasts use the app's own neutral chip styling
+						    (surface-gray-9 + ink-base) with colored status icons. */}
+						<Toaster />
+						<RouterProvider router={router} />
+					</UserProvider>
+				</TooltipProvider>
 			</ThemeProvider>
 		</FrappeProvider>
 	)

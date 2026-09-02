@@ -3,7 +3,7 @@ import { useSWRConfig } from 'frappe-react-sdk'
 import { toast } from 'sonner'
 import { Button } from '@components/ui/button'
 import { motion } from 'framer-motion'
-import { RefreshCw, CheckCircle2 } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import _ from '@lib/translate'
 
 interface Props {
@@ -79,25 +79,7 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                         {_("Sync")}
                     </Button>
                 </motion.div>
-            ) : (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={{ height: '100%' }}
-                    data-testid='sync-button'
-                >
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        theme="gray"
-                        title={_("Sync")}
-                    >
-                        <CheckCircle2 className="size-4" />
-                        {_("Sync")}
-                    </Button>
-                </motion.div>
-            )}
+            ) : null /* synced state is silent — autosave needs no chip */}
         </div>
     )
 }

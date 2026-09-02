@@ -1,8 +1,7 @@
 import { useFormContext } from 'react-hook-form'
 import { useParams } from 'react-router-dom'
 import { useFrappeGetCall } from 'frappe-react-sdk'
-import { Type, Code } from 'lucide-react'
-import { Button } from '@components/ui/button'
+import { TabsButton, TabsButtonItem } from '@components/ui/tab-buttons'
 import { Checkbox } from '@components/ui/checkbox'
 import { Separator } from '@components/ui/separator'
 import ErrorBanner from '@components/ui/error-banner'
@@ -182,34 +181,30 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                 name={`fields.${index}.default_value`}
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>{_("Default value")}</FormLabel>
+                        {/* Mode switcher trails the label — one stable spot in both
+                            modes (frappe-ui TabButtons pattern, à la Gameplan/CRM
+                            view switchers). */}
+                        <div className="flex items-center justify-between">
+                            <FormLabel>{_("Default value")}</FormLabel>
+                            <ToggleDefaultValue index={index} />
+                        </div>
                         {isDefaultJinja ? (
-                            <div className="relative min-h-[30vh]">
-                                <CodeEditorFormField
-                                    name={`fields.${index}.default_value`}
-                                    label=""
-                                    hideLabel
-                                    editorProps={{
-                                        placeholder: _("{0}", ["e.g. {{ frappe.format_date('2019-09-08') }}"]),
-                                        height: '30vh',
-                                    }}
-                                />
-                                <div className="absolute top-0 right-0">
-                                    <ToggleDefaultValue index={index} />
-                                </div>
-                            </div>
+                            <CodeEditorFormField
+                                name={`fields.${index}.default_value`}
+                                label=""
+                                hideLabel
+                                editorProps={{
+                                    placeholder: _("{0}", ["e.g. {{ frappe.format_date('2019-09-08') }}"]),
+                                    height: '30vh',
+                                }}
+                            />
                         ) : (
-                            <div className="relative">
-                                <InputGroup>
-                                    <InputGroupInput
-                                        {...field}
-                                            placeholder={_("{0}", ["e.g. 2019-09-08"])}
-                                    />
-                                </InputGroup>
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                                    <ToggleDefaultValue index={index} />
-                                </div>
-                            </div>
+                            <InputGroup>
+                                <InputGroupInput
+                                    {...field}
+                                    placeholder={_("{0}", ["e.g. 2019-09-08"])}
+                                />
+                            </InputGroup>
                         )}
                     </FormItem>
                 )}
@@ -272,33 +267,17 @@ const ToggleDefaultValue = ({ index }: { index: number }) => {
     const { setValue, watch } = useFormContext()
     const isDefaultJinja = watch(`fields.${index}.is_default_jinja`)
 
+    // frappe-ui TabButtons (subtle · sm): labeled segments beat cryptic icons,
+    // and the radio-group semantics give arrow-key switching for free.
     return (
-        <div className="flex border border-outline-gray-2 rounded-r-md overflow-hidden bg-surface-white">
-            <Button
-                type="button"
-                variant={!isDefaultJinja ? 'subtle' : 'ghost'}
-                theme="gray"
-                size="sm"
-                isIconButton
-                className="rounded-none border-r border-outline-gray-2"
-                onClick={() => setValue(`fields.${index}.is_default_jinja`, false)}
-                title={_("Toggle Default Value")}
-            >
-                <Type className="size-4" />
-            </Button>
-            <Button
-                type="button"
-                variant={isDefaultJinja ? 'subtle' : 'ghost'}
-                theme="gray"
-                size="sm"
-                isIconButton
-                className="rounded-none"
-                onClick={() => setValue(`fields.${index}.is_default_jinja`, true)}
-                title={_("Toggle Default Value")}
-            >
-                <Code className="size-4" />
-            </Button>
-        </div>
+        <TabsButton
+            value={isDefaultJinja ? 'jinja' : 'text'}
+            onValueChange={(v) => setValue(`fields.${index}.is_default_jinja`, v === 'jinja')}
+            aria-label={_("Default value mode")}
+        >
+            <TabsButtonItem value="text">{_("Text")}</TabsButtonItem>
+            <TabsButtonItem value="jinja">{_("Jinja")}</TabsButtonItem>
+        </TabsButton>
     )
 }
 

@@ -1,5 +1,5 @@
 import { memo } from "react"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { Checkbox } from "@components/ui/checkbox"
 import {
     Table,
@@ -9,22 +9,56 @@ import {
     TableHeader,
     TableRow,
 } from "@components/ui/table"
-import { FileText, Loader2 } from "lucide-react"
-import type { FormTemplate } from "@types/FormPrinter/FormTemplate"
+import { Badge } from "@components/ui/badge"
+import { Button } from "@components/ui/button"
+import {
+    Empty,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from "@components/ui/empty"
+import { FileText, Loader2, Plus } from "lucide-react"
 import { convertFrappeDateStringToTimeAgo } from "@lib/dateConversions"
 import { Skeleton } from "@components/ui/skeleton"
 import _ from "@lib/translate"
+import type { FormTemplate } from "@/types/FormPrinter/FormTemplate"
 
 interface FormTemplateTableProps {
     data: FormTemplate[]
-    count?: number
-    currentCount: number
     isLoading?: boolean
+    /** True when no filters are applied — an empty result then means "no templates yet". */
+    isUnfiltered?: boolean
     selectedRows: Set<string>
     onSelectedRowsChange: (rows: Set<string>) => void
+    onAddNew?: () => void
 }
 
-export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, selectedRows, onSelectedRowsChange }: FormTemplateTableProps) => {
+const StatusBadge = ({ row }: { row: FormTemplate }) => {
+    if (row.is_pdf_converted) {
+        return <Badge theme="green">{_("Ready")}</Badge>
+    }
+    if (row.process_completed === 1) {
+        return (
+            <Badge
+                theme="red"
+                title={_("Something went wrong while converting the PDF. Open the template for details.")}
+            >
+                {_("Failed")}
+            </Badge>
+        )
+    }
+    return (
+        <Badge theme="gray">
+            <Loader2 className="size-2.5 animate-spin" />
+            {_("Processing")}
+        </Badge>
+    )
+}
+
+export const FormTemplateTable = memo(({ data, isLoading, isUnfiltered, selectedRows, onSelectedRowsChange, onAddNew }: FormTemplateTableProps) => {
+    const navigate = useNavigate()
+
     const toggleRowSelection = (id: string) => {
         const newSet = new Set(selectedRows)
         if (newSet.has(id)) {
@@ -49,7 +83,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
         <div className="flex-1 overflow-auto pb-4">
             <Table>
                 <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-transparent">
                         <TableHead className="w-12">
                             <Checkbox
                                 checked={isAllSelected}
@@ -61,15 +95,7 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                         <TableHead>{_("Description")}</TableHead>
                         <TableHead>{_("Status")}</TableHead>
                         <TableHead>{_("Source")}</TableHead>
-                        <TableHead className="text-end">
-                            <div className="flex items-center justify-end gap-2">
-                                {count !== undefined && (
-                                    <span className="text-xs font-normal text-ink-gray-5">
-                                        {currentCount} {_("of")} {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
-                                    </span>
-                                )}
-                            </div>
-                        </TableHead>
+                        <TableHead className="text-end">{_("Last Updated")}</TableHead>
                     </TableRow>
                 </TableHeader>
 
@@ -107,12 +133,29 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                             </TableRow>
                         ))
                     ) : data.length === 0 ? (
-                        <TableRow>
-                            <TableCell
-                                colSpan={6}
-                                className="h-24 text-center text-ink-gray-5"
-                            >
-                                    {_("No results.")}
+                        <TableRow className="hover:bg-transparent">
+                            <TableCell colSpan={6} className="whitespace-normal">
+                                <Empty>
+                                    <EmptyHeader>
+                                        <EmptyMedia>
+                                            <FileText />
+                                        </EmptyMedia>
+                                        <EmptyTitle>
+                                            {isUnfiltered ? _("No form templates yet") : _("No results")}
+                                        </EmptyTitle>
+                                        <EmptyDescription>
+                                            {isUnfiltered
+                                                ? _("Upload a PDF, map its fields to your data, and print filled PDFs from any document.")
+                                                : _("No templates match the current filters.")}
+                                        </EmptyDescription>
+                                    </EmptyHeader>
+                                    {isUnfiltered && onAddNew && (
+                                        <Button onClick={onAddNew} variant="solid" theme="gray" size="md">
+                                            <Plus className="size-4" />
+                                            {_("Add Form Template")}
+                                        </Button>
+                                    )}
+                                </Empty>
                             </TableCell>
                         </TableRow>
                     ) : (
@@ -120,9 +163,10 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                             <TableRow
                                 key={row.name}
                                 data-state={selectedRows.has(row.name) ? "selected" : undefined}
-                                className="h-9"
+                                className="h-9 cursor-pointer"
+                                onClick={() => navigate(`/template/${row.name}`)}
                             >
-                                <TableCell>
+                                <TableCell onClick={(e) => e.stopPropagation()}>
                                     <Checkbox
                                         checked={selectedRows.has(row.name)}
                                         onCheckedChange={() => toggleRowSelection(row.name)}
@@ -132,47 +176,26 @@ export const FormTemplateTable = memo(({ data, count, currentCount, isLoading, s
                                 <TableCell>
                                     <div className="flex items-center gap-2">
                                         <FileText className="size-4 text-ink-gray-5" />
-                                        <Link
-                                            to={`/template/${row.name}`}
-                                            className="font-medium text-ink-gray-8 underline hover:text-ink-blue-3"
-                                        >
+                                        <span className="font-medium text-ink-gray-8">
                                             {row.template_name || row.name}
-                                        </Link>
+                                        </span>
                                     </div>
                                 </TableCell>
-                                <TableCell>
-                                    {row.description
-                                        ? (row.description.length > 50
-                                            ? `${row.description.substring(0, 50)}...`
-                                            : row.description)
-                                        : "-"}
-                                </TableCell>
-
-                                <TableCell>
-                                    <span
-                                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${row.is_pdf_converted
-                                            ? "bg-surface-green-2 text-ink-green-4"
-                                            : "bg-surface-gray-2 text-ink-gray-6"
-                                            }`}
-                                    >
-                                        {row.is_pdf_converted ? (
-                                            "Converted"
-                                        ) : row.process_completed === 0 ? (
-                                            <div className="flex items-center gap-2">
-                                                <Loader2 className="size-3 text-ink-blue-3 animate-spin" />
-                                                    <span className="text-ink-gray-5 text-xs">{_("Processing template...")}</span>
-                                            </div>
-                                        ) : row.process_completed === 1 && !row.is_pdf_converted ? (
-                                                    _("Conversion failed")
-                                        ) : null}
+                                <TableCell className="text-ink-gray-6">
+                                    <span className="block max-w-[48ch] truncate" title={row.description || undefined}>
+                                        {row.description || "-"}
                                     </span>
                                 </TableCell>
 
                                 <TableCell>
+                                    <StatusBadge row={row} />
+                                </TableCell>
+
+                                <TableCell className="text-ink-gray-6">
                                     {row.source || "-"}
                                 </TableCell>
 
-                                <TableCell className="text-end">
+                                <TableCell className="text-end text-ink-gray-5">
                                     {convertFrappeDateStringToTimeAgo(row.modified)}
                                 </TableCell>
                             </TableRow>

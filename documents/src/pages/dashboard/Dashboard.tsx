@@ -15,7 +15,7 @@ import {
     AlertDialogTitle,
 } from "@components/ui/alert-dialog"
 import ErrorBanner from "@components/ui/error-banner"
-import { Plus, Trash2, Loader2 } from "lucide-react"
+import { Plus, Trash2, Loader2, Search } from "lucide-react"
 import { toast } from "sonner"
 import type { Filter } from "frappe-react-sdk"
 import { PageHeader } from "@components/layout/PageHeader"
@@ -57,7 +57,7 @@ export const Dashboard = () => {
     // Build base filters (without pagination filter)
     const baseFilters: Filter[] = []
     if (debouncedIdFilter) {
-        baseFilters.push(['name', 'like', `%${debouncedIdFilter}%`])
+        baseFilters.push(['template_name', 'like', `%${debouncedIdFilter}%`])
     }
     if (debouncedSourceFilter) {
         baseFilters.push(['source', 'like', `%${debouncedSourceFilter}%`])
@@ -78,7 +78,7 @@ export const Dashboard = () => {
     }
 
     const { data, error, mutate, isLoading } = useFrappeGetDocList<FormTemplate>('Form Template', {
-        fields: ["name", "template_name", "description", "source", "owner", "creation", "is_pdf_converted", "modified", "modified_by"],
+        fields: ["name", "template_name", "description", "source", "owner", "creation", "is_pdf_converted", "process_completed", "modified", "modified_by"],
         orderBy: {
             field: "creation",
             order: "desc"
@@ -146,12 +146,11 @@ export const Dashboard = () => {
     }
 
     const hasMoreData = count ? selectedPageLength < count : false
-    const pageLengthOptions = [20, 100, 500, 2500]
 
     return (
         <div className="flex flex-col h-screen gap-4 px-6">
             {/* Header */}
-            <PageHeader title={_("Form Template")} className="md:border-b px-0 py-4">
+            <PageHeader title={_("Form Templates")} className="md:border-b px-0 py-4">
                 <Button onClick={onOpen} variant="solid" theme="gray" size="md" title={_("Add Form Template")} className="ml-auto">
                     <Plus className="size-4" />
                     {_("Add Form Template")}
@@ -159,28 +158,34 @@ export const Dashboard = () => {
             </PageHeader>
 
             {/* Filters */}
-            <div className="flex items-center w-full gap-3 justify-between">
-                <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center w-full gap-2 justify-between">
+                <div className="flex items-center gap-2 shrink-0">
+                    <div className="relative">
+                        <Search className="absolute start-2 top-1/2 size-4 -translate-y-1/2 text-ink-gray-4 pointer-events-none" />
+                        <Input
+                            type="text"
+                            placeholder={_("Search by template name")}
+                            value={idFilter}
+                            onChange={(e) => setIdFilter(e.target.value)}
+                            className="w-64 ps-7"
+                        />
+                    </div>
                     <Input
                         type="text"
-                        placeholder={_("ID")}
-                        value={idFilter}
-                        onChange={(e) => setIdFilter(e.target.value)}
-                        className="min-w-xs"
-                    />
-                    <Input
-                        type="text"
-                        placeholder={_("Source")}
+                        placeholder={_("Filter by source")}
                         value={sourceFilter}
                         onChange={(e) => setSourceFilter(e.target.value)}
-                        className="min-w-xs"
+                        className="w-44"
                     />
                 </div>
                 {selectedRows.size > 0 && (
-                    <div className="flex justify-end w-full">
+                    <div className="flex items-center justify-end gap-3 w-full">
+                        <span className="text-sm text-ink-gray-5">
+                            {_(`${selectedRows.size} selected`)}
+                        </span>
                         <Button
                             type="button"
-                            variant="solid"
+                            variant="subtle"
                             theme="red"
                             size="md"
                             onClick={() => setDeleteConfirmOpen(true)}
@@ -197,11 +202,11 @@ export const Dashboard = () => {
             <div className="flex-1 overflow-hidden flex flex-col">
                 <FormTemplateTable
                     data={data ?? []}
-                    count={count}
-                    currentCount={data?.length ?? 0}
                     isLoading={isLoading}
+                    isUnfiltered={baseFilters.length === 0 && !filter}
                     selectedRows={selectedRows}
                     onSelectedRowsChange={setSelectedRows}
+                    onAddNew={onOpen}
                 />
             </div>
 
@@ -241,44 +246,21 @@ export const Dashboard = () => {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Sticky Pagination */}
-            <div className="sticky bottom-0 bg-surface-white border-t border-outline-gray-2 py-3 flex items-center justify-between z-10">
-                {/* Page Length Selector */}
-                <div className="flex items-center gap-0 border border-outline-gray-2 rounded-md overflow-hidden">
-                    {pageLengthOptions.map((option, index) => {
-                        const isSelected = selectedPageLength === option
-                        const isFirst = index === 0
-                        const isLast = index === pageLengthOptions.length - 1
+            {/* Sticky Pagination — desk-style: "x of y" count + Load More */}
+            <div className="sticky bottom-0 bg-surface-base border-t border-outline-gray-2 py-3 flex items-center justify-between z-10">
+                <span className="text-sm text-ink-gray-5">
+                    {count !== undefined && count > 0
+                        ? _(`${Math.min(data?.length ?? 0, count)} of ${count}`)
+                        : ""}
+                </span>
 
-                        return (
-                            <Button
-                                key={option}
-                                variant={isSelected ? 'subtle' : 'ghost'}
-                                theme="gray"
-                                size="sm"
-                                onClick={() => setPageLength(option)}
-                                className={(
-                                    [
-                                        'h-8 px-3 rounded-none border-0 border-e border-outline-gray-2 last:border-e-0',
-                                        isFirst ? 'rounded-s-md' : '',
-                                        isLast ? 'rounded-e-md' : '',
-                                    ].filter(Boolean).join(' ')
-                                )}
-                            >
-                                {option}
-                            </Button>
-                        )
-                    })}
-                </div>
-
-                {/* Load More Button */}
                 {hasMoreData && (
                     <Button
                         title={_("Load more templates")}
                         onClick={handleLoadMore}
-                        variant="outline"
+                        variant="subtle"
                         theme="gray"
-                        size="md"
+                        size="sm"
                     >
                         {_("Load More")}
                     </Button>

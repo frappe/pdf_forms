@@ -55,13 +55,13 @@
 @utility text-page-title {
   font-size: var(--text-xl);
   /* mobile 16px */
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
   line-height: 1.15;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.01em;
 
   @media (width >=48rem) {
-    font-size: var(--text-base);
-    /* desktop 14px */
+    font-size: var(--text-3xl);
+    /* desktop 18px — frappe-ui PageHeader-scale title, not a 14px whisper */
   }
 }
 
@@ -238,6 +238,10 @@
 
   body {
     @apply bg-surface-base text-ink-gray-8;
+    /* Espresso base text — without this, any unclassed text falls back to the
+       browser's 16px/400, which reads oversized next to the 13–14px UI scale. */
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-regular);
   }
 
   /* The app is a fixed viewport with INNER scrollers (message stream, lists) —
@@ -317,6 +321,19 @@ body {
 .lucide {
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Annotorious annotation states: hover and selection gain stroke WEIGHT, not a
+   color change — the per-type color (blue = auto, violet = manual) comes from
+   the formatter's inline style on .a9s-inner, hence the !important. */
+.a9s-annotation:hover .a9s-inner,
+.a9s-annotation.editable .a9s-inner,
+.a9s-annotation.selected .a9s-inner {
+  stroke-width: 2px !important;
+}
+
+.a9s-annotation {
+  cursor: pointer;
 }
 
 /** @shadcn/tailwind.css **/

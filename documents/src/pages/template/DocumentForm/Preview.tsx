@@ -69,7 +69,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
     return (
         <div className="flex flex-col gap-4">
             {/* Document selection */}
-            <section className="px-2">
+            <section>
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
                     <div className="flex flex-1 flex-col gap-2 min-w-0 sm:min-w-[240px] sm:max-w-xs">
                         <Label>
@@ -126,9 +126,9 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
 
             {/* Prompt fields used in mapping */}
             {prompts.length > 0 && (
-                <section className="px-2">
-                    <h3 className="text-base font-semibold text-ink-gray-8 mb-2">Prompt fields</h3>
-                    <p className="text-xs text-ink-gray-5 mb-4">
+                <section>
+                    <h3 className="text-lg-semibold text-ink-gray-8 mb-1">{_("Prompt fields")}</h3>
+                    <p className="text-p-sm text-ink-gray-5 mb-4">
                         {_("These prompts are used in this template’s field mapping. Fill them to include in the printed PDF.")}
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,7 +136,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                             <div key={prompt.name ?? prompt.field_name} className="flex flex-col gap-1">
                                 <Label className="text-sm">
                                     {_("{0}", [prompt.label])}
-                                    {prompt.mandatory === 1 && <span className="text-ink-red-2 ms-0.5">*</span>}
+                                    {prompt.mandatory === 1 && <span className="text-ink-red-6 ms-0.5" aria-hidden>*</span>}
                                 </Label>
                                 {prompt.type === "Checkbox" ? (
                                     <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
             )}
 
             {/* Document data / empty state — height comes from Editor; avoid capping shorter than the editor */}
-            <section className="min-h-0 overflow-x-hidden px-2">
+            <section className="min-h-0 overflow-x-hidden">
                 {documentData ? (
                     <Accordion type="single" collapsible defaultValue="document-data" className="w-full">
                         <AccordionItem value="document-data" className="border-0">

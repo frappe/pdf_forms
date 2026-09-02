@@ -7,6 +7,7 @@ import ErrorBanner from "@components/ui/error-banner"
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogFooter,
@@ -106,6 +107,7 @@ export const SettingPageModalContent = ({
             <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <DialogHeader>
                     <DialogTitle>{_("Settings")}</DialogTitle>
+                    <DialogDescription className="sr-only">{_("Configure page repeat settings for this template page.")}</DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-4">
                     {error && <ErrorBanner error={error} />}

@@ -24,7 +24,9 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list text-ink-gray-5 inline-flex group-data-[orientation=horizontal]/tabs:w-full group-data-[orientation=vertical]/tabs:w-fit items-center justify-start group-data-[orientation=vertical]/tabs:flex-col",
+  // frappe-ui TabButtons are content-width, left-aligned — never stretched
+  // across the pane like a segmented control (underline lists span via border).
+  "group/tabs-list text-ink-gray-5 inline-flex w-fit items-center justify-start group-data-[orientation=vertical]/tabs:flex-col",
   {
     variants: {
       variant: {
@@ -106,7 +108,7 @@ function TabsTrigger({
       data-slot="tabs-trigger"
       className={cn(
         // Common
-        "whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-50 w-full",
+        "whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-50",
         "text-ink-gray-5 text-base data-[state=active]:text-ink-gray-9 hover:text-ink-gray-9 relative gap-2",
         "flex items-center justify-center group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start",
         // Icon Sizes - 16px for sm, 18px for md

@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import OpenSeaDragon from "openseadragon";
 import Annotorious from '@recogito/annotorious-openseadragon';
 import '@recogito/annotorious-openseadragon/dist/annotorious.min.css';
-import type { FormTemplateImage } from '@types/FormPrinter/FormTemplateImage';
-import type { Annotation } from '@types/Annotation';
 import { Button } from '@components/ui/button';
+import { WithTooltip } from '@components/ui/tooltip';
 import { DocumentImageSettingModal } from './DocumentImageSettingModal';
-import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Settings, ArrowLeft } from 'lucide-react';
+import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Settings, ArrowLeft, ImageOff } from 'lucide-react';
 import _ from '@lib/translate';
+import type { FormTemplateImage } from '@/types/FormPrinter/FormTemplateImage';
+import type { Annotation } from '@/types/Annotation';
 
 
 interface AnnotationLabelMap {
@@ -71,6 +72,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
     const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
     const mousePosRef = useRef({ x: 0, y: 0 });
     const tooltipDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [imageLoadFailed, setImageLoadFailed] = useState(false);
 
     // Init Annotorious when the component
     // mounts, and keep the current 'anno'
@@ -103,27 +105,28 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                 // zoomPerClick: 1,
                 autoHideControls: false,
             })
+            // Replace OSD's raw failure text ("Unable to open [object Object]…")
+            // with our own error state overlay.
+            v.addHandler('open-failed', () => setImageLoadFailed(true));
+            v.addHandler('open', () => setImageLoadFailed(false));
             setViewer(v);
             setAnnotator(Annotorious(v, {
                 allowEmpty: 1,
                 disableEditor: 1,
                 readOnly: !allowEdit,
                 formatters: (a: any) => {
+                    // Espresso semantics: Auto (system-detected) = blue (informational),
+                    // Manual (user-drawn) = violet (authored). Never red — red is for
+                    // errors, and an annotation isn't one. Hover/selected gain stroke
+                    // weight via CSS (index.css), not a color change.
                     const annotationType = a.underlying.body?.[0]?.value
-                    let fillColor = "rgba(255,0,0,0.2)"
-                    let strokeColor = "#ff0000"
-                    if (annotationType) {
-                        if (annotationType === 'Auto') {
-                            fillColor = "rgba(144, 205, 244, 0.1)"
-                            strokeColor = "#90CDF4"
-                        }
-                        if (annotationType === 'Manual') {
-                            fillColor = "rgba(255,0,0,0.2)"
-                            strokeColor = "#ff0000"
-                        }
-                    }
+                    const isAuto = annotationType === 'Auto'
+                    const stroke = isAuto ? 'var(--blue-500)' : 'var(--violet-500)'
+                    const fill = isAuto
+                        ? 'color-mix(in srgb, var(--blue-500) 8%, transparent)'
+                        : 'color-mix(in srgb, var(--violet-500) 10%, transparent)'
                     return {
-                        'style': `stroke: ${strokeColor}; stroke-width: 1px; fill: ${fillColor};`,
+                        'style': `stroke: ${stroke}; stroke-width: 1px; fill: ${fill};`,
                     }
                 },
                 // handleRadius: 1
@@ -401,97 +404,99 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
     }, [setIsOpen])
 
     return (
-        <div className="relative w-full" {...props}>
+        <div className="relative h-full w-full" {...props}>
             {showToolbar && (
-                <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto border-l border-r border-outline-gray-2">
+                // No side borders here — the pane divider and page edges already
+                // provide them; doubling made a twin line at the split.
+                <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto">
                     <div className="flex items-stretch gap-0 bg-surface-gray-1 w-full shadow-sm justify-between p-1">
                         <div className="flex items-center gap-1">
                             {backTo && (
-                                <Button variant="ghost" theme="gray" isIconButton size="md" aria-label={backLabel} title={backLabel} asChild>
-                                    {backToExternal ? (
-                                        <a href={backTo}>
-                                            <ArrowLeft className="size-4" />
-                                        </a>
-                                    ) : (
-                                        <Link to={backTo}>
-                                            <ArrowLeft className="size-4" />
-                                        </Link>
-                                    )}
-                                </Button>
+                                <WithTooltip tip={backLabel}>
+                                    <Button variant="ghost" theme="gray" isIconButton size="md" aria-label={backLabel} asChild>
+                                        {backToExternal ? (
+                                            <a href={backTo}>
+                                                <ArrowLeft className="size-4" />
+                                            </a>
+                                        ) : (
+                                            <Link to={backTo}>
+                                                <ArrowLeft className="size-4" />
+                                            </Link>
+                                        )}
+                                    </Button>
+                                </WithTooltip>
                             )}
-                            <Button
-                                variant="ghost"
-                                theme="gray"
-                                isIconButton
-                                size="md"
-                                aria-label={_("Full Screen")}
-                                title={_("Full Screen")}
-                                onClick={fullScreen}
-                               
-                            >
-                                <Maximize className="size-4" />
-                            </Button>
-                            <div className="flex items-center gap-0">
+                            <WithTooltip tip={_("Full Screen")}>
                                 <Button
                                     variant="ghost"
                                     theme="gray"
                                     isIconButton
                                     size="md"
-                                    aria-label={_("Previous Page")}
-                                    disabled={currentPage === 0}
-                                    onClick={prevPage}
-                                   
-                                    title={_("Previous Page")}
+                                    aria-label={_("Full Screen")}
+                                    onClick={fullScreen}
                                 >
-                                    <ChevronLeft className="size-4" />
+                                    <Maximize className="size-4" />
                                 </Button>
+                            </WithTooltip>
+                            <div className="flex items-center gap-0">
+                                <WithTooltip tip={_("Previous Page")}>
+                                    <Button
+                                        variant="ghost"
+                                        theme="gray"
+                                        isIconButton
+                                        size="md"
+                                        aria-label={_("Previous Page")}
+                                        disabled={currentPage === 0}
+                                        onClick={prevPage}
+                                    >
+                                        <ChevronLeft className="size-4" />
+                                    </Button>
+                                </WithTooltip>
                                 <div className="w-[70px] text-center">
                                     <span className="text-xs">{_("Page")} {currentPage + 1} {_("of")} {images.length}</span>
                                 </div>
+                                <WithTooltip tip={_("Next Page")}>
+                                    <Button
+                                        variant="ghost"
+                                        theme="gray"
+                                        isIconButton
+                                        size="md"
+                                        aria-label={_("Next Page")}
+                                        disabled={currentPage === images.length - 1}
+                                        onClick={nextPage}
+                                    >
+                                        <ChevronRight className="size-4" />
+                                    </Button>
+                                </WithTooltip>
+                            </div>
+                            <WithTooltip tip={_("Zoom In")}>
                                 <Button
                                     variant="ghost"
                                     theme="gray"
                                     isIconButton
                                     size="md"
-                                    aria-label={_("Next Page")}
-                                    disabled={currentPage === images.length - 1}
-                                    onClick={nextPage}
-                                   
-                                    title={_("Next Page")}
+                                    aria-label={_("Zoom In")}
+                                    onClick={zoomIn}
                                 >
-                                    <ChevronRight className="size-4" />
+                                    <ZoomIn className="size-4" />
                                 </Button>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                theme="gray"
-                                isIconButton
-                                size="md"
-                                aria-label={_("Zoom In")}
-                                title={_("Zoom In")}
-                                onClick={zoomIn}
-                               
-                            >
-                                <ZoomIn className="size-4" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                theme="gray"
-                                isIconButton
-                                size="md"
-                                aria-label={_("Zoom Out")}
-                                title={_("Zoom Out")}
-                                onClick={zoomOut}
-                               
-                            >
-                                <ZoomOut className="size-4" />
-                            </Button>
+                            </WithTooltip>
+                            <WithTooltip tip={_("Zoom Out")}>
+                                <Button
+                                    variant="ghost"
+                                    theme="gray"
+                                    isIconButton
+                                    size="md"
+                                    aria-label={_("Zoom Out")}
+                                    onClick={zoomOut}
+                                >
+                                    <ZoomOut className="size-4" />
+                                </Button>
+                            </WithTooltip>
                         </div>
-                        {customButtons && (
-                            <div className="flex items-stretch gap-0 [&>*:not(:last-child)]:border-e [&>*:not(:last-child)]:border-outline-gray-2">
-                                {customButtons}
-                            </div>
-                        )}
+                        <div className="flex items-center gap-1">
+                            {customButtons}
+                        </div>
                     </div>
                     {customHeader && (
                         <div className="w-full z-999">{customHeader}</div>
@@ -500,21 +505,24 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
             )}
 
             <div
-                className="relative pt-10 h-[70vh] md:h-[75vh] lg:h-screen border border-outline-gray-2 w-full"
+                className="relative h-full w-full pt-10"
                 style={annotatorImageStyles}
             >
-                <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    aria-label={_("Settings")}
-                    title={_("Settings")}
-                    onClick={onOpen}
-                    isIconButton
-                    className="absolute right-2 top-12 z-50"
-                >
-                    <Settings className="size-4" />
-                </Button>
+                {/* Per-PAGE settings live ON the page they configure (repeat count
+                    etc. is page-scoped), not in the toolbar which governs the whole PDF. */}
+                <WithTooltip tip={_("Page settings")}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        type="button"
+                        aria-label={_("Page settings")}
+                        onClick={onOpen}
+                        isIconButton
+                        className="absolute right-2 top-12 z-50"
+                    >
+                        <Settings className="size-4" />
+                    </Button>
+                </WithTooltip>
                 <div
                     id={id ? id : "openSeaDragon"}
                     style={{
@@ -523,9 +531,22 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     }}
                 >
                 </div>
+                {imageLoadFailed && (
+                    <div className="absolute inset-0 top-10 z-40 flex flex-col items-center justify-center gap-3 bg-surface-base p-6 text-center">
+                        <div className="rounded-full bg-surface-gray-2 p-4">
+                            <ImageOff className="size-8 text-ink-gray-5" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-lg-medium text-ink-gray-8">{_("Could not load the page image")}</p>
+                            <p className="text-p-base text-ink-gray-5 max-w-sm">
+                                {_("The converted page image is missing or you don't have access to it. Try re-uploading the PDF, or check the background job logs.")}
+                            </p>
+                        </div>
+                    </div>
+                )}
                 {tooltip && (
                     <div
-                        className="fixed z-9999 pointer-events-none px-2 py-1.5 text-sm text-white bg-gray-900 rounded shadow-lg max-w-[280px] truncate"
+                        className="fixed z-9999 pointer-events-none px-2 py-1 text-p-xs text-ink-base bg-surface-gray-10 rounded shadow-xl max-w-[280px] truncate"
                         style={{
                             left: tooltip.x + 12,
                             top: tooltip.y + 12,
@@ -534,8 +555,11 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                         {tooltip.text}
                     </div>
                 )}
-                <div className="absolute bottom-2 left-1 bg-black/80 px-3 py-1 text-white rounded-md shadow-md">
-                    {NUMBER_OF_ANNOTATIONS}
+                <div
+                    className="absolute bottom-2 left-2 bg-surface-gray-10 px-2 py-1 text-p-xs text-ink-base rounded shadow-xl"
+                    title={_("Fields annotated on this page")}
+                >
+                    {_(`${NUMBER_OF_ANNOTATIONS} ${NUMBER_OF_ANNOTATIONS === 1 ? 'field' : 'fields'}`)}
                 </div>
             </div>
             {images[currentPage] && (
