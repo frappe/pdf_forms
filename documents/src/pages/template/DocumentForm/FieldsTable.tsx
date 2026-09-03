@@ -443,26 +443,30 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, templateID, save
                     {/* scroll-fade (bottom only — the sticky header must never dim):
                         rows fade at the bottom edge while more remain, so a mid-scroll
                         cut doesn't read as clipped content. */}
-                    {/* overflow-auto (both axes): the sticky thead needs THIS container
-                        as its scroll ancestor, and on narrow panes the table needs
-                        horizontal scrolling too — the old overflow-x-visible clipped
-                        the action column entirely. */}
-                    <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-auto pb-2 scroll-fade [--scroll-fade-t-size:0px]">
+                    {/* Vertical scroll only: this container is the sticky thead's
+                        scroll ancestor. The table is table-fixed and every cell
+                        truncates, so there is nothing to scroll sideways to. */}
+                    <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-2 scroll-fade [--scroll-fade-t-size:0px]">
                         {/* overflow-x-visible: the default overflow-x-auto wrapper would
                             become the sticky thead's scroll ancestor and break sticking
                             (it never scrolls vertically). Open table, Frappe-style —
                             no card border. */}
-                        <Table containerClassName="overflow-x-visible">
+                        {/* table-fixed: columns take the widths below instead of
+                            growing to fit content, so a long value truncates rather
+                            than pushing the table wider than the pane. */}
+                        <Table containerClassName="overflow-x-visible" className="table-fixed">
                             {/* Solid bg: with the transparent Frappe-style header, rows
                                 would bleed through this sticky thead while scrolling. */}
                             <TableHeader className="sticky top-0 z-10 bg-surface-base">
                                 <TableRow className="h-8 hover:bg-transparent">
                                     <TableHead className="w-11">No.</TableHead>
-                                    <TableHead>{_("Label")}</TableHead>
+                                    <TableHead className="w-[30%]">{_("Label")}</TableHead>
                                     <TableHead className="w-28">{_("Field Type")}</TableHead>
                                     <TableHead className="w-24">{_("Value Type")}</TableHead>
+                                    {/* Widthless on purpose — Value soaks up whatever
+                                        the fixed columns leave over. */}
                                     <TableHead>{_("Value")}</TableHead>
-                                    <TableHead className="w-[72px]" />
+                                    <TableHead className="w-20" />
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -640,13 +644,14 @@ const MappingRow = memo(function MappingRow({
                 : ''}`}
         >
             <TableCell className="p-2 text-ink-gray-4">{index + 1}.</TableCell>
-            <TableCell className="p-2" title={fieldName && fieldName !== label ? `${label} · ${fieldName}` : label}>
+            <TableCell className="overflow-hidden p-2" title={fieldName && fieldName !== label ? `${label} · ${fieldName}` : label}>
                 {/* The PDF widget's own name only when it differs — inline, so every
-                    row stays one line and the vertical rhythm holds. */}
+                    row stays one line and the vertical rhythm holds. The label wins
+                    the space; the widget name gives way first. */}
                 <div className="flex min-w-0 items-baseline gap-1.5">
-                    <span className="max-w-[26ch] truncate font-medium text-ink-gray-8">{label}</span>
+                    <span className="min-w-0 flex-1 truncate font-medium text-ink-gray-8">{label}</span>
                     {fieldName && fieldName !== label && (
-                        <span className="max-w-[18ch] shrink-0 truncate font-mono text-xs text-ink-gray-4">{fieldName}</span>
+                        <span className="min-w-0 max-w-[45%] truncate font-mono text-xs text-ink-gray-4">{fieldName}</span>
                     )}
                 </div>
             </TableCell>
@@ -654,9 +659,11 @@ const MappingRow = memo(function MappingRow({
             <TableCell className="p-2">
                 <Badge variant="subtle" theme={theme}>{_("{0}", [valueType])}</Badge>
             </TableCell>
-            <TableCell className="p-2" title={value || undefined}>
+            <TableCell className="overflow-hidden p-2" title={value || undefined}>
                 <div className="flex min-w-0 items-center gap-1.5">
-                    <span className="truncate font-mono text-sm text-ink-gray-6">{value}</span>
+                    {/* min-w-0 so the flex item may shrink below its text width —
+                        without it `truncate` never kicks in and the row widens. */}
+                    <span className="min-w-0 flex-1 truncate font-mono text-sm text-ink-gray-6">{value}</span>
                     {formatter && (
                         <Badge variant="outline" theme="gray" size="sm" className="shrink-0 font-normal">
                             {_("{0}", [formatter])}
