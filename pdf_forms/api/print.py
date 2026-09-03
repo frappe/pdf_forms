@@ -1,9 +1,11 @@
 import io
 import json
+import re
 from typing import Any
 
 import fitz
 import frappe
+from frappe import _
 
 from pdf_forms.utils.jinja import format_currency, format_date, format_number, format_phone
 
@@ -209,6 +211,10 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 		frappe.log_error(title="Form Template preview scale failed", message=frappe.get_traceback())
 
 	values: dict[str, Any] = {}
+	# Opened once so the "is this font embedded?" check is per distinct name.
+	template_pdf = fitz.open(frappe.get_site_path(template.file.lstrip("/")))
+	embedded_cache: dict[str, bool] = {}
+
 	for annotation in template.form_template_field:
 		try:
 			value = get_field_value(annotation, data, 0)
@@ -252,19 +258,46 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 		except (TypeError, ValueError):
 			annotation_font_size = 0
 
-		effective_font_size = (
-			annotation_font_size
-			if annotation.override_style and annotation_font_size > 0
-			else template_font_size
-		)
-		effective_font = annotation.font if annotation.font and annotation.font != "None" else template_font
+		# Same precedence as the printer: override, then what the PDF declared,
+		# then the template default -- so the overlay cannot promise a size or
+		# family the generated PDF will not deliver.
+		try:
+			declared_size = float(annotation.get("pdf_font_size") or 0)
+		except (TypeError, ValueError):
+			declared_size = 0
+		if annotation.override_style and annotation_font_size > 0:
+			effective_font_size = annotation_font_size
+		elif declared_size > 0:
+			effective_font_size = declared_size
+		else:
+			effective_font_size = template_font_size
+		declared_font = (annotation.get("pdf_font") or "").strip()
+		if annotation.override_style and annotation.font and annotation.font != "None":
+			effective_font = annotation.font
+		elif declared_font:
+			effective_font = PREVIEW_FAMILY[guess_base14(declared_font)[:2]]
+		else:
+			effective_font = template_font
 		scale = page_scale.get(int(annotation.page_index or 0), 1.0)
 
+		alias = guess_base14(
+			effective_font if annotation.override_style else (declared_font or effective_font)
+		)
+		if declared_font and not annotation.override_style and declared_font not in embedded_cache:
+			embedded_cache[declared_font] = bool(
+				embedded_font_buffer(template_pdf, template_pdf[0], declared_font)
+			)
 		values[annotation.name] = {
 			"kind": "text",
 			"text": text,
 			"font": effective_font,
 			"font_size_px": round(effective_font_size * scale, 2),
+			# The declared /DA font, so the preview can draw with the real thing
+			# when the PDF embeds it; bold/italic hints for base-14 variants.
+			"font_name": declared_font if not annotation.override_style else "",
+			"embedded": bool(embedded_cache.get(declared_font)) if declared_font else False,
+			"bold": alias in ("hebo", "hebi", "tibo", "tibi", "cobo", "cobi"),
+			"italic": alias in ("heit", "hebi", "tiit", "tibi", "coit", "cobi"),
 		}
 
 	return values
@@ -287,6 +320,214 @@ def fetch_repeated_document_template_images(template_id):
 		],
 		key=lambda row: row["page_index"],
 	)
+
+
+# PyMuPDF's widget appearance can only carry the five REGULAR base-14 fonts;
+# it silently rewrites anything else -- bold, italic, or an embedded font -- to
+# Helvetica. Those get drawn straight onto the page with the real font instead.
+WIDGET_FONTS = {
+	"helv": "Helv",
+	"helvetica": "Helv",
+	"tiro": "TiRo",
+	"times-roman": "TiRo",
+	"times": "TiRo",
+	"cour": "Cour",
+	"courier": "Cour",
+	"symb": "Symb",
+	"symbol": "Symb",
+	"zadb": "ZaDb",
+	"zapfdingbats": "ZaDb",
+}
+DRAW_FONTS = {
+	"hebo": "hebo",
+	"helvetica-bold": "hebo",
+	"heit": "heit",
+	"helvetica-oblique": "heit",
+	"hebi": "hebi",
+	"helvetica-boldoblique": "hebi",
+	"tibo": "tibo",
+	"times-bold": "tibo",
+	"tiit": "tiit",
+	"times-italic": "tiit",
+	"tibi": "tibi",
+	"times-bolditalic": "tibi",
+	"cobo": "cobo",
+	"courier-bold": "cobo",
+	"coit": "coit",
+	"courier-oblique": "coit",
+	"cobi": "cobi",
+	"courier-boldoblique": "cobi",
+}
+MULTILINE_FLAG = 1 << 12
+# Family buckets the annotator's font stacks understand.
+PREVIEW_FAMILY = {
+	"he": "helvetica",
+	"ti": "times-roman",
+	"co": "courier",
+	"sy": "symbol",
+	"za": "zapfdingbats",
+}
+
+
+def guess_base14(name: str) -> str:
+	"""Nearest base-14 alias for a font we cannot use directly (e.g. ArialMT,
+	HelveticaLTStd-Bold, Georgia-Italic): family from the name, then style."""
+	n = (name or "").lower()
+	# Base-14 aliases (TiRo, HeBo, Cour...) name their family directly.
+	if n in WIDGET_FONTS:
+		return {"Helv": "helv", "TiRo": "tiro", "Cour": "cour", "Symb": "symb", "ZaDb": "zadb"}[
+			WIDGET_FONTS[n]
+		]
+	if n in DRAW_FONTS:
+		return DRAW_FONTS[n]
+	bold = "bold" in n or "black" in n or "heavy" in n or n.endswith(",b") or n.endswith("-b")
+	italic = "italic" in n or "oblique" in n or n.endswith(",i") or n.endswith("-i")
+	if any(k in n for k in ("courier", "mono", "consol")):
+		fam = "co"
+	elif any(k in n for k in ("times", "serif", "georgia", "garamond", "book", "roman", "cambria")):
+		fam = "ti"
+	elif "symbol" in n:
+		return "symb"
+	elif "zapf" in n or "dingbat" in n:
+		return "zadb"
+	else:
+		fam = "he"
+	if fam == "ti":
+		return {(False, False): "tiro", (True, False): "tibo", (False, True): "tiit", (True, True): "tibi"}[
+			(bold, italic)
+		]
+	if fam == "co":
+		return {(False, False): "cour", (True, False): "cobo", (False, True): "coit", (True, True): "cobi"}[
+			(bold, italic)
+		]
+	return {(False, False): "helv", (True, False): "hebo", (False, True): "heit", (True, True): "hebi"}[
+		(bold, italic)
+	]
+
+
+def regular_widget_font(alias: str) -> str:
+	"""The regular base-14 widget font of the same family as a draw alias."""
+	family = (alias or "he")[:2]
+	return {"he": "Helv", "ti": "TiRo", "co": "Cour", "sy": "Symb", "za": "ZaDb"}.get(family, "Helv")
+
+
+def embedded_font_buffer(doc, page, da_name: str):
+	"""The font program the form embeds under this /DA name, if any."""
+	if not da_name:
+		return None
+	try:
+		ref = doc.xref_get_key(doc.pdf_catalog(), f"AcroForm/DR/Font/{da_name}")
+		xref = int(ref[1].split()[0]) if ref[0] == "xref" else None
+		if xref is None:
+			xref = next((f[0] for f in page.get_fonts() if f[4] == da_name), None)
+		if xref is None:
+			return None
+		_name, _ext, _type, buf = doc.extract_font(xref)
+		return buf or None
+	except Exception:
+		return None
+
+
+def resolve_text_style(doc, page, annotation, template_font, template_font_size):
+	"""How this field's text should be set: override, else what the PDF
+	declared, else the template default.
+
+	Returns (mode, font, size): mode "widget" with a base-14 alias the widget
+	can carry, or mode "draw" with a fontname/fontbuffer pair for insert_textbox.
+	"""
+	try:
+		override_size = float(annotation.font_size) if annotation.font_size is not None else 0
+	except (TypeError, ValueError):
+		override_size = 0
+	try:
+		declared_size = float(annotation.get("pdf_font_size") or 0)
+	except (TypeError, ValueError):
+		declared_size = 0
+	try:
+		tpl_size = float(template_font_size) if template_font_size is not None else 12
+	except (TypeError, ValueError):
+		tpl_size = 12
+
+	if annotation.override_style and override_size > 0:
+		size = override_size
+	elif declared_size > 0:
+		size = declared_size
+	else:
+		size = tpl_size
+
+	declared_font = (annotation.get("pdf_font") or "").strip()
+	if annotation.override_style and annotation.font and annotation.font != "None":
+		name = annotation.font
+	elif declared_font:
+		name = declared_font
+	else:
+		name = template_font or "helvetica"
+
+	key = name.lower()
+	if key in WIDGET_FONTS:
+		return "widget", WIDGET_FONTS[key], size
+	if key in DRAW_FONTS:
+		return "draw", (DRAW_FONTS[key], None), size
+
+	buf = embedded_font_buffer(doc, page, name) if name == declared_font else None
+	if buf:
+		return "draw", (f"pdfforms_{re.sub(r'[^A-Za-z0-9]', '', name)}", buf), size
+
+	alias = guess_base14(name)
+	if alias in WIDGET_FONTS:
+		return "widget", WIDGET_FONTS[alias], size
+	return "draw", (alias, None), size
+
+
+def draw_field_text(page, widget, text: str, font, size: float) -> bool:
+	"""Write the value into the field's box with the real font, then remove the
+	widget: the drawn text is the field now. Returns False (and leaves the
+	widget alone) if nothing could be drawn, so a field is never lost silently.
+	"""
+	fontname, fontbuffer = font
+	if not text:
+		return False
+	if fontbuffer:
+		page.insert_font(fontname=fontname, fontbuffer=fontbuffer)
+		metrics = fitz.Font(fontbuffer=fontbuffer)
+	else:
+		metrics = fitz.Font(fontname)
+
+	box = fitz.Rect(widget.rect)
+	inset = fitz.Rect(box.x0 + 2, box.y0 + 1, box.x1 - 2, box.y1 - 1)
+	color = widget.text_color if widget.text_color else (0, 0, 0)
+	align = {0: fitz.TEXT_ALIGN_LEFT, 1: fitz.TEXT_ALIGN_CENTER, 2: fitz.TEXT_ALIGN_RIGHT}.get(
+		widget.text_format or 0, fitz.TEXT_ALIGN_LEFT
+	)
+
+	if widget.field_flags & MULTILINE_FLAG:
+		# Fixed-size text that does not fit is stepped down rather than dropped:
+		# insert_textbox refuses outright when the block is too tall.
+		fs = size
+		while fs >= 4:
+			if (
+				page.insert_textbox(inset, text, fontname=fontname, fontsize=fs, color=color, align=align)
+				>= 0
+			):
+				page.delete_widget(widget)
+				return True
+			fs -= 0.5
+		return False
+
+	# Single line: centre by the font's own ascent/descent, like a viewer does.
+	# insert_text places a baseline and never refuses, so tall faces (Lora's
+	# ascent is 1.006) cannot make the value disappear.
+	glyph_h = (metrics.ascender - metrics.descender) * size
+	baseline = box.y0 + (box.height - glyph_h) / 2 + metrics.ascender * size
+	width = metrics.text_length(text, fontsize=size)
+	x = inset.x0
+	if align == fitz.TEXT_ALIGN_CENTER:
+		x = inset.x0 + max(0, (inset.width - width) / 2)
+	elif align == fitz.TEXT_ALIGN_RIGHT:
+		x = max(inset.x0, inset.x1 - width)
+	page.insert_text((x, baseline), text, fontname=fontname, fontsize=size, color=color)
+	page.delete_widget(widget)
+	return True
 
 
 def annotate_form_template(page, i, template_id, data, font, font_size, base_index=0, xref_map=None):
@@ -315,7 +556,9 @@ def annotate_form_template(page, i, template_id, data, font, font_size, base_ind
 def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_index=0, xref_map=None):
 	if xref_map is None:
 		xref_map = {}
-	fields = page.widgets()
+	# A list, not the generator: the draw path deletes widgets as it goes.
+	fields = list(page.widgets())
+	doc = page.parent
 
 	for field in fields:
 		# get the annotation for the field from the auto_annotations list which matches the field_name and xref
@@ -339,17 +582,20 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 			if value is not None:
 				# update the field value according to the field type
 				if annotation.field_type == "Text":
-					# set the field value, font, font size
-					# if annotation have font or font size set it else set the font and font size from the form template
-					# ensure numeric types for PyMuPDF (it uses format code 'g' internally)
-					anno_fs = float(annotation.font_size) if annotation.font_size is not None else 0
-					tpl_fs = float(font_size) if font_size is not None else 12
-					field.text_fontsize = anno_fs if annotation.override_style and anno_fs > 0 else tpl_fs
-					text_font = annotation.font if annotation.font and annotation.font != "None" else font
-					font_name = fitz.Font(text_font).name
-					field.text_font = get_fontname(font_name)
-					field.field_value = str(value) if value is not None and value != "None" else ""
-					field.update()
+					text = str(value) if value is not None and value != "None" else ""
+					mode, text_font, size = resolve_text_style(doc, page, annotation, font, font_size)
+					if mode == "widget":
+						field.text_fontsize = size
+						field.text_font = text_font
+						field.field_value = text
+						field.update()
+					elif not draw_field_text(page, field, text, text_font, size):
+						# Could not draw (empty value, or a multiline box too small
+						# even at 4pt): keep the field as a widget in its regular face.
+						field.text_fontsize = size
+						field.text_font = regular_widget_font(text_font[0])
+						field.field_value = text
+						field.update()
 				elif annotation.field_type == "CheckBox":
 					if value is True or value == "True" or value == "1" or value == 1:
 						field.field_value = field.on_state()
@@ -405,13 +651,11 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			widget.rect = rect
 			widget.field_name = annotation.field_label
 			widget.field_label = annotation.field_label
-			# ensure numeric types for PyMuPDF (it uses format code 'g' internally)
-			anno_fs = float(annotation.font_size) if annotation.font_size is not None else 0
-			tpl_fs = float(font_size) if font_size is not None else 12
-			widget.text_fontsize = anno_fs if annotation.override_style and anno_fs > 0 else tpl_fs
-			text_font = annotation.font if annotation.font and annotation.font != "None" else font
-			font_name = fitz.Font(text_font).name
-			widget.text_font = get_fontname(font_name)
+			mode, text_font, size = resolve_text_style(page.parent, page, annotation, font, font_size)
+			widget.text_fontsize = size
+			# A manual box is a fresh widget with nothing declared, so it stays a
+			# widget; a variant the widget cannot carry uses its regular face.
+			widget.text_font = text_font if mode == "widget" else regular_widget_font(text_font[0])
 			widget.field_type = get_field_type(annotation.field_type)
 			page.draw_rect(rect, color=(0, 0, 0), width=0.5)
 
@@ -555,3 +799,26 @@ def get_fontname(font):
 		if value.lower() == font.lower():
 			return key
 	return "Helv"
+
+
+@frappe.whitelist()
+def get_template_font(template_id: str, font_name: str):
+	"""The font program a template's PDF embeds under a /DA name, for the
+	annotator preview to register as a web font. Only fonts the PDF's own
+	AcroForm declares are reachable, and only when a program is embedded.
+	"""
+	template = frappe.get_doc("Form Template", template_id)
+	template.check_permission("read")
+	if not template.file:
+		frappe.throw(_("This template has no PDF."), frappe.DoesNotExistError)
+
+	doc = fitz.open(frappe.get_site_path(template.file.lstrip("/")))
+	buffer = embedded_font_buffer(doc, doc[0], font_name)
+	if not buffer:
+		frappe.throw(
+			_("The PDF does not embed a font named {0}.").format(font_name), frappe.DoesNotExistError
+		)
+
+	frappe.local.response.filename = f"{re.sub(r'[^A-Za-z0-9_-]', '', font_name) or 'font'}.bin"
+	frappe.local.response.filecontent = buffer
+	frappe.local.response.type = "binary"

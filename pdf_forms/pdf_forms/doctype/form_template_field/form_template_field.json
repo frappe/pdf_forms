@@ -21,6 +21,8 @@
   "font",
   "font_size",
   "override_style",
+  "pdf_font",
+  "pdf_font_size",
   "column_break_hjhf",
   "y_point",
   "width",
@@ -141,6 +143,20 @@
    "fieldname": "override_style",
    "fieldtype": "Check",
    "label": "Override Style"
+  },
+  {
+   "description": "The font named in this field's /DA when the PDF was uploaded. Used unless Override Style is set.",
+   "fieldname": "pdf_font",
+   "fieldtype": "Data",
+   "label": "Font declared by the PDF",
+   "read_only": 1
+  },
+  {
+   "description": "0 means the PDF asked for auto-size; the template default is used then.",
+   "fieldname": "pdf_font_size",
+   "fieldtype": "Float",
+   "label": "Font Size declared by the PDF",
+   "read_only": 1
   },
   {
    "default": "0",

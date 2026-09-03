@@ -27,6 +27,17 @@ interface FieldEditFormProps {
     index: number
 }
 
+/** Nearest option in the Font select for a font the PDF declares (e.g. ArialMT, TiRo, Courier-Bold). */
+const familyOf = (name: string): string | undefined => {
+    const n = name.toLowerCase()
+    if (!n) return undefined
+    if (/courier|cour\b|mono/.test(n)) return 'courier'
+    if (/times|tiro|tibo|tiit|tibi|serif|georgia|garamond|roman/.test(n)) return 'times-roman'
+    if (/zapf|zadb|dingbat/.test(n)) return 'zapfdingbats'
+    if (/symbol|symb\b/.test(n)) return 'symbol'
+    return 'helvetica'
+}
+
 export const FieldEditForm = ({ index }: FieldEditFormProps) => {
     const { watch, setValue, control } = useFormContext()
     const { templateID } = useParams<{ templateID: string }>()
@@ -36,6 +47,12 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
     const overrideStyle = watch(`fields.${index}.override_style`)
 
     const overrideStyleTrue = overrideStyle === '1' || overrideStyle === true || overrideStyle === 1
+
+    // What the PDF itself asks for. Printing honours it unless Override Style
+    // is on, so the dialog says so instead of leaving the user to guess.
+    const declaredFont = String(watch(`fields.${index}.pdf_font`) ?? '').trim()
+    const declaredSize = Number(watch(`fields.${index}.pdf_font_size`) ?? 0)
+    const declaredFamily = familyOf(declaredFont)
 
     const shouldFetch = (valueType === 'Field' || valueType === 'Prompt') && templateID
 
@@ -225,14 +242,22 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                         setValue(`fields.${index}.font`, '')
                                         setValue(`fields.${index}.font_size`, '')
                                     } else {
-                                        setValue(`fields.${index}.font`, 'helvetica')
-                                        setValue(`fields.${index}.font_size`, 12)
+                                        // Start from what the form declares, not a blanket 12pt Helvetica.
+                                        setValue(`fields.${index}.font`, declaredFamily ?? 'helvetica')
+                                        setValue(`fields.${index}.font_size`, declaredSize > 0 ? declaredSize : 12)
                                     }
                                 }}
                             />
                         </FormControl>
                         <div className="space-y-1 leading-none">
                             <FormLabel>{_("Override Style")}</FormLabel>
+                            {!overrideStyleTrue && (declaredFont || declaredSize > 0) && (
+                                <p className="text-p-sm text-ink-gray-5">
+                                    {_("Prints as the form declares: {0}", [
+                                        [declaredFont || _("template font"), declaredSize > 0 ? `${declaredSize}pt` : _("auto size")].join(' · '),
+                                    ])}
+                                </p>
+                            )}
                         </div>
                     </FormItem>
                 )}

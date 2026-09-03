@@ -254,16 +254,20 @@ def create_form_fields_annotations(page, image_doc, image_url, font_counter, fon
 	# 3. Loop through the widgets and create a Form Template Field for each field
 
 	# 1. Get the Metadata from the page
-	width, height = page.mediabox_size
+	width, _height = page.mediabox_size
 	ratio = image_doc.width / width if image_doc.width and image_doc.width > 0 else 1
 
 	# 2. Get the All Widgets (Mostly Form Fields) from the page
 	fields = page.widgets()
 
 	for field in fields:
-		# Get the font and font size of the field
-		font_counter[field.text_font] += 1
-		font_size_counter[field.text_fontsize] += 1
+		# Get the font and font size of the field. PyMuPDF reports base-14
+		# aliases in mixed case (TiRo, Cour, Helv); return_standard_font matches
+		# lowercase, so without this every form defaulted to Helvetica.
+		declared_font = (field.text_font or "").strip()
+		declared_size = float(field.text_fontsize or 0)
+		font_counter[declared_font.lower()] += 1
+		font_size_counter[declared_size] += 1
 
 		# Get the dimensions of the field
 		rect = field.rect
@@ -289,6 +293,10 @@ def create_form_fields_annotations(page, image_doc, image_url, font_counter, fon
 				"xref": field.xref,
 				"field_value": "",
 				"field_type": field.field_type_string,
+				# What the form itself asked for, kept per field so printing can
+				# honour it. Override Style still wins when the user sets it.
+				"pdf_font": declared_font,
+				"pdf_font_size": declared_size,
 			},
 		)
 

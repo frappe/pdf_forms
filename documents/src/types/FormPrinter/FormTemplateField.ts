@@ -38,6 +38,10 @@ export interface FormTemplateField{
 	font_size?: number
 	/**	Override Style : Check	*/
 	override_style?: 0 | 1
+	/** Font declared by the PDF : Data - the font named in this field's /DA when uploaded */
+	pdf_font?: string
+	/** Font Size declared by the PDF : Float - 0 means auto-size */
+	pdf_font_size?: number
 	/**	Y Point : Data	*/
 	y_point: string
 	/**	Width : Data	*/
