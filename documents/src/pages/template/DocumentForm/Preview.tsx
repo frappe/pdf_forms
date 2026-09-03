@@ -1,5 +1,5 @@
 import { useFrappeGetCall } from "frappe-react-sdk"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import LinkFieldCombobox from "@components/common/LinkField/LinkFieldCombobox"
 import { Editor } from "@components/common/Editor/Editor"
 import { Button } from "@components/ui/button"
@@ -16,6 +16,7 @@ import { FileJson, Printer } from "lucide-react"
 import { web_url } from "@config/socket"
 import ErrorBanner from "@components/ui/error-banner"
 import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts"
+import { usePreviewData } from "../PreviewDataContext"
 import _ from "@lib/translate"
 
 export interface PreviewProps {
@@ -48,6 +49,10 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
 
     const documentData = useMemo(() => docData?.message ?? null, [docData])
 
+    // Publish the resolved document so the annotator can draw the real values
+    // onto the PDF while you work.
+    const { setPreviewDocument } = usePreviewData()
+
     const setPromptValue = useCallback((fieldName: string, value: string | boolean) => {
         setPromptValues((prev) => ({ ...prev, [fieldName]: value }))
     }, [])
@@ -60,6 +65,10 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
         }
         return merged
     }, [documentData, promptValues])
+
+    useEffect(() => {
+        setPreviewDocument(selectedDocument, printData)
+    }, [selectedDocument, printData, setPreviewDocument])
 
     const getPrintUrl = () => {
         if (!printData) return "#"

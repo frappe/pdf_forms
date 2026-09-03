@@ -17,6 +17,7 @@ import {
 import { useState } from 'react'
 import _ from '@lib/translate'
 import { TemplateSaveProvider, useTemplateSaveHandle } from './TemplateSaveContext'
+import { PreviewDataProvider } from './PreviewDataContext'
 
 /**
  * Save button for the page header. Rendered only while a form (the mapping
@@ -69,7 +70,13 @@ const TemplateHeader = ({ templateName }: { templateName?: string }) => (
     </div>
 )
 
-/** Mirrors the real editor layout: breadcrumb strip, annotator pane, tabs + toolbar + table. */
+/**
+ * Mirrors the real editor layout element for element: breadcrumb strip, the
+ * three-zone annotator toolbar, the five underline tabs, the search/filter
+ * row, and the mapping table with its sticky page separator. Sizes are the
+ * real components' sizes (icon buttons 28/32px, inputs 28px, header 32px,
+ * rows 45px) so the page does not jump when the data lands.
+ */
 const ViewTemplateLoader = () => {
     return (
         <div className="flex h-screen flex-col overflow-hidden">
@@ -86,12 +93,23 @@ const ViewTemplateLoader = () => {
             <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
                 {/* Annotator pane — hidden on mobile, like the editor's default pane */}
                 <div className="hidden min-h-0 flex-col border-r border-outline-gray-2 lg:flex lg:w-[44%]">
-                    <div className="flex h-10 shrink-0 items-center gap-2 border-b border-outline-gray-2 bg-surface-gray-1 px-2">
-                        {Array.from({ length: 4 }).map((_, i) => (
-                            <Skeleton key={i} className="size-7 rounded" />
-                        ))}
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="ms-auto size-7 rounded" />
+                    {/* Toolbar: [back · fullscreen │] ‹ page › [│ zoom in · zoom out] */}
+                    <div className="flex h-10 shrink-0 items-center justify-between border-b border-outline-gray-2 bg-surface-gray-1 p-1">
+                        <div className="flex flex-1 items-center justify-start gap-1">
+                            <Skeleton className="size-8 rounded" />
+                            <Skeleton className="size-8 rounded" />
+                            <span className="mx-1 h-4 w-px shrink-0 bg-outline-gray-2" aria-hidden />
+                        </div>
+                        <div className="flex shrink-0 items-center">
+                            <Skeleton className="size-8 rounded" />
+                            <Skeleton className="mx-1 h-3.5 w-[68px]" />
+                            <Skeleton className="size-8 rounded" />
+                        </div>
+                        <div className="flex flex-1 items-center justify-end gap-1">
+                            <span className="mx-1 h-4 w-px shrink-0 bg-outline-gray-2" aria-hidden />
+                            <Skeleton className="size-8 rounded" />
+                            <Skeleton className="size-8 rounded" />
+                        </div>
                     </div>
                     {/* Flush like the real OSD area — no inset, no rounding. */}
                     <div className="min-h-0 flex-1">
@@ -101,7 +119,7 @@ const ViewTemplateLoader = () => {
 
                 {/* Editor pane — px-4 and the h-10 tab strip mirror the real Tabs wrapper */}
                 <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 lg:w-[56%] lg:flex-none">
-                    {/* Underline tab strip — same 40px as the annotator toolbar */}
+                    {/* Underline tabs: Mapping Fields · Fields · Prompts · Style · Preview */}
                     <div className="flex h-10 shrink-0 items-center gap-5 border-b border-outline-gray-1">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-4 w-12" />
@@ -109,32 +127,49 @@ const ViewTemplateLoader = () => {
                         <Skeleton className="h-4 w-10" />
                         <Skeleton className="h-4 w-14" />
                     </div>
-                    {/* Toolbar — every control is 28px tall, like the real one */}
-                    <div className="flex shrink-0 items-center gap-2">
-                        <Skeleton className="h-7 flex-1 max-w-[340px] rounded" />
-                        <Skeleton className="h-7 w-32 rounded" />
-                        <Skeleton className="ms-auto h-7 w-24 rounded" />
-                        <Skeleton className="size-7 rounded" />
-                        <Skeleton className="size-7 rounded" />
-                    </div>
-                    {/* Table: header row + 49px rows with borders, like the mapping table */}
-                    <div className="min-h-0 flex-1 overflow-hidden">
-                        <div className="flex h-8 items-center gap-4 border-b border-outline-gray-1">
-                            <Skeleton className="h-3 w-6" />
-                            <Skeleton className="h-3 w-24" />
-                            <Skeleton className="h-3 w-16" />
-                            <Skeleton className="h-3 w-20" />
-                            <Skeleton className="h-3 w-24" />
+                    {/* Search · All/Unmapped chips ··· Auto-map · import · export — all 28px */}
+                    <div className="flex shrink-0 items-center justify-between gap-2">
+                        <div className="flex flex-1 items-center gap-4">
+                            <Skeleton className="h-7 w-full max-w-[390px] rounded" />
+                            <Skeleton className="h-7 w-36 shrink-0 rounded" />
                         </div>
-                        {Array.from({ length: 8 }).map((_, i) => (
-                            <div key={i} className="flex h-[49px] items-center gap-4 border-b border-outline-gray-1">
-                                <Skeleton className="h-4 w-6" />
-                                <Skeleton className="h-4 w-28" />
-                                <Skeleton className="h-4 w-10" />
-                                <Skeleton className="h-8 w-24 rounded" />
-                                <Skeleton className="h-8 flex-1 rounded" />
-                                <Skeleton className="size-7 rounded" />
-                                <Skeleton className="size-7 rounded" />
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="h-7 w-[104px] rounded" />
+                            <Skeleton className="size-7 rounded" />
+                            <Skeleton className="size-7 rounded" />
+                        </div>
+                    </div>
+                    {/* Table, with the mapping table's own column widths */}
+                    <div className="min-h-0 flex-1 overflow-hidden pb-2">
+                        {/* header: No. · Label · Field Type · Value Type · Value · actions */}
+                        <div className="flex h-8 items-center border-b border-outline-gray-1">
+                            <div className="w-11 shrink-0 px-2"><Skeleton className="h-3 w-5" /></div>
+                            <div className="w-[30%] shrink-0 px-2"><Skeleton className="h-3 w-10" /></div>
+                            <div className="w-28 shrink-0 px-2"><Skeleton className="h-3 w-16" /></div>
+                            <div className="w-24 shrink-0 px-2"><Skeleton className="h-3 w-16" /></div>
+                            <div className="min-w-0 flex-1 px-2"><Skeleton className="h-3 w-10" /></div>
+                            <div className="w-20 shrink-0" />
+                        </div>
+                        {/* sticky page separator: "Page 1 · 25 fields · [n unmapped]" */}
+                        <div className="flex h-7 items-center gap-2 bg-surface-gray-1 px-2">
+                            <Skeleton className="h-3 w-12" />
+                            <Skeleton className="h-3 w-14" />
+                            <Skeleton className="h-4 w-20 rounded-full" />
+                        </div>
+                        {Array.from({ length: 9 }).map((_, i) => (
+                            <div key={i} className="flex h-[45px] items-center border-b border-outline-gray-1">
+                                <div className="w-11 shrink-0 px-2"><Skeleton className="h-3.5 w-5" /></div>
+                                <div className="flex w-[30%] shrink-0 items-baseline gap-1.5 px-2">
+                                    <Skeleton className="h-3.5 w-24" />
+                                    <Skeleton className="h-3 w-16" />
+                                </div>
+                                <div className="w-28 shrink-0 px-2"><Skeleton className="h-3.5 w-8" /></div>
+                                <div className="w-24 shrink-0 px-2"><Skeleton className="h-5 w-11 rounded-full" /></div>
+                                <div className="min-w-0 flex-1 px-2"><Skeleton className="h-3.5 w-[60%]" /></div>
+                                <div className="flex w-20 shrink-0 items-center justify-end gap-1 px-2">
+                                    <Skeleton className="size-7 rounded" />
+                                    <Skeleton className="size-7 rounded" />
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -193,6 +228,7 @@ export const ViewTemplate = () => {
                     </div>
                 ) : data.process_completed === 1 && data.is_pdf_converted === 1 ? (
                             <TemplateSaveProvider>
+                            <PreviewDataProvider templateID={templateID}>
                             {/* Fixed-viewport layout: the page never scrolls; each pane owns its scrolling. */}
                             <div className="flex h-screen flex-col overflow-hidden">
                                 <TemplateHeader templateName={data.template_name} />
@@ -227,6 +263,7 @@ export const ViewTemplate = () => {
                                 </div>
                                 </div>
                             </div>
+                            </PreviewDataProvider>
                             </TemplateSaveProvider>
                 ) : null}
             </>

@@ -164,6 +164,112 @@ def build_form_template_pdf(
 	return pdf_byte_array.getvalue()
 
 
+@frappe.whitelist()
+def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str, Any]:
+	"""Resolve how each field of a template would PRINT for the given data.
+
+	Powers the live preview drawn over the PDF in the annotator. It mirrors the
+	printer field for field — same resolver, same default fallback, same
+	checkbox truthiness, same font resolution — so the preview cannot promise
+	something the generated PDF won't deliver.
+
+	Returns a map of Form Template Field row name -> one of:
+	    {"kind": "text",  "text": str, "font": str, "font_size_px": float}
+	    {"kind": "check", "checked": bool}
+
+	`font_size_px` is the effective size expressed in *page image pixels*, so
+	the client can scale it with the viewer without knowing about PDF points.
+	Fields that would print nothing are omitted, keeping "empty" and "unmapped"
+	distinguishable.
+	"""
+	if isinstance(data, str):
+		data = json.loads(data or "{}")
+
+	template = frappe.get_doc("Form Template", template_id)
+	template.check_permission("read")
+
+	template_font = template.font or "helvetica"
+	try:
+		template_font_size = float(template.font_size) if template.font_size is not None else 12
+	except (TypeError, ValueError):
+		template_font_size = 12
+
+	# Widget coordinates are stored in page-image pixels while font sizes are in
+	# PDF points; this is the conversion between them, per page.
+	image_width_by_page = {img.page_index: img.width for img in template.form_template_image}
+	page_scale: dict[int, float] = {}
+	try:
+		doc = fitz.open(frappe.get_site_path(template.file[1:]))
+		for page_index in range(doc.page_count):
+			page_width = doc[page_index].mediabox_size[0]
+			image_width = image_width_by_page.get(page_index)
+			page_scale[page_index] = image_width / page_width if image_width and page_width else 1.0
+		doc.close()
+	except Exception:
+		frappe.log_error(title="Form Template preview scale failed", message=frappe.get_traceback())
+
+	values: dict[str, Any] = {}
+	for annotation in template.form_template_field:
+		try:
+			value = get_field_value(annotation, data, 0)
+			if isinstance(value, str):
+				value = value.strip()
+
+			# Same fallback the printer applies: an empty value defers to the
+			# field's default, which may itself be a Jinja template.
+			if value is None or value == "" or value == "None":
+				if annotation.is_default_jinja and annotation.default_value:
+					# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - default_value is a trusted database field
+					value = frappe.render_template(annotation.default_value, data)
+				else:
+					value = annotation.default_value
+		except Exception:
+			# One bad expression must not blank the whole preview.
+			frappe.log_error(
+				title="Form Template preview value failed",
+				message=f"{template_id} / {annotation.field_label}: {frappe.get_traceback()}",
+			)
+			continue
+
+		if value is None:
+			continue
+
+		field_type = (annotation.field_type or "Text").replace(" ", "").lower()
+
+		if field_type in ("checkbox", "radiobutton"):
+			# The printer ticks the widget only for these; anything else stays
+			# blank, so "0" must read as unchecked rather than as the text "0".
+			checked = value is True or value in ("True", "1", 1)
+			values[annotation.name] = {"kind": "check", "checked": bool(checked)}
+			continue
+
+		text = str(value).strip()
+		if not text or text == "None":
+			continue
+
+		try:
+			annotation_font_size = float(annotation.font_size) if annotation.font_size is not None else 0
+		except (TypeError, ValueError):
+			annotation_font_size = 0
+
+		effective_font_size = (
+			annotation_font_size
+			if annotation.override_style and annotation_font_size > 0
+			else template_font_size
+		)
+		effective_font = annotation.font if annotation.font and annotation.font != "None" else template_font
+		scale = page_scale.get(int(annotation.page_index or 0), 1.0)
+
+		values[annotation.name] = {
+			"kind": "text",
+			"text": text,
+			"font": effective_font,
+			"font_size_px": round(effective_font_size * scale, 2),
+		}
+
+	return values
+
+
 def fetch_repeated_document_template_images(template_id):
 	form_template = frappe.get_cached_doc("Form Template", template_id)
 	rows = [row for row in form_template.form_template_image if row.repeat_page]

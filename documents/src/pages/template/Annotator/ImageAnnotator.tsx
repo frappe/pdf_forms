@@ -10,6 +10,7 @@ import { Maximize, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Settings, ArrowLe
 import _ from '@lib/translate';
 import type { FormTemplateImage } from '@/types/FormPrinter/FormTemplateImage';
 import type { Annotation } from '@/types/Annotation';
+import type { PreviewFieldValue } from '../PreviewDataContext';
 
 
 interface AnnotationLabelMap {
@@ -48,6 +49,17 @@ interface Props {
     backToExternal?: boolean,
     /** Increment after a successful delete to reset pan/zoom to the default (full-page) view. */
     resetZoomNonce?: number,
+    /** Annotation id -> how that field would print, drawn over the page. */
+    previewValues?: Record<string, PreviewFieldValue>,
+}
+
+/** PDF base-14 fonts mapped to what a browser can actually render. */
+const PDF_FONT_STACKS: Record<string, string> = {
+    helvetica: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    courier: "'Courier New', Courier, monospace",
+    'times-roman': "'Times New Roman', Times, serif",
+    symbol: "'Segoe UI Symbol', sans-serif",
+    zapfdingbats: "'Zapf Dingbats', 'Segoe UI Symbol', sans-serif",
 }
 
 function getTooltipText(annotationId: string, labels?: Record<string, AnnotationLabelMap>): string | null {
@@ -56,7 +68,7 @@ function getTooltipText(annotationId: string, labels?: Record<string, Annotation
     return l.field_label?.trim() || l.field_name?.trim() || null
 }
 
-export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, resetZoomNonce = 0, ...props }: Props) => {
+export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, resetZoomNonce = 0, previewValues, ...props }: Props) => {
 
     const [currentPage, setCurrentPage] = useState(0);
 
@@ -144,6 +156,91 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
             }
         };
     }, [images, allowEdit, id, annotator]);
+
+    /* ---------------------------------------------------------------- *
+     * Live preview: draw the value each field would print inside its box.
+     * OpenSeadragon overlays are anchored in image coordinates, so they pan
+     * and zoom with the page for free; only the font size has to be tracked
+     * by hand, from the element's rendered height.
+     * ---------------------------------------------------------------- */
+    const previewOverlays = useRef<HTMLElement[]>([]);
+
+    useEffect(() => {
+        if (!viewer) return
+
+        const clear = () => {
+            previewOverlays.current.forEach((el) => {
+                try { viewer.removeOverlay(el) } catch { /* overlay already gone */ }
+            })
+            previewOverlays.current = []
+        }
+        clear()
+
+        const pageAnnotations = annotations?.[currentPage] ?? []
+        if (previewValues && Object.keys(previewValues).length) {
+            pageAnnotations.forEach((annotation) => {
+                const preview = previewValues[annotation.id]
+                if (!preview) return
+                // An unticked box prints nothing, so it shows nothing here either.
+                if (preview.kind === 'check' && !preview.checked) return
+
+                const match = /xywh=pixel:([\d.]+),([\d.]+),([\d.]+),([\d.]+)/.exec(
+                    annotation.target?.selector?.value ?? ''
+                )
+                if (!match) return
+                const [x, y, w, h] = match.slice(1).map(Number)
+
+                const el = document.createElement('div')
+                if (preview.kind === 'check') {
+                    el.className = 'pdf-preview-value pdf-preview-check'
+                    el.textContent = '✓'
+                    el.title = _("Checked")
+                } else {
+                    el.className = 'pdf-preview-value'
+                    el.style.fontFamily = PDF_FONT_STACKS[preview.font] ?? PDF_FONT_STACKS.helvetica
+                    // Remembered in image pixels; converted to screen pixels below.
+                    el.dataset.fontImagePx = String(preview.font_size_px || 0)
+                    // Plain text: the resolver can return markup (a Text Editor field
+                    // prints its HTML), and this must show what actually prints.
+                    el.textContent = preview.text
+                    el.title = preview.text
+                }
+                el.dataset.imageHeight = String(h)
+
+                viewer.addOverlay({
+                    element: el,
+                    location: viewer.viewport.imageToViewportRectangle(
+                        new OpenSeaDragon.Rect(x, y, w, h)
+                    ),
+                })
+                previewOverlays.current.push(el)
+            })
+        }
+
+        // Overlay boxes scale with the viewport, their text does not — size it
+        // from the box's rendered height on every viewport change.
+        const scaleText = () => {
+            previewOverlays.current.forEach((el) => {
+                const boxHeight = el.clientHeight
+                if (boxHeight <= 0) return
+                const imageHeight = Number(el.dataset.imageHeight) || 0
+                const fontImagePx = Number(el.dataset.fontImagePx) || 0
+                // Text keeps the size the PDF will print, converted image px ->
+                // screen px by how much the viewer is currently magnifying.
+                const size = fontImagePx && imageHeight
+                    ? fontImagePx * (boxHeight / imageHeight)
+                    : boxHeight * 0.72
+                el.style.fontSize = `${Math.max(4, Math.min(size, 64))}px`
+            })
+        }
+        scaleText()
+        viewer.addHandler('update-viewport', scaleText)
+
+        return () => {
+            viewer.removeHandler('update-viewport', scaleText)
+            clear()
+        }
+    }, [viewer, annotations, currentPage, previewValues])
 
     const panToAnnotation = useCallback((annotationID: string) => {
         if (annotator) {
@@ -410,7 +507,11 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                 // provide them; doubling made a twin line at the split.
                 <div className="absolute top-0 left-0 right-0 flex flex-col gap-0 z-50 pointer-events-auto">
                     <div className="flex items-stretch gap-0 bg-surface-gray-1 w-full shadow-sm justify-between p-1">
-                        <div className="flex items-center gap-1">
+                        {/* Three zones. The outer two share the leftover space
+                            equally, so page navigation is centred against the
+                            toolbar itself rather than against whatever happens
+                            to sit to its left. */}
+                        <div className="flex flex-1 min-w-0 items-center justify-start gap-1 [&_button]:shrink-0">
                             {backTo && (
                                 <WithTooltip tip={backLabel}>
                                     <Button variant="ghost" theme="gray" isIconButton size="md" aria-label={backLabel} asChild>
@@ -438,7 +539,12 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                     <Maximize className="size-4" />
                                 </Button>
                             </WithTooltip>
-                            <div className="flex items-center gap-0">
+                            {/* Mirrors the divider before the zoom controls, so the
+                                toolbar reads as three groups from either end. */}
+                            <span className="mx-1 h-4 w-px shrink-0 bg-outline-gray-2" aria-hidden />
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-0">
                                 <WithTooltip tip={_("Previous Page")}>
                                     <Button
                                         variant="ghost"
@@ -452,8 +558,10 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                         <ChevronLeft className="size-4" />
                                     </Button>
                                 </WithTooltip>
-                                <div className="w-[70px] text-center">
-                                    <span className="text-xs">{_("Page")} {currentPage + 1} {_("of")} {images.length}</span>
+                                <div className="min-w-[76px] px-1 text-center">
+                                    <span className="text-xs tabular-nums whitespace-nowrap">
+                                        {_("Page")} {currentPage + 1} {_("of")} {images.length}
+                                    </span>
                                 </div>
                                 <WithTooltip tip={_("Next Page")}>
                                     <Button
@@ -468,7 +576,18 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                         <ChevronRight className="size-4" />
                                     </Button>
                                 </WithTooltip>
-                            </div>
+                        </div>
+
+                        <div className="flex flex-1 min-w-0 items-center justify-end gap-1">
+                            {/* Contextual buttons shrink; the zoom controls never
+                                do, so they stay pinned to the right edge. */}
+                            {customButtons ? (
+                                <div className="flex min-w-0 items-center gap-1">{customButtons}</div>
+                            ) : null}
+                            {customButtons ? (
+                                <span className="mx-1 h-4 w-px shrink-0 bg-outline-gray-2" aria-hidden />
+                            ) : null}
+                            <div className="flex shrink-0 items-center gap-1">
                             <WithTooltip tip={_("Zoom In")}>
                                 <Button
                                     variant="ghost"
@@ -493,9 +612,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                                     <ZoomOut className="size-4" />
                                 </Button>
                             </WithTooltip>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            {customButtons}
+                            </div>
                         </div>
                     </div>
                     {customHeader && (

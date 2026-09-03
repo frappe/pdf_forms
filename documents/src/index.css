@@ -323,6 +323,30 @@ body {
   stroke-linejoin: round;
 }
 
+/* Live preview values drawn over the PDF (OpenSeadragon overlays). Sized and
+   positioned by the viewer; this only styles the text. Never interactive — the
+   annotation underneath must stay clickable. */
+.pdf-preview-value {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding-inline: 2px;
+  color: var(--ink-gray-9, #0f0f0f);
+  font-family: var(--font-sans, system-ui), sans-serif;
+  line-height: 1;
+  white-space: pre;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* A ticked checkbox/radio: the printer flips the widget on, so the preview
+   shows a mark rather than the raw value. */
+.pdf-preview-check {
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* Annotorious annotation states: hover and selection gain stroke WEIGHT, not a
    color change — the per-type color (blue = auto, violet = manual) comes from
    the formatter's inline style on .a9s-inner, hence the !important. */

@@ -8,6 +8,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ImageAnnotator } from './ImageAnnotator'
 import { AnnotationDeleteModal } from './AnnotationDeleteModal'
 import { AnnotationSyncState } from './AnnotationSyncState'
+import { Eye } from 'lucide-react'
+import { usePreviewData } from '../PreviewDataContext'
 import _ from '@lib/translate'
 
 interface GetTemplateFieldResponse {
@@ -127,6 +129,9 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
     }, [unsavedAnnotations, templateID, call, mutate])
 
     const { focusedAnnotation, onAnnotationClick, setFocusedAnnotation } = useAnnotationFocus(templateID)
+
+    // Values for the document chosen in the Preview tab, drawn over the page.
+    const { docName: previewDocName, values: previewValues } = usePreviewData()
 
     const [deleteAnnotationID, setDeleteAnnotationID] = useState<string | null>(null)
     const [resetViewportNonce, setResetViewportNonce] = useState(0)
@@ -255,6 +260,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                     setFocusedAnnotation={setFocusedAnnotation}
                     onAnnotationDelete={setDeleteAnnotationID}
                     resetZoomNonce={resetViewportNonce}
+                    previewValues={previewValues}
                     backTo={
                         import.meta.env.VITE_DESK_FORM_TEMPLATE_LIST_URL?.trim() ||
                         `${String(import.meta.env.VITE_FRAPPE_PATH ?? '').replace(/\/$/, '')}/app/list/${encodeURIComponent('Form Template')}/List`
@@ -262,6 +268,17 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                     backLabel="Back to Desk"
                     backToExternal
                     customButtons={<>
+                        {previewDocName && (
+                            <span
+                                // min-w-0 so the chip gives way on a narrow pane
+                                // instead of overflowing onto the page controls.
+                                className="flex min-w-0 items-center gap-1.5 self-center rounded-full bg-surface-blue-2 px-2.5 py-1 text-xs text-ink-blue-8"
+                                title={_("Showing values from {0}", [previewDocName])}
+                            >
+                                <Eye className="size-3.5 shrink-0" />
+                                <span className="min-w-0 max-w-[16ch] truncate">{previewDocName}</span>
+                            </span>
+                        )}
                         <AnnotationSyncState
                             hasUnsavedChanges={unsavedAnnotations.length > 0}
                             forceUpdate={uploadToDatabase}
