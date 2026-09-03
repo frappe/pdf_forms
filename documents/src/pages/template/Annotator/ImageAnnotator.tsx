@@ -51,6 +51,8 @@ interface Props {
     resetZoomNonce?: number,
     /** Annotation id -> how that field would print, drawn over the page. */
     previewValues?: Record<string, PreviewFieldValue>,
+    /** Declared /DA font name -> CSS family registered from the PDF's embedded program. */
+    previewFonts?: Record<string, string>,
 }
 
 /** PDF base-14 fonts mapped to what a browser can actually render. */
@@ -68,7 +70,7 @@ function getTooltipText(annotationId: string, labels?: Record<string, Annotation
     return l.field_label?.trim() || l.field_name?.trim() || null
 }
 
-export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, resetZoomNonce = 0, previewValues, ...props }: Props) => {
+export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, setFocusedAnnotation, annotationToFocus, onAnnotationCreate, onAnnotationUpdate, annotatorImageStyles, annotations, annotationLabels, customButtons, allowEdit = true, showToolbar = true, onAnnotationDelete, backTo, backLabel = 'Back to dashboard', backToExternal = false, resetZoomNonce = 0, previewValues, previewFonts, ...props }: Props) => {
 
     const [currentPage, setCurrentPage] = useState(0);
 
@@ -197,7 +199,12 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     el.title = _("Checked")
                 } else {
                     el.className = 'pdf-preview-value'
-                    el.style.fontFamily = PDF_FONT_STACKS[preview.font] ?? PDF_FONT_STACKS.helvetica
+                    const stack = PDF_FONT_STACKS[preview.font] ?? PDF_FONT_STACKS.helvetica
+                    // The PDF's own font first, when it is embedded and has loaded.
+                    const real = preview.font_name ? previewFonts?.[preview.font_name] : undefined
+                    el.style.fontFamily = real ? `'${real}', ${stack}` : stack
+                    if (preview.bold) el.style.fontWeight = '700'
+                    if (preview.italic) el.style.fontStyle = 'italic'
                     // Remembered in image pixels; converted to screen pixels below.
                     el.dataset.fontImagePx = String(preview.font_size_px || 0)
                     // Plain text: the resolver can return markup (a Text Editor field
@@ -240,7 +247,7 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
             viewer.removeHandler('update-viewport', scaleText)
             clear()
         }
-    }, [viewer, annotations, currentPage, previewValues])
+    }, [viewer, annotations, currentPage, previewValues, previewFonts])
 
     const panToAnnotation = useCallback((annotationID: string) => {
         if (annotator) {

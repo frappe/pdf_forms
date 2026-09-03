@@ -131,7 +131,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
     const { focusedAnnotation, onAnnotationClick, setFocusedAnnotation } = useAnnotationFocus(templateID)
 
     // Values for the document chosen in the Preview tab, drawn over the page.
-    const { docName: previewDocName, values: previewValues } = usePreviewData()
+    const { docName: previewDocName, values: previewValues, fonts: previewFonts } = usePreviewData()
 
     const [deleteAnnotationID, setDeleteAnnotationID] = useState<string | null>(null)
     const [resetViewportNonce, setResetViewportNonce] = useState(0)
@@ -261,6 +261,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
                     onAnnotationDelete={setDeleteAnnotationID}
                     resetZoomNonce={resetViewportNonce}
                     previewValues={previewValues}
+                    previewFonts={previewFonts}
                     backTo={
                         import.meta.env.VITE_DESK_FORM_TEMPLATE_LIST_URL?.trim() ||
                         `${String(import.meta.env.VITE_FRAPPE_PATH ?? '').replace(/\/$/, '')}/app/list/${encodeURIComponent('Form Template')}/List`
