@@ -174,6 +174,9 @@ def update_annotation(form_template_id: str, annotations: list[dict[str, Any]]) 
 					"form_template_image": annotation["form_template_image"],
 					"annotation_type": "Manual",
 					"value_type": "Text",
+					# A drawn box is a text field unless the user says otherwise;
+					# without this the printer had no type to write the value as.
+					"field_type": "Text",
 				},
 			)
 

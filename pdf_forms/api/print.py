@@ -88,9 +88,18 @@ def build_form_template_pdf(
 	for i in range(len(doc)):
 		page = doc[i]
 
+		# Snapshot a page that will be copied BEFORE it is filled: copies made
+		# from the filled page inherited its values -- widgets and drawn text --
+		# and printed them on top of their own.
+		pristine, original_widgets = None, []
+		if i in page_index_include_in_images:
+			original_widgets = [(w.field_name, w.xref) for w in page.widgets()]
+			pristine = fitz.open()
+			pristine.insert_pdf(doc, from_page=i, to_page=i)
+
 		annotate_form_template(page, i, template_id, data, font, font_size)
 
-		if i in page_index_include_in_images:
+		if pristine is not None:
 			image = next(image for image in repeated_images if image["page_index"] == i)
 			repeat_after = int(image["repeat_after"])
 			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - image["copies"] comes from database field, trusted source
@@ -100,31 +109,19 @@ def build_form_template_pdf(
 
 			# Loop over the number of copies and apply the template logic
 			for copy_num in range(copies):
-				# Create a temporary PDF document with the page to be copied
+				# Each copy starts from the pristine page, which already carries
+				# every widget, empty. Rows are stored against the original
+				# page's xrefs, so map those to the copy's by field name.
 				temp_doc = fitz.open()
-				temp_doc.insert_pdf(doc, from_page=i, to_page=i)
+				temp_doc.insert_pdf(pristine, from_page=0, to_page=0)
 				temp_page = temp_doc[0]
 
-				xref_map = {}
-
-				for widget in page.widgets():
-					if widget.field_type == fitz.PDF_WIDGET_TYPE_TEXT:
-						widget.field_value = None
-					if widget.field_type == fitz.PDF_WIDGET_TYPE_CHECKBOX:
-						if widget.field_value == "Yes":
-							widget.field_value = widget.on_state()
-						else:
-							widget.field_value = False
-
-					elif widget.field_type == fitz.PDF_WIDGET_TYPE_RADIOBUTTON:
-						if widget.field_value != "Off":
-							widget.field_value = widget.on_state()
-						else:
-							widget.field_value = False
-
-					new_widget = temp_page.add_widget(widget)
-
-					xref_map[str(widget.xref)] = str(new_widget.xref)
+				copy_xref_by_name = {w.field_name: w.xref for w in temp_page.widgets()}
+				xref_map = {
+					str(xref): str(copy_xref_by_name[name])
+					for name, xref in original_widgets
+					if name in copy_xref_by_name
+				}
 
 				# Apply the data print logic to the copied page
 				annotate_form_template(
@@ -479,6 +476,23 @@ def resolve_text_style(doc, page, annotation, template_font, template_font_size)
 	return "draw", (alias, None), size
 
 
+# Base-14 widget fonts cover WinAnsi only. A value with a glyph outside that --
+# the rupee sign in every INR amount -- makes PyMuPDF build the appearance with
+# a fallback font whose baseline lands outside the clip box, so the amount
+# prints cut in half. Such values are drawn with Noto Sans (bundled with
+# pymupdf-fonts), which has the glyphs.
+WIDGET_FONT_FILES = {"Helv": "helv", "TiRo": "tiro", "Cour": "cour", "Symb": "symb", "ZaDb": "zadb"}
+UNICODE_DRAW_FONT = "notos"
+
+
+def widget_font_can_render(alias: str, text: str) -> bool:
+	try:
+		font = fitz.Font(WIDGET_FONT_FILES.get(alias, "helv"))
+	except Exception:
+		return True
+	return all(font.has_glyph(ord(ch)) for ch in text if not ch.isspace())
+
+
 def draw_field_text(page, widget, text: str, font, size: float) -> bool:
 	"""Write the value into the field's box with the real font, then remove the
 	widget: the drawn text is the field now. Returns False (and leaves the
@@ -584,6 +598,8 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 				if annotation.field_type == "Text":
 					text = str(value) if value is not None and value != "None" else ""
 					mode, text_font, size = resolve_text_style(doc, page, annotation, font, font_size)
+					if mode == "widget" and text and not widget_font_can_render(text_font, text):
+						mode, text_font = "draw", (UNICODE_DRAW_FONT, None)
 					if mode == "widget":
 						field.text_fontsize = size
 						field.text_font = text_font
@@ -638,8 +654,6 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			width = image_width_by_id.get(annotation.form_template_image)
 			ratio = width / page_width if width and width > 0 else 1
 
-			fields = page.widgets()
-
 			x1_point = float(annotation.x_point) / ratio
 			y1_point = float(annotation.y_point) / ratio
 			width = float(annotation.width) / ratio
@@ -656,27 +670,29 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			# A manual box is a fresh widget with nothing declared, so it stays a
 			# widget; a variant the widget cannot carry uses its regular face.
 			widget.text_font = text_font if mode == "widget" else regular_widget_font(text_font[0])
-			widget.field_type = get_field_type(annotation.field_type)
-			page.draw_rect(rect, color=(0, 0, 0), width=0.5)
+			# A box drawn in the annotator arrives with no field_type; it is text.
+			manual_type = annotation.field_type or "Text"
+			widget.field_type = get_field_type(manual_type)
+			# No frame: a manual box says where the value goes, not what to draw.
+			# If the form wants a box there, the form already has one.
 
-			# create random and unique xref for the widget
-			widget.xref = max([field.xref for field in fields]) + 1
-
+			# PyMuPDF assigns the xref on add_widget; computing one from the
+			# page's existing widgets crashed on a page that had none.
 			page.add_widget(widget)
 
 			form_fields = page.widgets()
 			# find the widget and update the field value
 			for field in form_fields:
 				if field.field_name == annotation.field_label:
-					if annotation.field_type == "Text":
+					if manual_type == "Text":
 						field.field_value = str(value) if value is not None and value != "None" else ""
 						field.update()
 
-					elif annotation.field_type == "Checkbox":
+					elif manual_type == "Checkbox":
 						if value is True or value == "True" or value == "1" or value == 1:
 							field.field_value = field.on_state()
 							field.update()
-					elif annotation.field_type == "Radio Button":
+					elif manual_type == "Radio Button":
 						if value is True or value == "True" or value == "1" or value == 1:
 							field.field_value = field.on_state()
 							field.update()
