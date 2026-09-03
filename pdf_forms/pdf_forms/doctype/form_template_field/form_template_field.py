@@ -48,13 +48,27 @@ class FormTemplateField(Document):
 
 
 def _extract_dimensions(value: str) -> tuple[str, str, str, str]:
-	xywh = value.split("=")[1].split(":")[1].split(",")
-	return xywh[0], xywh[1], xywh[2], xywh[3]
+	"""Parse an Annotorious `xywh=pixel:x,y,w,h` selector; reject anything else."""
+	try:
+		xywh = value.split("=", 1)[1].split(":", 1)[1].split(",")
+		x, y, w, h = (str(float(part)) for part in xywh)
+	except (IndexError, ValueError, AttributeError):
+		frappe.throw(_("Invalid annotation geometry: {0}").format(value), frappe.ValidationError)
+	return x, y, w, h
+
+
+def _get_template(form_template_id: str, permission: str = "read"):
+	"""The Form Template, after checking the caller may {permission} it. Every
+	endpoint here goes through this: a whitelisted method is reachable by any
+	logged-in user, and the doctype itself is System Manager only."""
+	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template.check_permission(permission)
+	return form_template
 
 
 @frappe.whitelist()
 def get_annotations(form_template_id: str) -> list[dict[str, Any]]:
-	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+	form_template = _get_template(form_template_id)
 	return [
 		{
 			"name": row.name,
@@ -76,7 +90,7 @@ def get_annotations(form_template_id: str) -> list[dict[str, Any]]:
 
 @frappe.whitelist()
 def get_for_template_images(form_template_id: str) -> list[dict[str, Any]]:
-	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+	form_template = _get_template(form_template_id)
 
 	# return form_template_images by sorting by page_index
 	form_template_images = sorted(
@@ -98,12 +112,17 @@ def update_form_template_fields(
 	# 1. Update the form template fields only those are changed
 	# 2. Update the font and font size for the form template
 
-	# update the font and font size for the form template
-	if font or font_size:
-		frappe.db.set_value("Form Template", form_template_id, {"font": font, "font_size": font_size})
-
-	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template = _get_template(form_template_id, "write")
 	has_updates = False
+
+	# Font and size go through the document too: a direct db.set_value here
+	# let any logged-in user change them with no permission check.
+	if font or font_size:
+		if font:
+			form_template.font = font
+		if font_size:
+			form_template.font_size = font_size
+		has_updates = True
 	for field in fields:
 		existing_field = next(
 			(row for row in form_template.form_template_field if row.name == field["name"]),
@@ -141,7 +160,7 @@ def update_form_template_fields(
 
 @frappe.whitelist(methods=["POST"])
 def update_annotation(form_template_id: str, annotations: list[dict[str, Any]]) -> str:
-	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template = _get_template(form_template_id, "write")
 	for annotation in annotations:
 		existing_row = next(
 			(row for row in form_template.form_template_field if row.name == annotation["id"]),
@@ -187,13 +206,13 @@ def update_annotation(form_template_id: str, annotations: list[dict[str, Any]]) 
 
 @frappe.whitelist(methods=["POST"])
 def delete_annotation(form_template_id: str, annotation_id: str) -> str:
-	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template = _get_template(form_template_id, "write")
 	row_index = next(
 		(index for index, row in enumerate(form_template.form_template_field) if row.name == annotation_id),
 		-1,
 	)
 	if row_index == -1:
-		frappe.throw(_("Annotation {annotation_id} not found"))
+		frappe.throw(_("Annotation {0} not found").format(annotation_id))
 
 	form_template.form_template_field.pop(row_index)
 	form_template.save()

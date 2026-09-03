@@ -67,9 +67,11 @@
    "label": "File Name"
   },
   {
+   "description": "Attached once. To use a different PDF, delete this template and create a new one.",
    "fieldname": "file",
    "fieldtype": "Attach",
-   "label": "File"
+   "label": "File",
+   "set_only_once": 1
   },
   {
    "fieldname": "file_extension",

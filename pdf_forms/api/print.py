@@ -7,6 +7,7 @@ import fitz
 import frappe
 from frappe import _
 
+from pdf_forms.utils.files import template_file_path
 from pdf_forms.utils.jinja import format_currency, format_date, format_number, format_phone
 
 # Mapping of font names to standard font names
@@ -45,6 +46,10 @@ def print_form_template(
 	    str: A success message indicating that the template has been written successfully.
 	"""
 
+	# Whitelisted means every logged-in user; the template itself is System
+	# Manager only, so ask before rendering it.
+	frappe.get_doc("Form Template", template_id).check_permission("read")
+
 	pdf_bytes = build_form_template_pdf(template_id=template_id, data=data, print_name=print_name)
 	template_name = frappe.db.get_value("Form Template", template_id, "template_name") or template_id
 	frappe.response["filename"] = print_name or f"{template_name}.pdf"
@@ -69,11 +74,8 @@ def build_form_template_pdf(
 	except (TypeError, ValueError):
 		font_size = 12
 
-	# get the file path
-	file = frappe.get_site_path(form_template[1:])
-
-	# open the pdf file
-	doc = fitz.open(file)
+	# the uploaded PDF, confined to the site's files directories
+	doc = fitz.open(template_file_path(form_template))
 
 	# Check the repeated images in the form template
 	repeated_images = fetch_repeated_document_template_images(template_id)
@@ -94,16 +96,20 @@ def build_form_template_pdf(
 		pristine, original_widgets = None, []
 		if i in page_index_include_in_images:
 			original_widgets = [(w.field_name, w.xref) for w in page.widgets()]
-			pristine = fitz.open()
-			pristine.insert_pdf(doc, from_page=i, to_page=i)
+			# Kept as bytes and reopened per copy: insert_pdf brings a page's
+			# widgets across only the first time from a given source document,
+			# so a second copy taken from the same open snapshot had no fields.
+			snapshot = fitz.open()
+			snapshot.insert_pdf(doc, from_page=i, to_page=i)
+			pristine = snapshot.tobytes()
+			snapshot.close()
 
 		annotate_form_template(page, i, template_id, data, font, font_size)
 
 		if pristine is not None:
 			image = next(image for image in repeated_images if image["page_index"] == i)
 			repeat_after = int(image["repeat_after"])
-			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - image["copies"] comes from database field, trusted source
-			copies = int(frappe.render_template(image["copies"], data))
+			copies = resolve_copies(image["copies"], data, template_id, i)
 
 			base_index = int(image["base_index"])
 
@@ -112,8 +118,7 @@ def build_form_template_pdf(
 				# Each copy starts from the pristine page, which already carries
 				# every widget, empty. Rows are stored against the original
 				# page's xrefs, so map those to the copy's by field name.
-				temp_doc = fitz.open()
-				temp_doc.insert_pdf(pristine, from_page=0, to_page=0)
+				temp_doc = fitz.open(stream=pristine, filetype="pdf")
 				temp_page = temp_doc[0]
 
 				copy_xref_by_name = {w.field_name: w.xref for w in temp_page.widgets()}
@@ -198,7 +203,7 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 	image_width_by_page = {img.page_index: img.width for img in template.form_template_image}
 	page_scale: dict[int, float] = {}
 	try:
-		doc = fitz.open(frappe.get_site_path(template.file[1:]))
+		doc = fitz.open(template_file_path(template.file))
 		for page_index in range(doc.page_count):
 			page_width = doc[page_index].mediabox_size[0]
 			image_width = image_width_by_page.get(page_index)
@@ -209,7 +214,7 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 
 	values: dict[str, Any] = {}
 	# Opened once so the "is this font embedded?" check is per distinct name.
-	template_pdf = fitz.open(frappe.get_site_path(template.file.lstrip("/")))
+	template_pdf = fitz.open(template_file_path(template.file))
 	embedded_cache: dict[str, bool] = {}
 
 	for annotation in template.form_template_field:
@@ -298,6 +303,30 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 		}
 
 	return values
+
+
+# More copies of one page than any form plausibly needs; a typo in the
+# expression should not print a book.
+MAX_PAGE_COPIES = 200
+
+
+def resolve_copies(expression, data, template_id, page_index) -> int:
+	"""How many extra copies of a repeat page to print: the page's Jinja
+	expression evaluated against the data. Blank means none; a broken
+	expression is logged and means none rather than failing the whole print."""
+	if not (expression or "").strip():
+		return 0
+	try:
+		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - the expression is authored on the template, a trusted database field
+		rendered = frappe.render_template(expression, data)
+		copies = int(float(str(rendered).strip() or 0))
+	except Exception:
+		frappe.log_error(
+			title="Form Template: page copies expression failed",
+			message=f"{template_id} page {page_index}: {expression!r}\n{frappe.get_traceback()}",
+		)
+		return 0
+	return max(0, min(copies, MAX_PAGE_COPIES))
 
 
 def fetch_repeated_document_template_images(template_id):
@@ -825,10 +854,7 @@ def get_template_font(template_id: str, font_name: str):
 	"""
 	template = frappe.get_doc("Form Template", template_id)
 	template.check_permission("read")
-	if not template.file:
-		frappe.throw(_("This template has no PDF."), frappe.DoesNotExistError)
-
-	doc = fitz.open(frappe.get_site_path(template.file.lstrip("/")))
+	doc = fitz.open(template_file_path(template.file))
 	buffer = embedded_font_buffer(doc, doc[0], font_name)
 	if not buffer:
 		frappe.throw(

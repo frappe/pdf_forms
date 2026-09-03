@@ -12,6 +12,8 @@ from frappe.model.document import Document
 from frappe.utils.file_manager import save_file
 from pdf2image import convert_from_path
 
+from pdf_forms.utils.files import template_file_path
+
 
 class FormTemplate(Document):
 	# begin: auto-generated types
@@ -52,6 +54,27 @@ class FormTemplate(Document):
 		"""
 		if self.template_name and frappe.db.exists("Print Format", self.template_name):
 			frappe.throw(_("A Print Format with this name already exists. Please use a different name."))
+
+	def validate(self):
+		self.enforce_single_upload()
+
+	def enforce_single_upload(self):
+		"""The PDF is attached once. Replacing or removing it would orphan every
+		mapping, page image and annotation built on it, so neither is allowed:
+		to use a different PDF, delete the template and create a new one."""
+		old = self.get_doc_before_save()
+		if not old or not old.file:
+			return
+		if not self.file:
+			frappe.throw(
+				_("The PDF cannot be removed from a template. Delete the template instead."),
+				frappe.ValidationError,
+			)
+		if self.file != old.file:
+			frappe.throw(
+				_("The PDF cannot be replaced once uploaded. Delete this template and create a new one."),
+				frappe.ValidationError,
+			)
 
 	def before_save(self):
 		# get filename and extension from the file path
@@ -147,20 +170,16 @@ def convert_pdf_to_image(form_template_id):
 		form_template.set("form_template_image", [])
 		form_template.set("form_template_field", [])
 
-		# get the file path from the document
-		file = form_template.file
+		# the uploaded PDF, confined to the site's files directories
+		file_path = template_file_path(form_template.file)
 
 		# convert the pdf to images
 		# create a temporary directory to store the images
 		with tempfile.TemporaryDirectory() as path:
-			images = convert_from_path(
-				frappe.get_site_path(file[1:]),
-				output_folder=path,
-				fmt="jpeg",
-			)
+			images = convert_from_path(file_path, output_folder=path, fmt="jpeg")
 
 		# open the pdf file in fitz
-		pdf_doc = fitz.open(frappe.get_site_path(file[1:]))
+		pdf_doc = fitz.open(file_path)
 
 		# set the font and font size counter to get most common font and font size
 		font_counter = Counter()
@@ -356,7 +375,8 @@ def get_form_template_prompts(form_template_id):
 	# 5. Return the list of prompts
 
 	# 1. Get the Form Template from the document
-	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template.check_permission("read")
 
 	# 2. Get All Form Template Fields which are prompts from the form template
 	prompts = form_template.prompts
@@ -392,10 +412,15 @@ def get_fields_and_prompts_for_form_template(form_template_id):
 	from pdf_forms.api.adapter import get_json_schema_for_doctype, get_json_schema_from_custom_source
 
 	# 1. Get the Form Template from the document
-	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template.check_permission("read")
 
 	# 3. Check if data_source is Doctype or Custom Data Source
 	if form_template.data_source == "DocType":
+		# The schema is the source doctype's own metadata: field names, labels
+		# and options. Only hand it to someone who may read that doctype.
+		if not frappe.has_permission(form_template.source, "read"):
+			frappe.throw(_("Not permitted to read {0}").format(form_template.source), frappe.PermissionError)
 		# 4. Get the fields from the doctype
 		fields = get_json_schema_for_doctype(form_template.source)
 	else:
