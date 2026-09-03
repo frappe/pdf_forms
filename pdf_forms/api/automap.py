@@ -2,21 +2,37 @@
 # For license information, please see license.txt
 """Suggest data-source mappings for a Form Template's unmapped PDF fields.
 
+Nothing here knows what a buyer, a vehicle or an invoice is. Every table the
+matcher uses is derived, per run, from the two corpora actually in front of it:
+the PDF's own field labels, and the source doctype's own metadata.
+
+    abbreviations   `addr` -> `address` only when that word exists in the other
+                    corpus, uniquely, and is short enough to be an abbreviation
+    generic tails   measured, not listed: a token in many of the doctype's
+                    fields cannot pick one of them out
+    qualifiers      minimal pairs. `buyer city` next to `dealer city` proves
+                    those two words name different entities *on this form* --
+                    which works equally well for shipper/consignee/carrier
+    collisions      if two PDF fields reach the same source field by dropping
+                    tokens, the dropped tokens were the ones that told them
+                    apart, so neither is safe to apply
+
 Matching runs in tiers, most trustworthy first:
 
-    TIER 1  exact match after normalization  — deterministic, confidence 1.0
-    TIER 2  learned from your own history    — mappings used on other templates
-                                               with the same source, confidence 0.95
-    TIER 3  synonyms + fuzzy + type          — heuristic, confidence < 0.95
+    TIER 1  exact match after normalization  -- deterministic, confidence 1.0
+    TIER 2  learned from your own history    -- mappings used on other templates
+                                                with the same source, conf 0.95
+    TIER 2b near-exact: the label minus tokens that cannot discriminate, 0.95
+    TIER 3  weighted fuzzy + type            -- heuristic, confidence < 0.95
 
-Only tiers 1 and 2 are "auto-appliable"; a tier-1 hit that is *ambiguous*
-(two source fields normalize to the same key, e.g. `source` vs `utm_source`)
-is deliberately NOT auto-applied — a confidently wrong mapping costs the user
-more than an unmapped field.
+Only confident, unambiguous, non-colliding hits are auto-appliable: a
+confidently wrong mapping costs the user more than an unmapped field.
 """
 
 import difflib
+import math
 import re
+from collections import defaultdict
 
 import frappe
 from frappe import _
@@ -38,209 +54,209 @@ SKIPPED_FIELDTYPES = {
 	"Table MultiSelect",
 }
 
-# Abbreviations seen on printed forms, expanded before comparison.
-ABBREVIATIONS = {
-	"no": "number",
-	"nos": "number",
-	"sig": "signature",
-	"veh": "vehicle",
-	"lic": "license",
-	"addr": "address",
-	"amt": "amount",
-	"qty": "quantity",
-	"desc": "description",
-	"yr": "year",
-	"tel": "telephone",
-}
+# English function words. Grammar, not domain vocabulary.
+FUNCTION_WORDS = {"the", "of", "a", "an", "and", "or", "for", "in", "to", "is", "by", "with", "on", "at"}
 
-# Domain synonyms — deliberately conservative. Anything that could merge two
-# genuinely different fields (mobile vs phone) is left out.
-SYNONYMS = {
-	"buyer": "customer",
-	"purchaser": "customer",
-	"client": "customer",
-	"dealer": "company",
-	"seller": "company",
-	"supplier": "company",
-	"zip": "pincode",
-	"postal": "pincode",
-	"vin": "serial",
-	"mail": "email",
-	"organisation": "organization",
-	"firm": "organization",
-}
+# Typographic convention, not domain vocabulary: "No." means numero on every
+# printed form there is, and it is the one abbreviation no algorithm can derive
+# (its letters are not a subsequence of "number"). Everything else is learned.
+UNIVERSAL_ABBREVIATIONS = {"no": "number", "nos": "number"}
 
-# Words that add no meaning once the strong token is present, so
-# "email address" can still meet "email id" and "phone number" meet "phone".
-NOISE_AFTER_STRONG = {"address", "id", "number", "no"}
-STRONG_TOKENS = {"email", "phone", "telephone", "mobile", "fax"}
+# Frappe's primary key. It is the record's ID rather than a data field, so it is
+# reachable only by an exact match -- never by dropping tokens off a label that
+# happens to end in "Name". Framework structure, true of every doctype.
+PRIMARY_KEY = "name"
 
-STOPWORDS = {"the", "of", "a", "an", "and", "input", "field"}
-
-# Generic tails a form designer adds that carry no meaning of their own:
-# "Territory Name" is still the territory, "Industry Type" is still the industry.
-# Used only to let a candidate label match as a subset — never to merge two
-# candidates that differ by a real word.
-GENERIC_TAIL = {"type", "name", "url", "code", "id", "number", "no", "details",
-                "detail", "info", "information", "reference", "ref", "value"}
-
-# Entity qualifiers. If a PDF field and a candidate each carry a qualifier and
-# they differ, the pair is vetoed outright — this is what stops "buyer city",
-# "dealer city" and "co-buyer city" collapsing onto one target.
-QUALIFIER_FAMILIES = [
-	{"buyer", "customer", "purchaser"},
-	{"cobuyer"},
-	{"dealer", "seller", "supplier"},
-	{"trade1"},
-	{"trade2"},
-]
+# Tiers whose match is exact, so two PDF fields legitimately sharing one source
+# field (a name printed in both the header and the signature block) is fine.
+EXACT_TIERS = {"exact", "exact+history", "history"}
 
 
-def normalize(text: str) -> list[str]:
-	"""Lowercase, split camelCase, unify separators, expand abbreviations."""
-	text = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", text or "").lower()
-	text = re.sub(r"\bco[\s\-]?buyer\b", "cobuyer", text)
-	text = re.sub(r"\btrade\s*1\b", "trade1", text)
-	text = re.sub(r"\btrade\s*2\b", "trade2", text)
-	text = re.sub(r"[_\-/.#&,()]+", " ", text)
-
-	tokens = [ABBREVIATIONS.get(word, word) for word in text.split() if word and word not in STOPWORDS]
-
-	# Drop trailing noise once a strong token is present: "email address" -> "email".
-	if any(token in STRONG_TOKENS for token in tokens):
-		tokens = [t for t in tokens if t not in NOISE_AFTER_STRONG]
-
-	return tokens
-
-
-def comparison_key(text: str) -> str:
-	"""The string tier 1 compares on."""
-	return " ".join(normalize(text))
+def raw_tokens(text: str) -> list[str]:
+	"""Split a label or fieldname into comparable words."""
+	text = text or ""
+	text = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", text)  # camelCase
+	text = re.sub(r"(?<=[A-Za-z])(?=[0-9])", " ", text)  # trade1 -> trade 1
+	text = re.sub(r"(?<=[0-9])(?=[A-Za-z])", " ", text)
+	text = re.sub(r"[^A-Za-z0-9]+", " ", text).lower()
+	return [
+		token
+		for token in text.split()
+		if token
+		and token not in FUNCTION_WORDS
+		# A lone letter is punctuation debris, not a word: "Customer's Purchase
+		# Order" must not carry a stray `s` that breaks the match. Lone digits
+		# are kept -- `trade 1` versus `trade 2` turns on them.
+		and not (len(token) == 1 and token.isalpha())
+	]
 
 
-def canonical(tokens: list[str]) -> set:
-	return {SYNONYMS.get(token, token) for token in tokens}
+def _is_subsequence(short: str, long_word: str) -> bool:
+	iterator = iter(long_word)
+	return all(character in iterator for character in short)
 
 
-def qualifier_of(tokens: list[str]):
-	joined = " ".join(tokens)
-	for index, family in enumerate(QUALIFIER_FAMILIES):
-		if any(word in joined for word in family):
-			return index
-	return None
+class Lexicon:
+	"""Token statistics shared by one PDF and one doctype, computed per run."""
 
+	def __init__(self, pdf_labels: list, candidates: list[dict]):
+		pdf_raw = [raw_tokens(label) for label in pdf_labels]
+		candidate_raw = [
+			raw_tokens(candidate["label"]) + raw_tokens(candidate["fieldname"]) for candidate in candidates
+		]
 
-def is_vetoed(pdf_tokens, label_tokens, fieldname_tokens) -> bool:
-	"""True when both sides name a different entity (buyer vs dealer vs co-buyer)."""
-	pdf_qualifier = qualifier_of(pdf_tokens)
-	candidate_qualifier = qualifier_of(label_tokens)
-	if candidate_qualifier is None:
-		candidate_qualifier = qualifier_of(fieldname_tokens)
-	return pdf_qualifier is not None and candidate_qualifier is not None and pdf_qualifier != candidate_qualifier
+		pdf_vocab = {token for document in pdf_raw for token in document}
+		candidate_vocab = {token for document in candidate_raw for token in document}
 
+		# An abbreviation is only accepted when the expansion exists in the OTHER
+		# corpus and nothing else there fits, so `qty` -> `quantity` but never
+		# `so` -> `signatory`.
+		self.abbreviations = {}
+		self.abbreviations.update(self._learn_abbreviations(pdf_vocab, candidate_vocab))
+		self.abbreviations.update(self._learn_abbreviations(candidate_vocab, pdf_vocab))
 
-def fuzzy_score(pdf_label, candidate_label, candidate_fieldname, pdf_type, candidate_type) -> float:
-	"""Tier 3: token overlap + string similarity, adjusted for field type."""
-	pdf_tokens = normalize(pdf_label)
-	label_tokens = normalize(candidate_label)
-	fieldname_tokens = normalize(candidate_fieldname)
+		self.vocab = pdf_vocab | candidate_vocab
+		pdf_documents = [self.canonical(document) for document in pdf_raw]
+		candidate_documents = [self.canonical(document) for document in candidate_raw]
 
-	if not pdf_tokens or not (label_tokens or fieldname_tokens):
-		return 0.0
-	if is_vetoed(pdf_tokens, label_tokens, fieldname_tokens):
-		return 0.0
+		self.pdf_df, self.pdf_n = self._document_frequency(pdf_documents)
+		self.candidate_df, self.candidate_n = self._document_frequency(candidate_documents)
 
-	pdf_canonical = canonical(pdf_tokens)
-	candidate_canonical = canonical(label_tokens) | canonical(fieldname_tokens)
+		self.contrast = defaultdict(set)
+		for documents in (pdf_documents, candidate_documents):
+			for first, second in self._minimal_pairs(documents):
+				self.contrast[first].add(second)
+				self.contrast[second].add(first)
 
-	overlap = (
-		len(pdf_canonical & candidate_canonical) / len(pdf_canonical | candidate_canonical)
-		if (pdf_canonical | candidate_canonical)
-		else 0
-	)
-	similarity = max(
-		difflib.SequenceMatcher(None, " ".join(pdf_tokens), " ".join(label_tokens)).ratio(),
-		difflib.SequenceMatcher(None, " ".join(pdf_tokens), " ".join(fieldname_tokens)).ratio(),
-	)
+	@staticmethod
+	def _learn_abbreviations(short_vocab: set, long_vocab: set) -> dict:
+		learned = {}
+		for token in short_vocab:
+			# Under three letters matches far too much; the length bound keeps
+			# `desc` -> `description` while rejecting `cp` -> `company`.
+			if len(token) < 3 or len(token) > 6 or token in long_vocab:
+				continue
+			hits = [
+				word
+				for word in long_vocab
+				if len(token) + 1 < len(word) <= 3 * len(token)
+				and word[0] == token[0]
+				and _is_subsequence(token, word)
+			]
+			if len(hits) == 1:
+				learned[token] = hits[0]
+		return learned
 
-	score = 0.55 * overlap + 0.35 * similarity
+	def _normalize_token(self, token: str) -> str:
+		token = UNIVERSAL_ABBREVIATIONS.get(token, token)
+		token = self.abbreviations.get(token, token)
+		# Spelling and inflection only -- orthography, not meaning.
+		for suffix, replacement in (("isation", "ization"), ("ise", "ize"), ("yse", "yze")):
+			if token.endswith(suffix) and token[: -len(suffix)] + replacement in self.vocab:
+				return token[: -len(suffix)] + replacement
+		if len(token) > 3 and token.endswith("es") and token[:-2] in self.vocab:
+			return token[:-2]
+		if len(token) > 2 and token.endswith("s") and token[:-1] in self.vocab:
+			return token[:-1]
+		return token
 
-	# A PDF checkbox wants a Check field; anything else is a poor fit.
-	if pdf_type == "CheckBox":
-		score += 0.10 if candidate_type == "Check" else -0.15
-	elif candidate_type == "Check":
-		score -= 0.10
+	def canonical(self, tokens: list[str]) -> list[str]:
+		return [self._normalize_token(token) for token in tokens]
 
-	pdf_qualifier = qualifier_of(pdf_tokens)
-	candidate_qualifier = qualifier_of(label_tokens)
-	if candidate_qualifier is None:
-		candidate_qualifier = qualifier_of(fieldname_tokens)
-	if pdf_qualifier is not None and pdf_qualifier == candidate_qualifier:
-		score += 0.10
+	def tokens(self, text: str) -> list[str]:
+		return self.canonical(raw_tokens(text))
 
-	return max(0.0, min(1.0, score))
+	@staticmethod
+	def _document_frequency(documents: list[list[str]]) -> tuple[dict, int]:
+		frequency = defaultdict(int)
+		for document in documents:
+			for token in set(document):
+				frequency[token] += 1
+		return frequency, max(1, len(documents))
 
+	@staticmethod
+	def _minimal_pairs(documents: list[list[str]]) -> list[tuple[str, str]]:
+		"""Labels differing by exactly one token on each side.
 
-def get_candidate_fields(doctype: str) -> list[dict]:
-	"""Mappable fields of the source doctype, plus its `name`."""
-	meta = frappe.get_meta(doctype)
-	candidates = [{"label": _("ID"), "fieldname": "name", "fieldtype": "Data"}]
-	for field in meta.fields:
-		if field.fieldtype in SKIPPED_FIELDTYPES or not field.fieldname:
-			continue
-		candidates.append(
-			{
-				"label": field.label or field.fieldname,
-				"fieldname": field.fieldname,
-				"fieldtype": field.fieldtype,
-			}
+		`buyer city` beside `dealer city` is proof that buyer and dealer name
+		different things here, without any list of what those things are.
+		"""
+		unique = {frozenset(document) for document in documents if document}
+		by_size = defaultdict(list)
+		for token_set in unique:
+			by_size[len(token_set)].append(token_set)
+
+		pairs = []
+		for group in by_size.values():
+			for i in range(len(group)):
+				for j in range(i + 1, len(group)):
+					left, right = group[i] - group[j], group[j] - group[i]
+					if len(left) == 1 and len(right) == 1:
+						pairs.append((next(iter(left)), next(iter(right))))
+		return pairs
+
+	def idf(self, token: str, side: str) -> float:
+		frequency, total = (
+			(self.pdf_df, self.pdf_n) if side == "pdf" else (self.candidate_df, self.candidate_n)
 		)
-	return candidates
+		return math.log(1 + total / (frequency.get(token, 0) + 0.5))
+
+	def weight(self, token: str) -> float:
+		"""Discriminating power: a token has to be informative on both sides."""
+		return min(self.idf(token, "pdf"), self.idf(token, "cand"))
+
+	def is_selective(self, token: str) -> bool:
+		"""Does this token on its own pick out only a few of the doctype's fields?
+
+		`territory` appears in one field of Customer; `name` appears in eight. A
+		subset match carried only by `name` is a collision, not a match -- which
+		is what keeps `buyer name` off the record ID.
+		"""
+		frequency = self.candidate_df.get(token, 0)
+		return 0 < frequency <= max(1, self.candidate_n / 10)
+
+	def is_vetoed(self, pdf_tokens, candidate_tokens) -> bool:
+		"""True when the two sides name directly contrasted things."""
+		pdf_set, candidate_set = set(pdf_tokens), set(candidate_tokens)
+		for token in pdf_set - candidate_set:
+			if self.contrast[token] & (candidate_set - pdf_set):
+				return True
+		return False
+
+	def overlap(self, pdf_tokens, candidate_tokens) -> float:
+		pdf_set, candidate_set = set(pdf_tokens), set(candidate_tokens)
+		if not pdf_set or not candidate_set:
+			return 0.0
+		shared = sum(self.weight(token) for token in pdf_set & candidate_set)
+		total = sum(self.weight(token) for token in pdf_set | candidate_set)
+		return shared / total if total else 0.0
 
 
-def learn_from_history(source: str, exclude_template: str) -> dict:
-	"""normalized PDF label -> the fieldname most often chosen for it before."""
-	usage = {}
-	template_names = frappe.get_all(
-		"Form Template", filters={"source": source, "name": ("!=", exclude_template)}, pluck="name"
-	)
-	if not template_names:
-		return {}
-
-	rows = frappe.get_all(
-		"Form Template Field",
-		filters={"parent": ("in", template_names), "value_type": "Field"},
-		fields=["field_label", "field_value"],
-	)
-	for row in rows:
-		if not (row.field_value or "").strip():
-			continue
-		key = comparison_key(row.field_label)
-		if not key:
-			continue
-		usage.setdefault(key, {}).setdefault(row.field_value.strip(), 0)
-		usage[key][row.field_value.strip()] += 1
-
-	return {key: max(counts, key=counts.get) for key, counts in usage.items()}
+def comparison_key(tokens: list[str]) -> str:
+	"""The string the exact tier compares on."""
+	return " ".join(tokens)
 
 
-def suggest_for_field(pdf_label, pdf_type, candidates, history) -> dict:
-	"""Run the tiers for one PDF field. Returns suggestion, confidence and tier."""
-	pdf_tokens = normalize(pdf_label)
-	key = comparison_key(pdf_label)
+def suggest_for_field(pdf_label, pdf_type, prepared, lex, history) -> dict:
+	"""Run the tiers for one PDF field. Returns suggestion, confidence and tier.
+
+	`prepared` is the candidate list with its tokens already computed, so a
+	200-field template does not re-tokenize the doctype 200 times.
+	"""
 	none_result = {"suggestion": None, "confidence": 0.0, "tier": "none", "ambiguous": False}
-
-	if not key:
+	pdf_tokens = lex.tokens(pdf_label)
+	if not pdf_tokens:
 		return none_result
+	key = comparison_key(pdf_tokens)
 
 	# ---- TIER 1: exact match after normalization ----
 	exact = []
-	for candidate in candidates:
-		if is_vetoed(pdf_tokens, normalize(candidate["label"]), normalize(candidate["fieldname"])):
+	for candidate, label_tokens, fieldname_tokens in prepared:
+		if lex.is_vetoed(pdf_tokens, label_tokens) and lex.is_vetoed(pdf_tokens, fieldname_tokens):
 			continue
-		if comparison_key(candidate["fieldname"]) == key:
+		if comparison_key(fieldname_tokens) == key:
 			exact.append((candidate, 2))  # a fieldname hit outranks a label hit
-		elif comparison_key(candidate["label"]) == key:
+		elif comparison_key(label_tokens) == key:
 			exact.append((candidate, 1))
 
 	if exact:
@@ -273,60 +289,156 @@ def suggest_for_field(pdf_label, pdf_type, candidates, history) -> dict:
 
 	# ---- TIER 2: learned from your own history ----
 	remembered = history.get(key)
-	if remembered and any(candidate["fieldname"] == remembered for candidate in candidates):
+	if remembered and any(candidate["fieldname"] == remembered for candidate, _l, _f in prepared):
 		return {"suggestion": remembered, "confidence": 0.95, "tier": "history", "ambiguous": False}
 
-	# ---- TIER 2b: near-exact — candidate label is the PDF label minus a generic
-	# tail ("Territory Name" -> Territory, "Industry Type" -> Industry). Still
-	# deterministic string containment, so it is trustworthy enough to apply,
-	# but only when exactly one candidate qualifies.
-	pdf_words = set(pdf_tokens)
+	# ---- TIER 2b: near-exact -- the candidate is the PDF label minus tokens
+	# that cannot separate one field of the doctype from another.
+	pdf_set = set(pdf_tokens)
 	near = []
-	for candidate in candidates:
-		if is_vetoed(pdf_tokens, normalize(candidate["label"]), normalize(candidate["fieldname"])):
+	for candidate, label_tokens, fieldname_tokens in prepared:
+		if candidate["fieldname"] == PRIMARY_KEY:
 			continue
-		for words in (set(normalize(candidate["label"])), set(normalize(candidate["fieldname"]))):
-			if not words or not words < pdf_words:
+		if lex.is_vetoed(pdf_tokens, label_tokens) and lex.is_vetoed(pdf_tokens, fieldname_tokens):
+			continue
+		for words in (set(label_tokens), set(fieldname_tokens)):
+			if not words or not words < pdf_set:
 				continue
-			if (pdf_words - words) <= GENERIC_TAIL:
-				near.append(candidate)
+			if any(lex.is_selective(token) for token in words):
+				near.append((candidate, sum(lex.idf(token, "cand") for token in words)))
 				break
 
 	if near:
-		unique = {candidate["fieldname"] for candidate in near}
-		if len(unique) == 1:
+		# Several candidates can sit inside one label: "Item Group Name" contains
+		# both `item_name` and `item_group`. The one carrying more of the label's
+		# information wins; a genuine tie stays ambiguous.
+		near.sort(key=lambda item: -item[1])
+		winner, best = near[0]
+		runner_up = near[1][1] if len(near) > 1 else 0.0
+		others = {candidate["fieldname"] for candidate, _score in near[1:]}
+		if not others or best > runner_up + 1e-9:
 			return {
-				"suggestion": near[0]["fieldname"],
+				"suggestion": winner["fieldname"],
 				"confidence": 0.95,
 				"tier": "near-exact",
 				"ambiguous": False,
 			}
 		return {
-			"suggestion": near[0]["fieldname"],
+			"suggestion": winner["fieldname"],
 			"confidence": 0.70,
 			"tier": "near-exact",
 			"ambiguous": True,
-			"alternatives": sorted(unique)[1:4],
+			"alternatives": sorted(others)[:3],
 		}
 
-	# ---- TIER 3: synonyms + fuzzy + type ----
-	best, best_score = None, 0.0
-	for candidate in candidates:
-		score = fuzzy_score(
-			pdf_label, candidate["label"], candidate["fieldname"], pdf_type, candidate["fieldtype"]
-		)
-		if score > best_score:
-			best, best_score = candidate, score
+	# ---- TIER 3: weighted fuzzy + type ----
+	best_candidate, best_score = None, 0.0
+	for candidate, label_tokens, fieldname_tokens in prepared:
+		if candidate["fieldname"] == PRIMARY_KEY:
+			continue
+		if not (label_tokens or fieldname_tokens):
+			continue
+		if lex.is_vetoed(pdf_tokens, label_tokens) and lex.is_vetoed(pdf_tokens, fieldname_tokens):
+			continue
 
-	if best and best_score >= 0.60:
+		overlap = max(lex.overlap(pdf_tokens, label_tokens), lex.overlap(pdf_tokens, fieldname_tokens))
+		similarity = max(
+			difflib.SequenceMatcher(None, key, comparison_key(label_tokens)).ratio(),
+			difflib.SequenceMatcher(None, key, comparison_key(fieldname_tokens)).ratio(),
+		)
+		score = 0.55 * overlap + 0.35 * similarity
+
+		# A PDF checkbox wants a Check field; anything else is a poor fit.
+		if pdf_type == "CheckBox":
+			score += 0.10 if candidate["fieldtype"] == "Check" else -0.15
+		elif candidate["fieldtype"] == "Check":
+			score -= 0.10
+
+		score = max(0.0, min(1.0, score))
+		if score > best_score:
+			best_candidate, best_score = candidate, score
+
+	if best_candidate and best_score >= 0.60:
 		return {
-			"suggestion": best["fieldname"],
+			"suggestion": best_candidate["fieldname"],
 			"confidence": round(best_score, 2),
 			"tier": "fuzzy",
 			"ambiguous": False,
 		}
 
 	return none_result
+
+
+def resolve_collisions(results: list[dict], already_used: set | None = None) -> None:
+	"""Demote inexact suggestions that land two PDF fields on one source field.
+
+	If `buyer phone` and `dealer phone` both reduce to `phone`, the tokens they
+	dropped were exactly the ones that told them apart. Detecting that needs no
+	notion of what a buyer or a dealer is -- which is why it works for
+	shipper/consignee/carrier too.
+	"""
+	claims = defaultdict(list)
+	# A source field another row already maps to counts as a claim too, so a
+	# half-mapped template gets the same protection as a fresh one.
+	for fieldname in already_used or ():
+		claims[fieldname].append(None)
+	for result in results:
+		if result["suggestion"] and result["confidence"] >= AUTO_APPLY_CONFIDENCE and not result["ambiguous"]:
+			claims[result["suggestion"]].append(result)
+
+	for fieldname, group in claims.items():
+		if len(group) < 2:
+			continue
+		for result in group:
+			if result is None:
+				continue
+			if result["tier"] not in EXACT_TIERS:
+				result["confidence"] = 0.70
+				result["ambiguous"] = True
+				result["collision"] = fieldname
+
+
+def get_candidate_fields(doctype: str) -> list[dict]:
+	"""Mappable fields of the source doctype, plus its `name`."""
+	meta = frappe.get_meta(doctype)
+	candidates = [{"label": _("ID"), "fieldname": PRIMARY_KEY, "fieldtype": "Data"}]
+	for field in meta.fields:
+		if field.fieldtype in SKIPPED_FIELDTYPES or not field.fieldname:
+			continue
+		candidates.append(
+			{
+				"label": field.label or field.fieldname,
+				"fieldname": field.fieldname,
+				"fieldtype": field.fieldtype,
+			}
+		)
+	return candidates
+
+
+def learn_from_history(source: str, exclude_template: str, lex: Lexicon) -> dict:
+	"""normalized PDF label -> the fieldname most often chosen for it before."""
+	usage = {}
+	template_names = frappe.get_all(
+		"Form Template", filters={"source": source, "name": ("!=", exclude_template)}, pluck="name"
+	)
+	if not template_names:
+		return {}
+
+	rows = frappe.get_all(
+		"Form Template Field",
+		filters={"parent": ("in", template_names), "value_type": "Field"},
+		fields=["field_label", "field_value"],
+	)
+	for row in rows:
+		if not (row.field_value or "").strip():
+			continue
+		key = comparison_key(lex.tokens(row.field_label))
+		if not key:
+			continue
+		usage.setdefault(key, {}).setdefault(row.field_value.strip(), 0)
+		usage[key][row.field_value.strip()] += 1
+
+	return {key: max(counts, key=counts.get) for key, counts in usage.items()}
 
 
 @frappe.whitelist()
@@ -343,28 +455,50 @@ def suggest_mappings(form_template_id: str) -> dict:
 		frappe.throw(_("Auto-map currently supports templates whose data source is a DocType."))
 
 	candidates = get_candidate_fields(template.source)
-	history = learn_from_history(template.source, template.name)
+
+	# The whole template's labels form the corpus, including the already-mapped
+	# ones: they are what reveal the minimal pairs.
+	lex = Lexicon([field.field_label for field in template.form_template_field], candidates)
+	prepared = [
+		(candidate, lex.tokens(candidate["label"]), lex.tokens(candidate["fieldname"]))
+		for candidate in candidates
+	]
+	history = learn_from_history(template.source, template.name, lex)
+
+	pending = [
+		field
+		for field in template.form_template_field
+		# Never touch a field that already has a value, and only propose for
+		# rows that read from the data source.
+		if not (field.field_value or "").strip() and (not field.value_type or field.value_type == "Field")
+	]
+
+	results = []
+	for field in pending:
+		result = suggest_for_field(field.field_label, field.field_type, prepared, lex, history)
+		result["name"] = field.name
+		result["field_label"] = field.field_label
+		results.append(result)
+
+	already_used = {
+		(field.field_value or "").strip()
+		for field in template.form_template_field
+		if (field.field_value or "").strip() and (not field.value_type or field.value_type == "Field")
+	}
+	resolve_collisions(results, already_used)
 
 	suggestions = []
 	auto_appliable = 0
-	for field in template.form_template_field:
-		# Never touch a field that already has a value, and only propose for
-		# rows that read from the data source.
-		if (field.field_value or "").strip() or (field.value_type and field.value_type != "Field"):
-			continue
-
-		result = suggest_for_field(field.field_label, field.field_type, candidates, history)
+	for result in results:
 		if not result["suggestion"]:
 			continue
-
 		can_auto_apply = result["confidence"] >= AUTO_APPLY_CONFIDENCE and not result["ambiguous"]
 		if can_auto_apply:
 			auto_appliable += 1
-
 		suggestions.append(
 			{
-				"name": field.name,
-				"field_label": field.field_label,
+				"name": result["name"],
+				"field_label": result["field_label"],
 				"suggestion": result["suggestion"],
 				"confidence": result["confidence"],
 				"tier": result["tier"],
@@ -374,16 +508,10 @@ def suggest_mappings(form_template_id: str) -> dict:
 			}
 		)
 
-	unmapped = sum(
-		1
-		for field in template.form_template_field
-		if not (field.field_value or "").strip() and (not field.value_type or field.value_type == "Field")
-	)
-
 	return {
 		"source": template.source,
 		"candidate_field_count": len(candidates),
-		"unmapped": unmapped,
+		"unmapped": len(pending),
 		"auto_appliable": auto_appliable,
 		"needs_review": len(suggestions) - auto_appliable,
 		"suggestions": suggestions,
