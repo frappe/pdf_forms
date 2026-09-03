@@ -1,17 +1,18 @@
-import { getSystemDefault, slug } from "@lib/frappe";
-import { type Filter, useFrappeGetCall } from "frappe-react-sdk"
+import { getSystemDefault, slug } from "@/lib/frappe";
+import { useFrappeGetCall, type Filter } from "frappe-react-sdk"
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { canCreateDocument } from "@lib/permissions";
+import { canCreateDocument } from "@/lib/permissions";
 import { useDebounceValue } from "usehooks-ts";
-import { ChevronsUpDownIcon, ExternalLink } from "lucide-react";
-import { cn } from "@lib/utils";
-import _ from "@lib/translate";
-import { useGetDoctypeMeta } from "@hooks/useGetDoctypeMeta";
-import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
-import { FormControl } from "@components/ui/form";
-import { Button } from "@components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@components/ui/command";
-import ErrorBanner from "@components/ui/error-banner";
+import { ChevronDownIcon, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
+import _ from "@/lib/translate";
+import ErrorBanner from "@/components/ui/error-banner";
+import { FormControl } from "@/components/ui/form";
+import MarkdownRenderer from "@/components/ui/markdown";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useGetDoctypeMeta } from "@/hooks/useGetDoctypeMeta";
+import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 export interface ResultItem {
     value: string,
@@ -99,7 +100,8 @@ export interface LinkFieldComboboxProps {
     /** If true, the component will be wrapped in a FormControl component */
     useInForm?: boolean,
     /** Button Class name */
-    buttonClassName?: string
+    buttonClassName?: string,
+    size?: 'sm' | 'md' | 'lg',
 }
 const LinkFieldCombobox = ({
     doctype,
@@ -116,7 +118,8 @@ const LinkFieldCombobox = ({
     searchAPIPath = "frappe.desk.search.search_link",
     limit,
     useInForm,
-    buttonClassName
+    buttonClassName,
+    size = 'md'
 }: LinkFieldComboboxProps) => {
 
     const pageLimit = useMemo(() => limit || getSystemDefault('link_field_results_limit') || 20, [limit])
@@ -213,69 +216,48 @@ const LinkFieldCombobox = ({
 
     const items = filterFn ? data?.message?.slice(0, 50).filter((item) => filterFn(item, searchInput)) : data?.message
 
-    /** DocType links can surface the string "DocType" when unset — treat like empty so placeholder matches Input. */
-    const showLinkPlaceholder = !value || (doctype === 'DocType' && linkTitle === 'DocType')
-    const triggerLabel = showLinkPlaceholder ? (placeholder ?? '') : linkTitle
+    const buttonProps = {
+        variant: "subtle",
+        type: 'button',
+        size: size,
+        role: "combobox",
+        "data-state": open ? "open" : "closed",
+        ref: buttonRef,
+        tabIndex: 0,
+        disabled: disabled || readOnly,
+        "aria-expanded": open,
+        "aria-readonly": readOnly,
+        className: cn("w-full justify-between font-normal group border border-transparent outline-none",
+            "data-[state=open]:bg-surface-white data-[state=open]:border-outline-gray-4 data-[state=open]:shadow-sm",
+            readOnly ? "bg-surface-gray-1" : "",
+            // Placeholder and value styling
+            linkTitle ? "text-ink-gray-7" : "text-ink-gray-4",
+            buttonClassName)
+    } as const
 
     return (
         <Popover open={open} onOpenChange={onOpenChange} modal={true}>
             <PopoverTrigger asChild>
                 {useInForm ? <FormControl>
-                    <Button
-                        variant="subtle"
-                        theme="gray"
-                        role="combobox"
-                        ref={buttonRef}
-                        tabIndex={0}
-                        disabled={disabled || readOnly}
-                        aria-expanded={open}
-                        aria-readonly={readOnly}
-                        size="md"
-                        className={cn(
-                            'group w-full justify-between border border-transparent font-normal',
-                            readOnly ? 'bg-surface-gray-1' : '',
-                            buttonClassName,
-                        )}>
-                        <span
-                            className={cn(
-                                'min-w-0 flex-1 truncate text-start',
-                                showLinkPlaceholder ? 'text-ink-gray-4' : 'text-ink-gray-7',
-                            )}
-                        >
-                            {triggerLabel}
-                        </span>
+                    <Button {...buttonProps}>
+                        {linkTitle || placeholder}
 
-                        <div className="flex shrink-0 items-center gap-1">
-                            {value && <a href={`/app/${slug(doctype)}/${value}`} target="_blank" className="group-hover:block hidden">
-                                <ExternalLink className="h-4 w-4 shrink-0 opacity-50" />
+                        <div className="flex items-center gap-1">
+                            {value && <a href={`/desk/${slug(doctype)}/${value}`} target="_blank" className="group-hover:block hidden">
+                                <ExternalLink className="size-4 shrink-0 opacity-50" />
                             </a>}
-                            <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            <ChevronDownIcon className="ms-2 size-4 shrink-0" />
                         </div>
                     </Button>
                 </FormControl>
-                    : <Button
-                        variant="subtle"
-                        theme="gray"
-                        role="combobox"
-                        ref={buttonRef}
-                        disabled={disabled}
-                        aria-expanded={open}
-                        className={cn(
-                            'w-full justify-between border border-transparent font-normal',
-                            readOnly ? 'bg-surface-gray-1' : '',
-                            buttonClassName,
-                        )}
-                    >
-                        <span
-                            className={cn(
-                                'min-w-0 flex-1 truncate text-start',
-                                showLinkPlaceholder ? 'text-ink-gray-4' : 'text-ink-gray-7',
-                            )}
-                        >
-                            {triggerLabel}
-                        </span>
-
-                        <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    : <Button {...buttonProps}>
+                        {linkTitle || placeholder}
+                        <div className="flex items-center gap-1">
+                            {value && <a href={`/desk/${slug(doctype)}/${value}`} target="_blank" className="group-hover:block hidden">
+                                <ExternalLink className="size-4 shrink-0 opacity-50" />
+                            </a>}
+                            <ChevronDownIcon className="ms-2 size-4 shrink-0" />
+                        </div>
                     </Button>}
             </PopoverTrigger>
             <PopoverContent className="p-0" style={{ minWidth: width }} align="start">
@@ -291,12 +273,12 @@ const LinkFieldCombobox = ({
                                         {result.label || result.value}
                                     </span>
                                     {result.description && <span className="text-xs text-ink-gray-5">
-                                        {result.description}
+                                        <MarkdownRenderer content={result.description} />
                                     </span>}
                                 </CommandItem>
                             ))}
                             {userCanCreate && <CommandItem asChild>
-                                <a href={`/app/${slug(doctype)}/new-${slug(doctype)}-1`}
+                                <a href={`/desk/${slug(doctype)}/new-${slug(doctype)}-1`}
                                     target="_blank"
                                     className="hover:underline underline-offset-4 cursor-pointer flex justify-between items-center">
                                     {_("Create New {0}", [doctype])}
