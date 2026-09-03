@@ -57,13 +57,21 @@ function AccordionTrigger({
 
 function AccordionContent({
   className,
+  contentClassName,
   children,
   ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Content>) {
+}: React.ComponentProps<typeof AccordionPrimitive.Content> & {
+  /** Classes for the Radix content element itself (the animated, overflow-hidden
+   *  wrapper) — needed when the content must take part in a flex height chain. */
+  contentClassName?: string
+}) {
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+      className={cn(
+        "overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
+        contentClassName
+      )}
       {...props}
     >
       <div className={cn("pb-4 pt-0", className)}>{children}</div>

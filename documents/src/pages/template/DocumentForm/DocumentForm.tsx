@@ -216,7 +216,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                 <TabsContent value="style" className="min-h-0 overflow-y-auto scroll-fade">
                     <StyleFields />
                 </TabsContent>
-                <TabsContent value="preview" className="min-h-0 overflow-y-auto scroll-fade">
+                <TabsContent value="preview" className="flex min-h-0 flex-col overflow-y-auto scroll-fade">
                     <Preview templateID={templateID} source={formTemplate.source ?? ''} />
                 </TabsContent>
             </Tabs>

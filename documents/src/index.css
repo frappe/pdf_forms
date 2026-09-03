@@ -461,3 +461,50 @@ body {
     display: none;
   }
 }
+
+/* Ace JSON editor (Preview tab's Document Data, Prompts). The bundled GitHub
+   theme brings its own greys and an 80-column ruler; these put it on Espresso
+   tokens and make the read-only view read as a document, not a code editor. */
+.pdf-forms-json-editor .ace_editor {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  line-height: 1.6;
+  background: var(--surface-base);
+  color: var(--ink-gray-8);
+}
+.pdf-forms-json-editor .ace_gutter {
+  background: var(--surface-gray-1);
+  color: var(--ink-gray-4);
+  border-right: 1px solid var(--outline-gray-1);
+}
+.pdf-forms-json-editor .ace_gutter-active-line {
+  background: var(--surface-gray-2);
+}
+.pdf-forms-json-editor .ace_scroller {
+  padding-left: 4px;
+}
+.pdf-forms-json-editor .ace_print-margin {
+  display: none;
+}
+/* JSON tokens: keys quiet, values legible, nothing shouting. */
+.pdf-forms-json-editor .ace_variable {
+  color: var(--ink-gray-7);
+}
+.pdf-forms-json-editor .ace_string {
+  color: var(--ink-blue-6);
+}
+.pdf-forms-json-editor .ace_constant.ace_numeric,
+.pdf-forms-json-editor .ace_constant.ace_language {
+  color: var(--ink-green-6);
+}
+.pdf-forms-json-editor .ace_paren,
+.pdf-forms-json-editor .ace_punctuation {
+  color: var(--ink-gray-5);
+}
+/* Read-only: no caret, no active-line band, no selection colour bleed. */
+.pdf-forms-json-editor[data-readonly] .ace_cursor,
+.pdf-forms-json-editor[data-readonly] .ace_cursor-layer {
+  opacity: 0;
+}
+.pdf-forms-json-editor[data-readonly] .ace_active-line {
+  background: transparent;
+}

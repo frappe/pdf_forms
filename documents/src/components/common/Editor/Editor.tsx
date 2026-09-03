@@ -69,7 +69,13 @@ export const Editor = ({ jsonValue, templateID, readOnly, shellClassName, ...pro
                 shellClassName
             )}
         >
-            <div className="relative min-h-0 w-full flex-1">
+            {/* Bordered like an input, and the gutter/colours come from the
+                pdf-forms-json-editor overrides in index.css. Long strings soft-
+                wrap, so the pane never scrolls sideways. */}
+            <div
+                className="pdf-forms-json-editor relative min-h-0 w-full flex-1 overflow-hidden rounded border border-outline-gray-2 bg-surface-base"
+                data-readonly={readOnly || undefined}
+            >
                 <AceEditor
                     placeholder="Enter your sample data here... (JSON format)"
                     width="100%"
@@ -79,10 +85,11 @@ export const Editor = ({ jsonValue, templateID, readOnly, shellClassName, ...pro
                     value={value}
                     onChange={onChange}
                     readOnly={readOnly}
-                    fontSize={14}
-                    showPrintMargin
+                    fontSize={13}
+                    showPrintMargin={false}
                     showGutter
-                    highlightActiveLine
+                    highlightActiveLine={!readOnly}
+                    wrapEnabled
                     editorProps={{ $blockScrolling: true }}
                     setOptions={{
                         enableBasicAutocompletion: !readOnly,
@@ -91,6 +98,11 @@ export const Editor = ({ jsonValue, templateID, readOnly, shellClassName, ...pro
                         showLineNumbers: true,
                         tabSize: 2,
                         useWorker: false,
+                        wrap: true,
+                        indentedSoftWrap: false,
+                        highlightGutterLine: !readOnly,
+                        showFoldWidgets: false,
+                        fixedWidthGutter: true,
                     }}
                     {...props}
                     theme={aceTheme}
