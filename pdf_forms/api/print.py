@@ -385,6 +385,113 @@ DRAW_FONTS = {
 	"courier-boldoblique": "cobi",
 }
 MULTILINE_FLAG = 1 << 12
+COMB_FLAG = 1 << 24
+
+
+def is_comb(widget) -> bool:
+	"""A comb text field: MaxLen cells, one character per cell (account
+	numbers, IFSC, dates on bank forms). PyMuPDF's appearance ignores the
+	flag and writes the value as a plain string, so these are always drawn."""
+	return bool(widget.field_flags & COMB_FLAG) and int(widget.text_maxlen or 0) > 0
+
+
+def _pdf_string(text: str) -> str:
+	return "(" + text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)") + ")"
+
+
+def fill_comb_widget(doc, widget, text: str, alias: str, size: float) -> bool:
+	"""Set a comb field's value and write its appearance one character per
+	cell, the way Acrobat renders comb fields. The widget is kept, so the
+	downloaded PDF stays a fillable form: click the row and the digits are
+	editable, one per box.
+
+	Only for base-14 faces (that is what the field's /DA names); a bold,
+	embedded or non-Latin comb falls back to drawing over the page."""
+	cells = int(widget.text_maxlen)
+	text = text[:cells]
+	metrics = fitz.Font(WIDGET_FONT_FILES.get(alias, "helv"))
+	box = fitz.Rect(widget.rect)
+	cell_w = box.width / cells
+	if not widget.text_fontsize:
+		size = min(box.height * 0.72, cell_w * 1.1)  # Acrobat's auto-size for combs
+	widest = max(metrics.text_length(ch, fontsize=size) for ch in text) or size
+	if widest > cell_w * 0.85:
+		size = size * (cell_w * 0.85) / widest
+
+	widget.text_font = alias
+	widget.field_value = text
+	widget.update()
+
+	kind, ref = doc.xref_get_key(widget.xref, "AP/N")
+	if kind != "xref":
+		return False
+	ap_xref = int(ref.split()[0])
+	font_res = re.search(r"/(\w+)\s+\d+\s+0\s+R", doc.xref_get_key(ap_xref, "Resources/Font")[1] or "")
+	if not font_res:
+		return False
+	bbox = doc.xref_get_key(ap_xref, "BBox")[1]
+	try:
+		_, _, ap_w, ap_h = (float(v) for v in bbox.strip("[]").split())
+	except ValueError:
+		ap_w, ap_h = box.width, box.height
+	cell_w = ap_w / cells
+	glyph_h = (metrics.ascender - metrics.descender) * size
+	baseline = (ap_h - glyph_h) / 2 - metrics.descender * size
+
+	color = widget.text_color or [0]
+	if len(color) == 3:
+		paint = "{:.3f} {:.3f} {:.3f} rg".format(*color)
+	elif len(color) == 4:
+		paint = "{:.3f} {:.3f} {:.3f} {:.3f} k".format(*color)
+	else:
+		paint = f"{color[0]:.3f} g"
+	ops = ["/Tx BMC", "q", "BT", paint, f"/{font_res.group(1)} {size:.2f} Tf"]
+	x_prev = y_prev = 0.0
+	for i, ch in enumerate(text):
+		if ch.isspace():
+			continue
+		x = i * cell_w + (cell_w - metrics.text_length(ch, fontsize=size)) / 2
+		ops.append(f"{x - x_prev:.2f} {baseline - y_prev:.2f} Td {_pdf_string(ch)} Tj")
+		x_prev, y_prev = x, baseline
+	ops += ["ET", "Q", "EMC"]
+	doc.update_stream(ap_xref, "\n".join(ops).encode("latin-1"))
+	return True
+
+
+def draw_comb_text(page, widget, text: str, font, size: float) -> bool:
+	"""Centre one character in each cell of a comb field, drawn on the page
+	(the widget is removed: for faces the field's /DA cannot name)."""
+	fontname, fontbuffer = font
+	if not text:
+		return False
+	if fontbuffer:
+		page.insert_font(fontname=fontname, fontbuffer=fontbuffer)
+		metrics = fitz.Font(fontbuffer=fontbuffer)
+	else:
+		metrics = fitz.Font(fontname)
+	cells = int(widget.text_maxlen)
+	box = fitz.Rect(widget.rect)
+	cell_w = box.width / cells
+	if not widget.text_fontsize:
+		# Auto-size, as Acrobat does for comb fields: fit the cell.
+		size = min(box.height * 0.72, cell_w * 1.1)
+	# Fit: a cell must hold its widest character with a little air.
+	widest = max(metrics.text_length(ch, fontsize=size) for ch in text[:cells]) or size
+	if widest > cell_w * 0.85:
+		size = size * (cell_w * 0.85) / widest
+	glyph_h = (metrics.ascender - metrics.descender) * size
+	baseline = box.y0 + (box.height - glyph_h) / 2 + metrics.ascender * size
+	color = widget.text_color if widget.text_color else (0, 0, 0)
+	for i, ch in enumerate(text[:cells]):
+		if ch.isspace():
+			continue
+		w = metrics.text_length(ch, fontsize=size)
+		x = box.x0 + i * cell_w + (cell_w - w) / 2
+		page.insert_text((x, baseline), ch, fontname=fontname, fontsize=size, color=color)
+	page.delete_widget(widget)
+	return True
+
+
 # Family buckets the annotator's font stacks understand.
 PREVIEW_FAMILY = {
 	"he": "helvetica",
@@ -480,6 +587,8 @@ def resolve_text_style(doc, page, annotation, template_font, template_font_size)
 		size = declared_size
 	else:
 		size = tpl_size
+	if not size or size <= 0:
+		size = 12
 
 	declared_font = (annotation.get("pdf_font") or "").strip()
 	if annotation.override_style and annotation.font and annotation.font != "None":
@@ -557,6 +666,8 @@ def draw_field_text(page, widget, text: str, font, size: float) -> bool:
 			fs -= 0.5
 		return False
 
+	if not widget.text_fontsize and size >= box.height:
+		size = box.height * 0.72  # auto-size: fit the box
 	# Single line: centre by the font's own ascent/descent, like a viewer does.
 	# insert_text places a baseline and never refuses, so tall faces (Lora's
 	# ascent is 1.006) cannot make the value disappear.
@@ -629,6 +740,13 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 					mode, text_font, size = resolve_text_style(doc, page, annotation, font, font_size)
 					if mode == "widget" and text and not widget_font_can_render(text_font, text):
 						mode, text_font = "draw", (UNICODE_DRAW_FONT, None)
+					if is_comb(field) and text:
+						if mode == "widget" and fill_comb_widget(doc, field, text, text_font, size):
+							continue
+						if mode == "widget":
+							text_font = (WIDGET_FONT_FILES.get(text_font, "helv"), None)
+						if draw_comb_text(page, field, text, text_font, size):
+							continue
 					if mode == "widget":
 						field.text_fontsize = size
 						field.text_font = text_font

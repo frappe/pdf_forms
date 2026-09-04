@@ -231,7 +231,9 @@ def convert_pdf_to_image(form_template_id):
 
 		# Determine the most common font and font size
 		default_font = font_counter.most_common(1)[0][0] if font_counter else "helvetica"
-		default_font_size = font_size_counter.most_common(1)[0][0] if font_size_counter else 12
+		# 0 is Acrobat's "auto-size"; it must not become the template default.
+		sized = Counter({k: v for k, v in font_size_counter.items() if k and k > 0})
+		default_font_size = sized.most_common(1)[0][0] if sized else 12
 
 		font_names = fitz.Base14_fontdict.keys()
 		if default_font not in font_names:
