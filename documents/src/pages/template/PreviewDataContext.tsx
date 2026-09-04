@@ -17,6 +17,8 @@ export type PreviewFieldValue =
         embedded?: boolean
         bold?: boolean
         italic?: boolean
+        /** Number of cells when the field is a comb (one character per box). */
+        comb?: number
     }
     | { kind: 'check'; checked: boolean }
 

@@ -207,10 +207,29 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     if (preview.italic) el.style.fontStyle = 'italic'
                     // Remembered in image pixels; converted to screen pixels below.
                     el.dataset.fontImagePx = String(preview.font_size_px || 0)
-                    // Plain text: the resolver can return markup (a Text Editor field
-                    // prints its HTML), and this must show what actually prints.
-                    el.textContent = preview.text
-                    el.title = preview.text
+                    if (preview.comb) {
+                        // A comb field prints one character per cell; lay the value
+                        // out on the same grid so an account number reads as boxes.
+                        // On an inner wrapper: the viewer owns the overlay element's
+                        // own display and position styles.
+                        el.classList.add('pdf-preview-comb')
+                        el.dataset.combCells = String(preview.comb)
+                        const grid = document.createElement('div')
+                        grid.className = 'pdf-preview-comb-grid'
+                        grid.style.gridTemplateColumns = `repeat(${preview.comb}, 1fr)`
+                        Array.from(preview.text.slice(0, preview.comb)).forEach((ch) => {
+                            const cell = document.createElement('span')
+                            cell.textContent = ch
+                            grid.appendChild(cell)
+                        })
+                        el.appendChild(grid)
+                        el.title = preview.text
+                    } else {
+                        // Plain text: the resolver can return markup (a Text Editor field
+                        // prints its HTML), and this must show what actually prints.
+                        el.textContent = preview.text
+                        el.title = preview.text
+                    }
                 }
                 el.dataset.imageHeight = String(h)
 
@@ -234,9 +253,15 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                 const fontImagePx = Number(el.dataset.fontImagePx) || 0
                 // Text keeps the size the PDF will print, converted image px ->
                 // screen px by how much the viewer is currently magnifying.
-                const size = fontImagePx && imageHeight
+                const combCells = Number(el.dataset.combCells) || 0
+                let size = fontImagePx && imageHeight
                     ? fontImagePx * (boxHeight / imageHeight)
                     : boxHeight * 0.72
+                if (combCells) {
+                    // Same fit the printer applies: a character must sit inside its cell.
+                    const cellWidth = el.clientWidth / combCells
+                    size = Math.min(size || boxHeight * 0.72, cellWidth * 1.1)
+                }
                 el.style.fontSize = `${Math.max(4, Math.min(size, 64))}px`
             })
         }

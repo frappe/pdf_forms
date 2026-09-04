@@ -216,6 +216,14 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 	# Opened once so the "is this font embedded?" check is per distinct name.
 	template_pdf = fitz.open(template_file_path(template.file))
 	embedded_cache: dict[str, bool] = {}
+	# Comb fields print one character per cell; the overlay must lay the
+	# value out the same way or an account number reads as a smudge.
+	comb_cells = {
+		str(widget.xref): int(widget.text_maxlen)
+		for page in template_pdf
+		for widget in page.widgets()
+		if is_comb(widget)
+	}
 
 	for annotation in template.form_template_field:
 		try:
@@ -301,6 +309,12 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 			"bold": alias in ("hebo", "hebi", "tibo", "tibi", "cobo", "cobi"),
 			"italic": alias in ("heit", "hebi", "tiit", "tibi", "coit", "cobi"),
 		}
+		cells = comb_cells.get(str(annotation.xref or ""))
+		if cells:
+			values[annotation.name]["comb"] = cells
+			if declared_size <= 0 and not annotation.override_style:
+				# The printer auto-sizes a comb to its cell; tell the overlay.
+				values[annotation.name]["font_size_px"] = 0
 
 	return values
 

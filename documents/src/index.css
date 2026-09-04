@@ -347,6 +347,23 @@ body {
   line-height: 1;
 }
 
+/* One character per cell, centred, exactly as the printer lays a comb out. */
+.pdf-preview-comb {
+  padding-inline: 0;
+}
+
+.pdf-preview-comb-grid {
+  display: grid;
+  align-items: center;
+  height: 100%;
+  white-space: nowrap;
+}
+
+.pdf-preview-comb-grid > span {
+  text-align: center;
+  overflow: hidden;
+}
+
 /* Annotorious annotation states: hover and selection gain stroke WEIGHT, not a
    color change — the per-type color (blue = auto, violet = manual) comes from
    the formatter's inline style on .a9s-inner, hence the !important. */
