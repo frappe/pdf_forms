@@ -98,7 +98,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                         <Button
                             title={_("Download PDF")}
                             asChild
-                            variant="solid"
+                            variant="outline"
                             size="md"
                             className="shrink-0"
                         >
@@ -116,7 +116,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     ) : (
                         <Button
                             type="button"
-                            variant="solid"
+                            variant="outline"
                             size="md"
                             disabled
                             className="shrink-0"

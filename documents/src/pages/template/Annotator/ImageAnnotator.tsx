@@ -111,6 +111,10 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                 // maxZoomPixelRatio: 2,
                 minZoomLevel: 1,
                 visibilityRatio: 1,
+                // The fitted page keeps a little air above and below: without this
+                // the page's bottom edge sits exactly on the pane's bottom edge and
+                // reads as cut off (the top already has the toolbar's padding).
+                viewportMargins: { top: 12, bottom: 16 },
                 // zoomPerScroll: 1,
                 showFullPageControl: false,
                 showHomeControl: false,

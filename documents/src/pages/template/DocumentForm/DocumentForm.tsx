@@ -196,7 +196,10 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                 </TabsList>
 
                 {/* Each pane owns its scrolling: map-fields scrolls inside FieldsTable
-                    (sticky toolbar), the rest scroll at the tab-content level. */}
+                    (sticky toolbar), the rest scroll at the tab-content level.
+                    The scrolling panes get 4px of side room (-mx-1 px-1): content stays
+                    aligned with the tab strip, but a focused input's 2px ring is no
+                    longer clipped by the pane's own overflow at its first/last column. */}
                 <TabsContent value="map-fields" className="min-h-0 overflow-hidden">
                     <FieldsTable
                         data={fieldsTableData}
@@ -206,17 +209,17 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
                         saveError={saveError}
                     />
                 </TabsContent>
-                <TabsContent value="fields" className="min-h-0 overflow-y-auto scroll-fade">
+                <TabsContent value="fields" className="min-h-0 overflow-y-auto scroll-fade -mx-1 px-1">
                     <Configurations />
                 </TabsContent>
                 {/* Prompts scrolls its list internally so the Add Prompt button stays pinned. */}
                 <TabsContent value="prompts" className="min-h-0 overflow-hidden">
                     <PromptsContent />
                 </TabsContent>
-                <TabsContent value="style" className="min-h-0 overflow-y-auto scroll-fade">
+                <TabsContent value="style" className="min-h-0 overflow-y-auto scroll-fade -mx-1 px-1">
                     <StyleFields />
                 </TabsContent>
-                <TabsContent value="preview" className="flex min-h-0 flex-col overflow-y-auto scroll-fade">
+                <TabsContent value="preview" className="flex min-h-0 flex-col overflow-y-auto scroll-fade -mx-1 px-1">
                     <Preview templateID={templateID} source={formTemplate.source ?? ''} />
                 </TabsContent>
             </Tabs>
