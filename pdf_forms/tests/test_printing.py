@@ -158,10 +158,23 @@ class TestPrinting(FrappeTestCase):
 			len(fitz.open(stream=self.pdf_bytes, filetype="pdf")[1].get_drawings()),
 		)
 
-	def test_output_stays_fillable_where_the_widget_could_render(self):
-		names = {w.field_name for w in self.out[0].widgets()}
-		self.assertIn("T_FIELD", names)
-		self.assertNotIn("T_CURRENCY", names, "rupee values are drawn, so that field is flat")
+	def test_output_stays_fillable_even_in_fonts_the_field_cannot_name(self):
+		widgets = {w.field_name: w for w in self.out[0].widgets()}
+		self.assertIn("T_FIELD", widgets)
+		# the rupee sign is outside the field's Helvetica; it is drawn in Noto
+		# Sans, but inside the field's own appearance, so the field survives
+		self.assertIn("T_CURRENCY", widgets)
+		self.assertTrue(widgets["T_CURRENCY"].field_value.startswith("₹"))
+		kind, ref = self.out.xref_get_key(widgets["T_CURRENCY"].xref, "AP/N")
+		ap = int(ref.split()[0])
+		self.assertIn("cm", self.out.xref_stream(ap).decode("latin-1"))
+		self.assertEqual(self.out.xref_get_key(ap, "Resources/Font")[0] in ("dict", "xref"), True)
+		# and nothing was left behind on the page itself
+		self.assertEqual(
+			len(self.out[0].get_drawings()),
+			len(fitz.open(stream=self.pdf_bytes, filetype="pdf")[0].get_drawings()),
+		)
+		self.assertIn("T_OVERRIDE", widgets, "an overridden face is drawn into the field too")
 
 	def test_preview_mirrors_the_printer(self):
 		pv = get_preview_values(self.tpl.name, self.data)

@@ -459,7 +459,12 @@ def fill_comb_widget(doc, widget, text: str, alias: str, size: float) -> bool:
 		paint = "{:.3f} {:.3f} {:.3f} {:.3f} k".format(*color)
 	else:
 		paint = f"{color[0]:.3f} g"
-	ops = ["/Tx BMC", "q", "BT", paint, f"/{font_res.group(1)} {size:.2f} Tf"]
+	ops = ["/Tx BMC", "q"]
+	# A form that pre-prints a hint in the cells ("D D M M Y Y Y Y") declares a
+	# background colour on the field; paint each cell with it, inset so the
+	# cell borders stay, so the hint does not show through the value.
+	ops += comb_cell_backgrounds(widget, cells, cell_w, ap_h)
+	ops += ["BT", paint, f"/{font_res.group(1)} {size:.2f} Tf"]
 	x_prev = y_prev = 0.0
 	for i, ch in enumerate(text):
 		if ch.isspace():
@@ -472,7 +477,30 @@ def fill_comb_widget(doc, widget, text: str, alias: str, size: float) -> bool:
 	return True
 
 
-def draw_comb_text(page, widget, text: str, font, size: float) -> bool:
+COMB_CELL_INSET = 1.2
+
+
+def comb_cell_backgrounds(widget, cells: int, cell_w: float, height: float) -> list[str]:
+	"""Appearance-stream operators that fill every cell of a comb field with
+	the field's own background colour (/MK /BG); nothing when it has none."""
+	color = widget.fill_color
+	if not color:
+		return []
+	if len(color) == 3:
+		paint = "{:.3f} {:.3f} {:.3f} rg".format(*color)
+	elif len(color) == 4:
+		paint = "{:.3f} {:.3f} {:.3f} {:.3f} k".format(*color)
+	else:
+		paint = "{:.3f} g".format(color[0])
+	inset = COMB_CELL_INSET
+	rects = [
+		f"{i * cell_w + inset:.2f} {inset:.2f} {cell_w - 2 * inset:.2f} {height - 2 * inset:.2f} re"
+		for i in range(cells)
+	]
+	return ["q", paint, *rects, "f", "Q"]
+
+
+def draw_comb_text(page, widget, text: str, font, size: float, keep_widget: bool = False) -> bool:
 	"""Centre one character in each cell of a comb field, drawn on the page
 	(the widget is removed: for faces the field's /DA cannot name)."""
 	fontname, fontbuffer = font
@@ -496,13 +524,21 @@ def draw_comb_text(page, widget, text: str, font, size: float) -> bool:
 	glyph_h = (metrics.ascender - metrics.descender) * size
 	baseline = box.y0 + (box.height - glyph_h) / 2 + metrics.ascender * size
 	color = widget.text_color if widget.text_color else (0, 0, 0)
+	if widget.fill_color and len(widget.fill_color) == 3:
+		for i in range(cells):
+			cell = fitz.Rect(
+				box.x0 + i * cell_w + COMB_CELL_INSET, box.y0 + COMB_CELL_INSET,
+				box.x0 + (i + 1) * cell_w - COMB_CELL_INSET, box.y1 - COMB_CELL_INSET,
+			)
+			page.draw_rect(cell, color=None, fill=tuple(widget.fill_color), width=0)
 	for i, ch in enumerate(text[:cells]):
 		if ch.isspace():
 			continue
 		w = metrics.text_length(ch, fontsize=size)
 		x = box.x0 + i * cell_w + (cell_w - w) / 2
 		page.insert_text((x, baseline), ch, fontname=fontname, fontsize=size, color=color)
-	page.delete_widget(widget)
+	if not keep_widget:
+		page.delete_widget(widget)
 	return True
 
 
@@ -645,7 +681,7 @@ def widget_font_can_render(alias: str, text: str) -> bool:
 	return all(font.has_glyph(ord(ch)) for ch in text if not ch.isspace())
 
 
-def draw_field_text(page, widget, text: str, font, size: float) -> bool:
+def draw_field_text(page, widget, text: str, font, size: float, keep_widget: bool = False) -> bool:
 	"""Write the value into the field's box with the real font, then remove the
 	widget: the drawn text is the field now. Returns False (and leaves the
 	widget alone) if nothing could be drawn, so a field is never lost silently.
@@ -675,7 +711,8 @@ def draw_field_text(page, widget, text: str, font, size: float) -> bool:
 				page.insert_textbox(inset, text, fontname=fontname, fontsize=fs, color=color, align=align)
 				>= 0
 			):
-				page.delete_widget(widget)
+				if not keep_widget:
+					page.delete_widget(widget)
 				return True
 			fs -= 0.5
 		return False
@@ -694,7 +731,47 @@ def draw_field_text(page, widget, text: str, font, size: float) -> bool:
 	elif align == fitz.TEXT_ALIGN_RIGHT:
 		x = max(inset.x0, inset.x1 - width)
 	page.insert_text((x, baseline), text, fontname=fontname, fontsize=size, color=color)
-	page.delete_widget(widget)
+	if not keep_widget:
+		page.delete_widget(widget)
+	return True
+
+
+def draw_into_widget(doc, page, widget, text: str, font, size: float, drawer) -> bool:
+	"""Run a drawer (draw_field_text / draw_comb_text) and move what it drew
+	into the widget's own appearance stream instead of the page, so a value in
+	a font the field's /DA cannot name (bold, embedded, a rupee sign in Noto)
+	still leaves the field in place, with its value, editable.
+
+	The drawer paints on the page as usual; the streams it appended to the
+	page's /Contents are lifted out again and become the appearance, shifted
+	from page space into the widget's box. The fonts it registered stay in the
+	page's resources and are shared with the appearance."""
+	if not text:
+		return False
+	before = page.get_contents()
+	if not drawer(page, widget, text, font, size, keep_widget=True):
+		return False
+	after = page.get_contents()
+	added = [x for x in after if x not in before]
+	if not added:
+		return False
+	drawn = b"\n".join(doc.xref_stream(x) for x in added)
+	# put the page back the way it was; the drawing now lives in the widget
+	doc.xref_set_key(page.xref, "Contents", "[" + " ".join(f"{x} 0 R" for x in before) + "]")
+
+	widget.field_value = text
+	widget.update()
+	kind, ref = doc.xref_get_key(widget.xref, "AP/N")
+	if kind != "xref":
+		return False
+	ap_xref = int(ref.split()[0])
+	box = fitz.Rect(widget.rect)
+	# page space -> appearance space: the box's bottom-left becomes the origin
+	shift = f"1 0 0 1 {-box.x0:.3f} {-(page.rect.height - box.y1):.3f} cm".encode()
+	doc.update_stream(ap_xref, b"/Tx BMC\nq\n" + shift + b"\n" + drawn + b"\nQ\nEMC")
+	fkind, fval = doc.xref_get_key(page.xref, "Resources/Font")
+	if fkind in ("dict", "xref"):
+		doc.xref_set_key(ap_xref, "Resources/Font", fval)
 	return True
 
 
@@ -759,6 +836,8 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 							continue
 						if mode == "widget":
 							text_font = (WIDGET_FONT_FILES.get(text_font, "helv"), None)
+						if draw_into_widget(doc, page, field, text, text_font, size, draw_comb_text):
+							continue
 						if draw_comb_text(page, field, text, text_font, size):
 							continue
 					if mode == "widget":
@@ -766,6 +845,8 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 						field.text_font = text_font
 						field.field_value = text
 						field.update()
+					elif draw_into_widget(doc, page, field, text, text_font, size, draw_field_text):
+						continue
 					elif not draw_field_text(page, field, text, text_font, size):
 						# Could not draw (empty value, or a multiline box too small
 						# even at 4pt): keep the field as a widget in its regular face.
