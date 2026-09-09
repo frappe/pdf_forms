@@ -15,9 +15,9 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useDebounceCallback } from "usehooks-ts"
 
-import { Checkbox } from "@/components/ui/checkbox"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
+import { Checkbox } from "@components/ui/checkbox"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@components/ui/tooltip"
+import { cn } from "@lib/utils"
 import { useDirection } from "./direction"
 
 /** Optional per-column layout hints for `ListView`. */
@@ -382,7 +382,7 @@ function ListViewInner<TData>({
                                 <div
                                     key={header.id}
                                     className={cn(
-                                        "text-ink-gray-5 group relative flex min-w-0 items-center px-0 text-sm",
+                                        "text-ink-gray-5 group relative flex min-w-0 items-center px-0 text-sm-medium",
                                         alignClass(meta),
                                     )}
                                     role="columnheader"
@@ -397,9 +397,9 @@ function ListViewInner<TData>({
                                             <span
                                                 aria-hidden
                                                 className={cn(
-                                                    "pointer-events-none absolute ltr:-right-2 rtl:-left-2 z-1 w-0.5 bg-gray-400",
+                                                    "pointer-events-none absolute ltr:-right-2 rtl:-left-2 z-1 w-0.5 bg-outline-gray-4",
                                                     "opacity-0 transition-[opacity,background-color] ease-in-out duration-150",
-                                                    "group-hover:opacity-100 group-hover:bg-gray-400",
+                                                    "group-hover:opacity-100 group-hover:bg-outline-gray-4",
                                                     header.column.getIsResizing() && "bg-outline-gray-6 opacity-100",
                                                 )}
                                                 style={{ height: "100%" }}
@@ -449,9 +449,9 @@ function ListViewInner<TData>({
                                 data-index={virtualRow.index}
                                 role="row"
                                 className={cn(
-                                    "ease-in-out absolute top-0 ltr:left-0 rtl:right-0 w-full min-w-0 rounded px-2 transition-all duration-300",
+                                    "absolute top-0 ltr:left-0 rtl:right-0 w-full min-w-0 rounded px-2 transition-colors",
                                     // virtualRow.index > 0 && "border-t border-outline-gray-1",
-                                    !row.getIsSelected() && "hover:bg-surface-menu-bar",
+                                    !row.getIsSelected() && "hover:bg-surface-gray-1",
                                     row.getIsSelected() && "bg-surface-gray-2 hover:bg-surface-gray-3",
                                     onRowClick && "cursor-pointer",
                                 )}
@@ -504,11 +504,7 @@ function ListViewInner<TData>({
  * Div-based list with CSS Grid columns, optional resize handles, row virtualization, and frappe-ui–aligned Espresso tokens.
  */
 export function ListView<TData>(props: ListViewProps<TData>) {
-    return (
-        <TooltipProvider delayDuration={400}>
-            <ListViewInner {...props} />
-        </TooltipProvider>
-    )
+    return <ListViewInner {...props} />
 }
 
 export type { ColumnSizingState, RowSelectionState }

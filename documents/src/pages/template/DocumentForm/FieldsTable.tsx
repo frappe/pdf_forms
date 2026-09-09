@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
-import { useFrappePostCall } from "frappe-react-sdk"
-import type { KeyedMutator } from 'swr'
+import { Fragment, memo, startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form"
+import type { TemplateFormValues } from "./formTypes"
+import { useFrappePostCall, type FrappeError } from "frappe-react-sdk"
 import { useBoolean } from "usehooks-ts"
-import { useCopyToClipboardHotkey, usePasteFromClipboardHotkey, useSaveHotkey } from "../../../hooks/useReactHotKeys"
-import type { FormTemplateField } from "@/types/FormPrinter/FormTemplateField"
+import { useCopyToClipboardHotkey, usePasteFromClipboardHotkey } from "../../../hooks/useReactHotKeys"
+import type { FormTemplateField } from "@types/FormPrinter/FormTemplateField"
 import { toast } from "sonner"
-import { FormField, FormControl, FormItem, FormMessage } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { SelectItem } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { DataField, SelectFormField } from "@/components/ui/form-elements"
+import { Badge } from "@components/ui/badge"
+import { TabsButton, TabsButtonItem } from "@components/ui/tab-buttons"
+import { Button } from "@components/ui/button"
+import { Spinner } from "@components/ui/spinner"
+import { Input } from "@components/ui/input"
 import {
     Table,
     TableBody,
@@ -19,25 +18,45 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
-import { Pencil, Trash2, Search, ChevronLeft, ChevronRight, X, Download, Upload } from "lucide-react"
-import { AnnotationDeleteModal } from "@/pages/template/Annotator/AnnotationDeleteModal"
+} from "@components/ui/table"
+import { Pencil, Trash2, Search, ChevronLeft, ChevronRight, X, Download, Upload, Sparkles } from "lucide-react"
+import { AnnotationDeleteModal } from "@pages/template/Annotator/AnnotationDeleteModal"
 import {
     Dialog,
     DialogContent,
     DialogClose,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+} from "@components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, WithTooltip } from "@components/ui/tooltip"
 import { FieldEditForm } from "./FieldEditForm"
-import { SpinnerLoader } from "@/components/common/FullPageLoader/SpinnerLoader"
-import ErrorBanner from "@/components/ui/error-banner"
+import ErrorBanner from "@components/ui/error-banner"
 import { useHotkeys } from "react-hotkeys-hook"
-import { CREATE_DEFAULT_OPTIONS } from "@/hooks/useReactHotKeys"
-import { getKeyboardMetaKeyString } from "@/lib/utils"
-import _ from "@/lib/translate"
+import { CREATE_DEFAULT_OPTIONS } from "@hooks/useReactHotKeys"
+import { getKeyboardMetaKeyString } from "@lib/utils"
+import _ from "@lib/translate"
+
+interface AutoMapSuggestion {
+    /** Form Template Field row name. */
+    name: string
+    field_label: string
+    suggestion: string
+    confidence: number
+    tier: string
+    ambiguous: boolean
+    /** True only for unambiguous, high-confidence matches. */
+    auto_apply: boolean
+}
+
+interface AutoMapResult {
+    source: string
+    candidate_field_count: number
+    unmapped: number
+    auto_appliable: number
+    needs_review: number
+    suggestions: AutoMapSuggestion[]
+}
 
 interface FieldsListProps {
     data: {
@@ -47,57 +66,36 @@ interface FieldsListProps {
     }
     focusedAnnotation: string | null,
     onClick: (annotationID: string | null) => void,
-    mutate: KeyedMutator<FormTemplateField[]>
     templateID: string
+    /** Save failure from the parent form, shown above the list. */
+    saveError?: FrappeError | null
 }
 
-export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, templateID }: FieldsListProps) => {
+export const FieldsTable = ({ data, focusedAnnotation, onClick, templateID, saveError }: FieldsListProps) => {
 
-    const defaultFields = useMemo(() => {
-        if (data && data?.field.length > 0) {
-            return data?.field.map((field: FormTemplateField) => {
-                return {
-                    name: field.name,
-                    field_label: field.field_label,
-                    field_type: field.field_type,
-                    value_type: field.value_type,
-                    field_value: field.field_value,
-                    annotation_type: field.annotation_type,
-                    override_style: field.override_style,
-                    font: field.font,
-                    font_size: field.font_size,
-                    is_prompt: field.is_prompt,
-                    formatter: field.formatter,
-                    xref: field.xref,
-                    field_name: field.field_name,
-                    default_value: field.default_value,
-                    is_default_jinja: field.is_default_jinja,
-                }
-            })
-        }
-    }, [data])
-
-    const methods = useForm({
-        defaultValues: {
-            fields: defaultFields,
-            font: data.font,
-            font_size: data.font_size
-        }
-    })
-    const { handleSubmit, control, reset, getValues } = methods
-
-    useEffect(() => {
-        reset({
-            fields: defaultFields ?? [],
-            font: data.font,
-            font_size: data.font_size,
-        })
-    }, [defaultFields, data.font, data.font_size, reset])
+    // The form is owned by DocumentForm so it survives tab switches; this tab is
+    // just one view onto it.
+    const methods = useFormContext<TemplateFormValues>()
+    const { control, getValues, reset } = methods
 
     const { fields } = useFieldArray({
         control,
         name: "fields"
     })
+
+    // Live row values: useFieldArray's `fields` snapshot doesn't update as the
+    // edit dialog changes values, so watch the array and read display values
+    // from it. Rows take primitives as props, so they stay memoized.
+    const watchedFields = useWatch({ control, name: 'fields' }) as TemplateFormValues['fields'] | undefined
+
+    /** Fields still without a value — drives the "Unmapped" filter chip. */
+    const unmappedCount = useMemo(
+        () => fields.reduce((n, field, index) => {
+            const value = watchedFields?.[index]?.field_value ?? field.field_value
+            return n + (value == null || String(value).trim() === '' ? 1 : 0)
+        }, 0),
+        [fields, watchedFields],
+    )
 
     const focusedAnnotationData = useMemo(() => {
         if (focusedAnnotation) {
@@ -107,31 +105,55 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         return null
     }, [focusedAnnotation, data])
 
-    const { call, error, loading } = useFrappePostCall('pdf_forms.pdf_forms.doctype.form_template_field.form_template_field.update_form_template_fields')
+    const { call: fetchSuggestions, loading: autoMapping } =
+        useFrappePostCall<{ message: AutoMapResult }>('pdf_forms.api.automap.suggest_mappings')
 
-    const onSubmit = (data: { fields?: typeof defaultFields; font: string; font_size: number }) => {
-        if (!data?.fields) return
-        call({
-            fields: data.fields as FormTemplateField[],
-            form_template_id: templateID,
-            font: data.font,
-            font_size: data.font_size
-        }).then(() => {
-            toast.success(_("Fields updated successfully"))
-            mutate()
-        }).catch((error: { message?: string }) => {
-            toast.error(_("Error updating custom fields"), {
-                description: _("{0}", [error.message ?? ''])
+    /**
+     * Fill in the fields the matcher is confident about, into the FORM (not the
+     * database) — so the result lands as unsaved changes the user can review,
+     * adjust and Save, or walk away from. Anything ambiguous or low-confidence
+     * is deliberately left untouched.
+     */
+    const runAutoMap = useCallback(() => {
+        fetchSuggestions({ form_template_id: templateID })
+            .then((res) => {
+                const result = res?.message
+                if (!result) return
+                const applied = result.suggestions.filter((s) => s.auto_apply)
+                const byRowName = new Map(applied.map((s) => [s.name, s.suggestion]))
+
+                let count = 0
+                getValues().fields?.forEach((row, index) => {
+                    const suggestion = byRowName.get(row?.name as string)
+                    if (!suggestion) return
+                    methods.setValue(`fields.${index}.field_value`, suggestion, { shouldDirty: true })
+                    methods.setValue(`fields.${index}.value_type`, 'Field', { shouldDirty: true })
+                    count++
+                })
+
+                if (count > 0) {
+                    toast.success(_(`Mapped ${count} field${count === 1 ? '' : 's'} automatically`), {
+                        description: _("Review the changes and Save."),
+                    })
+                } else if (result.unmapped === 0) {
+                    toast.info(_("Every field is already mapped"))
+                } else {
+                    toast.warning(_("No confident matches found"), {
+                        description: _(`${result.source} exposes ${result.candidate_field_count} fields — none matched the remaining ${result.unmapped} closely enough.`),
+                    })
+                }
             })
-        })
-    }
+            .catch(() => toast.error(_("Could not run auto-map")))
+    }, [fetchSuggestions, templateID, getValues, methods])
 
     // Create a ref for each row in your table
     const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+    // The table's own scroll container — the ONLY thing that scrolls for row focus.
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-    // ...
-
-    // When focusedAnnotation is set, scroll that row into view and it will be highlighted
+    // When focusedAnnotation is set, center that row inside the table's scroll
+    // container. Deliberately NOT scrollIntoView: that scrolls every scrollable
+    // ancestor too, dragging the page header out of view.
     useEffect(() => {
         if (!focusedAnnotation) return
         const focusedIndex = fields.findIndex(field => field.name === focusedAnnotation)
@@ -140,7 +162,13 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         const id = requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 const el = rowRefs.current[focusedIndex]
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                const container = scrollContainerRef.current
+                if (!el || !container) return
+                const cRect = container.getBoundingClientRect()
+                const eRect = el.getBoundingClientRect()
+                const target = container.scrollTop + (eRect.top - cRect.top)
+                    - container.clientHeight / 2 + eRect.height / 2
+                container.scrollTo({ top: Math.max(0, target), behavior: 'smooth' })
             })
         })
         return () => cancelAnimationFrame(id)
@@ -157,10 +185,24 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
 
     const { value: isOpen, setTrue: onOpen, setFalse: onClose } = useBoolean(false)
 
-    const onFieldOpen = (index: number) => {
+    const onFieldOpen = useCallback((index: number) => {
         setIndex(index)
         onOpen()
-    }
+    }, [onOpen])
+
+    // Stable row callbacks so the memoized MappingRow only re-renders when its
+    // own data (or focus) changes — not 197 times per click.
+    const onEditRow = useCallback((name: string, idx: number) => {
+        // Open the modal in the urgent update; defer the row-focus + annotator
+        // pan (which re-renders the focused row and animates OSD) so the dialog
+        // paints without jank on large templates.
+        onFieldOpen(idx)
+        startTransition(() => onClick(name))
+    }, [onClick, onFieldOpen])
+    const onDeleteRow = useCallback((name: string) => setDeleteAnnotationID(name), [])
+    const setRowRef = useCallback((idx: number, el: HTMLTableRowElement | null) => {
+        rowRefs.current[idx] = el
+    }, [])
 
 
     const copyToClipboard = () => {
@@ -232,8 +274,8 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
         const newFields = data.fields;
 
         const updatedFields = newFields.map((newField: FormFieldRow) => {
-            const matchingField = formFields?.find((formField: FormFieldRow) =>
-                formField.field_name === newField.field_name
+            const matchingField = formFields?.find(
+                (formField) => formField.field_name === newField.field_name
             );
 
             if (matchingField) {
@@ -258,28 +300,71 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
 
     useCopyToClipboardHotkey(copyToClipboard)
 
-    const { saveButtonRef } = useSaveHotkey()
-
     const [searchQuery, setSearchQuery] = useState('')
     const [showUnmappedOnly, setShowUnmappedOnly] = useState(false)
     const filteredFieldsWithIndex = useMemo(() => {
         const q = searchQuery.trim().toLowerCase()
-        const isUnmapped = (field: (typeof fields)[number]) =>
-            field.field_value == null || String(field.field_value).trim() === ''
         return fields
-            .map((field, index) => ({ field, index }))
-            .filter(({ field }) => {
-                const matchesSearch = !q || (field.field_label ?? '').toLowerCase().includes(q) || (field.field_name ?? '').toLowerCase().includes(q)
-                const matchesUnmapped = !showUnmappedOnly || isUnmapped(field)
+            .map((field, index) => {
+                const live = watchedFields?.[index]
+                return {
+                    field,
+                    index,
+                    label: String(live?.field_label ?? field.field_label ?? ''),
+                    fieldName: String(field.field_name ?? ''),
+                    fieldType: String(live?.field_type ?? field.field_type ?? ''),
+                    valueType: String(live?.value_type ?? field.value_type ?? 'Text'),
+                    value: String(live?.field_value ?? field.field_value ?? ''),
+                    formatter: String(live?.formatter ?? field.formatter ?? ''),
+                    hasDefault: String(live?.default_value ?? field.default_value ?? '').trim() !== '',
+                    pageIndex: Number(live?.page_index ?? field.page_index ?? 0),
+                }
+            })
+            .filter((row) => {
+                const matchesSearch = !q
+                    || row.label.toLowerCase().includes(q)
+                    || (row.field.field_name ?? '').toLowerCase().includes(q)
+                const matchesUnmapped = !showUnmappedOnly || row.value.trim() === ''
                 return matchesSearch && matchesUnmapped
             })
-    }, [fields, searchQuery, showUnmappedOnly])
+    }, [fields, watchedFields, searchQuery, showUnmappedOnly])
+
+    /** True per-page totals — independent of search/filter, so the separator
+     *  always describes the page itself rather than what happens to be shown. */
+    const pageTotals = useMemo(() => {
+        const totals = new Map<number, { total: number; unmapped: number }>()
+        fields.forEach((field, index) => {
+            const live = watchedFields?.[index]
+            const page = Number(live?.page_index ?? field.page_index ?? 0)
+            const value = String(live?.field_value ?? field.field_value ?? '')
+            const t = totals.get(page) ?? { total: 0, unmapped: 0 }
+            t.total++
+            if (value.trim() === '') t.unmapped++
+            totals.set(page, t)
+        })
+        return totals
+    }, [fields, watchedFields])
+
+    /** Rows grouped by the PDF page they sit on, for the page separators. */
+    const pageGroups = useMemo(() => {
+        const map = new Map<number, { pageIndex: number; rows: typeof filteredFieldsWithIndex; unmapped: number }>()
+        for (const row of filteredFieldsWithIndex) {
+            let g = map.get(row.pageIndex)
+            if (!g) {
+                g = { pageIndex: row.pageIndex, rows: [], unmapped: 0 }
+                map.set(row.pageIndex, g)
+            }
+            g.rows.push(row)
+            if (row.value.trim() === '') g.unmapped++
+        }
+        return [...map.values()].sort((a, b) => a.pageIndex - b.pageIndex)
+    }, [filteredFieldsWithIndex])
+
 
     return (
-        <div className="flex flex-col gap-2">
-            <FormProvider {...methods}>
-                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between gap-2 w-full px-2">
+        <div className="flex h-full min-h-0 flex-col gap-2">
+            <div className="flex h-full min-h-0 flex-col gap-4">
+                    <div className="flex items-center justify-between gap-2 w-full">
                         <div className="flex items-center gap-4 w-full">
                             <div className="relative flex-1 w-full max-w-[390px]">
                                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-ink-gray-5 pointer-events-none" aria-hidden />
@@ -288,186 +373,351 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, mutate, template
                                     placeholder={_("Search by field name or label...")}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="ps-8 w-full"
-                                    inputSize="md"
+                                    className="ps-8 w-full [&::-webkit-search-cancel-button]:hidden"
+                                    inputSize="sm"
                                     aria-label={_("Search fields")}
                                 />
                             </div>
-                            <label className="flex items-center gap-2 shrink-0 cursor-pointer select-none text-sm text-ink-gray-5 hover:text-ink-gray-8">
-                                <Checkbox
-                                    checked={showUnmappedOnly}
-                                    onCheckedChange={(checked) => setShowUnmappedOnly(checked === true)}
-                                    aria-label={_("Unmapped only")}
-                                />
-                                <span>{_("Unmapped only")}</span>
-                            </label>
+                            <TabsButton
+                                value={showUnmappedOnly ? 'unmapped' : 'all'}
+                                onValueChange={(v) => setShowUnmappedOnly(v === 'unmapped')}
+                                aria-label={_("Filter fields")}
+                                className="shrink-0"
+                            >
+                                <TabsButtonItem value="all">
+                                    {_("All")}
+                                    <span className="text-xs text-ink-gray-4">{fields.length}</span>
+                                </TabsButtonItem>
+                                <TabsButtonItem value="unmapped">
+                                    {_("Unmapped")}
+                                    <span className="text-xs text-ink-gray-4">{unmappedCount}</span>
+                                </TabsButtonItem>
+                            </TabsButton>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                theme="gray"
-                                size="sm"
-                                isIconButton
-                                aria-label={_("Import fields from clipboard")}
-                                title={_("Import fields from clipboard")}
-                                onClick={pasteToClipboard}
-                            >
-                                <Download className="size-4" />
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                theme="gray"
-                                size="sm"
-                                isIconButton
-                                aria-label={_("Export fields to clipboard")}
-                                title={_("Export fields to clipboard")}
-                                onClick={copyToClipboard}
-                            >
-                                <Upload className="size-4" />
-                            </Button>
-                            <Button type="submit" size="sm" ref={saveButtonRef} disabled={loading} variant="solid" theme="gray" title={_("Save")}>
-                                {loading && <SpinnerLoader />}
-                                {loading ? _("{0}", ["Saving..."]) : _("{0}", ["Save"])}
-                            </Button>
+                            <WithTooltip tip={_("Fill in fields that clearly match the data source")}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    theme="gray"
+                                    size="sm"
+                                    onClick={runAutoMap}
+                                    disabled={autoMapping}
+                                    aria-busy={autoMapping || undefined}
+                                >
+                                    {/* Only the icon swaps while matching — the label stays put
+                                        so the button keeps its width and nothing shifts. */}
+                                    {autoMapping ? <Spinner className="size-4" /> : <Sparkles className="size-4" />}
+                                    {_("Auto-map")}
+                                </Button>
+                            </WithTooltip>
+                            <WithTooltip tip={<p>{_("Import fields from clipboard")} ({getKeyboardMetaKeyString()} + I)</p>}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    theme="gray"
+                                    size="sm"
+                                    isIconButton
+                                    aria-label={_("Import fields from clipboard")}
+                                    onClick={pasteToClipboard}
+                                >
+                                    <Download className="size-4" />
+                                </Button>
+                            </WithTooltip>
+                            <WithTooltip tip={<p>{_("Export fields to clipboard")} ({getKeyboardMetaKeyString()} + E)</p>}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    theme="gray"
+                                    size="sm"
+                                    isIconButton
+                                    aria-label={_("Export fields to clipboard")}
+                                    onClick={copyToClipboard}
+                                >
+                                    <Upload className="size-4" />
+                                </Button>
+                            </WithTooltip>
                         </div>
                     </div>
-                    <div className="flex flex-row items-start gap-4 px-2 w-full">
-                        <div className="w-full min-w-[140px]">
-                            <SelectFormField name="font" label="Font">
-                                <SelectItem value="helvetica">{_("Helvetica")}</SelectItem>
-                                <SelectItem value="courier">{_("Courier")}</SelectItem>
-                                <SelectItem value="times-roman">{_("Times Roman")}</SelectItem>
-                                <SelectItem value="symbol">{_("Symbol")}</SelectItem>
-                                <SelectItem value="zapfdingbats">{_("ZapfDingbats")}</SelectItem>
-                            </SelectFormField>
-                        </div>
-                        <div className="w-full min-w-[140px]">
-                            <DataField name="font_size" label="Font Size" inputProps={{
-                                type: 'number',
-                                min: 0,
-                            }} />
-                        </div>
-                    </div>
-                    {error && <ErrorBanner error={error} />}
-                    <div className="overflow-y-auto px-2" style={{ height: 'calc(100vh - 200px)' }}>
-                        <Table containerClassName="rounded border border-outline-gray-1">
-                            <TableHeader className="sticky top-0 z-10">
-                                <TableRow>
-                                    <TableHead>No.</TableHead>
-                                    <TableHead>{_("Label")}</TableHead>
-                                    <TableHead>{_("Field Type")}</TableHead>
-                                    <TableHead>{_("Value Type")}</TableHead>
+                    {saveError && <ErrorBanner error={saveError} />}
+                    {/* scroll-fade (bottom only — the sticky header must never dim):
+                        rows fade at the bottom edge while more remain, so a mid-scroll
+                        cut doesn't read as clipped content. */}
+                    {/* Vertical scroll only: this container is the sticky thead's
+                        scroll ancestor. The table is table-fixed and every cell
+                        truncates, so there is nothing to scroll sideways to. */}
+                    <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-2 scroll-fade [--scroll-fade-t-size:0px]">
+                        {/* overflow-x-visible: the default overflow-x-auto wrapper would
+                            become the sticky thead's scroll ancestor and break sticking
+                            (it never scrolls vertically). Open table, Frappe-style —
+                            no card border. */}
+                        {/* table-fixed: columns take the widths below instead of
+                            growing to fit content, so a long value truncates rather
+                            than pushing the table wider than the pane. */}
+                        <Table containerClassName="overflow-x-visible" className="table-fixed">
+                            {/* Solid bg: with the transparent Frappe-style header, rows
+                                would bleed through this sticky thead while scrolling. */}
+                            <TableHeader className="sticky top-0 z-10 bg-surface-base">
+                                <TableRow className="h-8 hover:bg-transparent">
+                                    <TableHead className="w-11">No.</TableHead>
+                                    <TableHead className="w-[30%]">{_("Label")}</TableHead>
+                                    <TableHead className="w-28">{_("Field Type")}</TableHead>
+                                    <TableHead className="w-24">{_("Value Type")}</TableHead>
+                                    {/* Widthless on purpose — Value soaks up whatever
+                                        the fixed columns leave over. */}
                                     <TableHead>{_("Value")}</TableHead>
-                                    <TableHead className="w-[50px]" />
+                                    <TableHead className="w-20" />
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredFieldsWithIndex.map(({ field, index }) => (
-                                    <TableRow
-                                        ref={el => { rowRefs.current[index] = el }}
-                                        key={field.id}
-                                        onClick={() => onClick(field.name)}
-                                        className={
-                                            focusedAnnotationData?.name === field.name
-                                                ? 'bg-surface-blue-2 min-h-[50px] ring-1 ring-inset ring-outline-blue-2'
-                                                : ''
-                                        }
-                                    >
-                                        <TableCell className="p-2">{index + 1}.</TableCell>
-                                        <TableCell className="p-2" title={field.field_label}>
-                                            {field.annotation_type === 'Auto' ? (
-                                                <span className="block max-w-[25ch] truncate">{_("{0}", [field.field_label ?? ''])}</span>
-                                            ) : (
-                                                <FormField
-                                                    control={control}
-                                                    name={`fields.${index}.field_label`}
-                                                    rules={{ required: 'Field label is required' }}
-                                                    render={({ field: f }) => (
-                                                        <FormItem className="space-y-0">
-                                                            <FormControl>
-                                                                <Input
-                                                                    id={`field-label-${field.id}`}
-                                                                    className="min-w-[200px]"
-                                                                    inputSize="md"
-                                                                    {...f}
-                                                                />
-                                                            </FormControl>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="p-2">
-                                            {field.annotation_type === 'Auto' ? (
-                                                _("{0}", [field.field_type ?? ''])
-                                            ) : (
-                                                <SelectFormField name={`fields.${index}.field_type`} label="" hideLabel>
-                                                        <SelectItem value="Text">{_("Text")}</SelectItem>
-                                                        <SelectItem value="Checkbox">{_("Checkbox")}</SelectItem>
-                                                        <SelectItem value="Radio Button">{_("Radio Button")}</SelectItem>
-                                                </SelectFormField>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="p-2">
-                                            <SelectFormField name={`fields.${index}.value_type`} label="" hideLabel>
-                                                <SelectItem value="Text">{_("Text")}</SelectItem>
-                                                <SelectItem value="Field">{_("Field")}</SelectItem>
-                                                <SelectItem value="Prompt">{_("Prompt")}</SelectItem>
-                                                <SelectItem value="Jinja">{_("Jinja")}</SelectItem>
-                                            </SelectFormField>
-                                        </TableCell>
-                                        <TableCell className="p-2">
-                                            <FieldValueDisplay index={index} fieldId={field.id} />
-                                        </TableCell>
-                                        <TableCell className="p-2">
-                                            <div className="flex items-center gap-1">
+                                {pageGroups.length === 0 && (
+                                    <TableRow className="hover:bg-transparent">
+                                        <TableCell colSpan={6} className="h-32 whitespace-normal text-center align-middle">
+                                            <p className="text-base text-ink-gray-7">{_("No fields match")}</p>
+                                            <p className="mt-1 text-p-sm text-ink-gray-5">
+                                                {/* Search wins the explanation: it's the narrower cause. */}
+                                                {searchQuery.trim()
+                                                    ? _("Try a different search term.")
+                                                    : _("Every field on this template is mapped.")}
+                                            </p>
+                                            {(searchQuery || showUnmappedOnly) && (
                                                 <Button
                                                     type="button"
-                                                    variant="ghost"
+                                                    variant="subtle"
                                                     theme="gray"
                                                     size="sm"
-                                                    isIconButton
-                                                    aria-label={_("Edit")}
-                                                    title={_("Edit")}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        onFieldOpen(index)
-                                                    }}
+                                                    className="mt-3"
+                                                    onClick={() => { setSearchQuery(''); setShowUnmappedOnly(false) }}
                                                 >
-                                                    <Pencil className="size-3.5" />
+                                                    {_("Clear filters")}
                                                 </Button>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    theme="red"
-                                                    size="sm"
-                                                    isIconButton
-                                                    aria-label={_("Delete")}
-                                                    title={_("Delete")}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        setDeleteAnnotationID(field.name)
-                                                    }}
-                                                >
-                                                    <Trash2 className="size-3.5" />
-                                                </Button>
-                                            </div>
+                                            )}
                                         </TableCell>
                                     </TableRow>
+                                )}
+                                {pageGroups.map((group) => (
+                                    <Fragment key={`page-${group.pageIndex}`}>
+                                        <PageSeparator
+                                            pageIndex={group.pageIndex}
+                                            fieldCount={pageTotals.get(group.pageIndex)?.total ?? group.rows.length}
+                                            unmapped={pageTotals.get(group.pageIndex)?.unmapped ?? group.unmapped}
+                                            shown={group.rows.length}
+                                            firstFieldName={group.rows[0]?.field.name ?? ''}
+                                            onGoToPage={onClick}
+                                        />
+                                        {group.rows.map(({ field, index, label, fieldName, fieldType, valueType, value, formatter, hasDefault }) => (
+                                            <MappingRow
+                                                key={field.id}
+                                                name={field.name ?? ''}
+                                                index={index}
+                                                isFocused={focusedAnnotationData?.name === field.name}
+                                                label={label}
+                                                fieldName={fieldName}
+                                                fieldType={fieldType}
+                                                valueType={valueType}
+                                                value={value}
+                                                formatter={formatter}
+                                                hasDefault={hasDefault}
+                                                onRowClick={onClick}
+                                                onEditRow={onEditRow}
+                                                onDeleteRow={onDeleteRow}
+                                                setRowRef={setRowRef}
+                                            />
+                                        ))}
+                                    </Fragment>
                                 ))}
                             </TableBody>
                         </Table>
                     </div>
                     <AnnotationDeleteModal annotationID={deleteAnnotationID} templateID={templateID} onClose={deleteAnnotationModalClose} />
                     {index !== null && <FieldEditModal index={index} isOpen={isOpen} onClose={onClose} setIndex={setIndex} totalLength={fields.length} />}
-                </form>
-            </FormProvider>
+            </div>
         </div>
     )
 }
+
+const VALUE_TYPE_THEME = {
+    Field: "blue",
+    Prompt: "violet",
+    Jinja: "green",
+    Text: "gray",
+} as const
+
+interface PageSeparatorProps {
+    pageIndex: number
+    /** Fields on this page in total (not affected by search/filter). */
+    fieldCount: number
+    /** Unmapped fields on this page in total. */
+    unmapped: number
+    /** How many are currently listed under this separator. */
+    shown: number
+    firstFieldName: string
+    onGoToPage: (name: string | null) => void
+}
+
+/**
+ * Sticky strip that splits the list by the PDF page each field sits on.
+ * "Go to page" focuses that page's first field — the annotator already
+ * switches pages when a focused annotation lives on another one.
+ */
+const PageSeparator = memo(function PageSeparator({
+    pageIndex, fieldCount, unmapped, shown, firstFieldName, onGoToPage,
+}: PageSeparatorProps) {
+    const isFiltered = shown !== fieldCount
+    return (
+        <TableRow className="group/page hover:bg-transparent">
+            {/* top-8 clears the sticky table header above it */}
+            <TableCell colSpan={6} className="sticky top-[31px] z-9 bg-surface-gray-1 p-0">
+                <div className="flex h-7 items-center gap-2 px-2">
+                    <span className="text-sm-medium text-ink-gray-7">
+                        {_("Page {0}", [String(pageIndex + 1)])}
+                    </span>
+                    <span className="text-xs text-ink-gray-5">
+                        {isFiltered
+                            ? _("{0} of {1} fields", [String(shown), String(fieldCount)])
+                            : _("{0} fields", [String(fieldCount)])}
+                    </span>
+                    {unmapped > 0 && (
+                        <Badge theme="amber" size="sm">{_("{0} unmapped", [String(unmapped)])}</Badge>
+                    )}
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        theme="gray"
+                        size="xs"
+                        className="ms-auto opacity-0 transition-opacity group-hover/page:opacity-100 focus-visible:opacity-100"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            if (firstFieldName) onGoToPage(firstFieldName)
+                        }}
+                    >
+                        {_("Go to page")}
+                        <ChevronRight className="size-3.5" />
+                    </Button>
+                </div>
+            </TableCell>
+        </TableRow>
+    )
+})
+
+interface MappingRowProps {
+    name: string
+    index: number
+    isFocused: boolean
+    label: string
+    /** The PDF widget's own name — shown under the label when it differs. */
+    fieldName: string
+    /** Text / CheckBox / Radio Button, from the PDF. */
+    fieldType: string
+    valueType: string
+    value: string
+    /** Date / Currency / Phone / Number, when one is applied. */
+    formatter: string
+    /** Whether a default value is configured. */
+    hasDefault: boolean
+    onRowClick: (name: string | null) => void
+    onEditRow: (name: string, index: number) => void
+    onDeleteRow: (name: string) => void
+    setRowRef: (index: number, el: HTMLTableRowElement | null) => void
+}
+
+/**
+ * One mapping row — display only: label, a value-type badge, and the mapped
+ * value as text (empty when unmapped). All editing happens in the edit dialog
+ * (pencil or double-click), so ~200 rows render as text instead of ~400 live
+ * form controls. Memoized on primitives.
+ */
+const MappingRow = memo(function MappingRow({
+    name, index, isFocused, label, fieldName, fieldType, valueType, value, formatter, hasDefault,
+    onRowClick, onEditRow, onDeleteRow, setRowRef,
+}: MappingRowProps) {
+    const theme = VALUE_TYPE_THEME[valueType as keyof typeof VALUE_TYPE_THEME] ?? "gray"
+
+    return (
+        <TableRow
+            ref={el => setRowRef(index, el)}
+            onClick={() => onRowClick(name)}
+            onDoubleClick={() => onEditRow(name, index)}
+            data-focused={isFocused || undefined}
+            className={`group/row h-10 cursor-pointer ${isFocused
+                ? 'bg-surface-blue-2 ring-1 ring-inset ring-outline-blue-2 hover:bg-surface-blue-2'
+                : ''}`}
+        >
+            <TableCell className="p-2 text-ink-gray-4">{index + 1}.</TableCell>
+            <TableCell className="overflow-hidden p-2" title={fieldName && fieldName !== label ? `${label} · ${fieldName}` : label}>
+                {/* The PDF widget's own name only when it differs — inline, so every
+                    row stays one line and the vertical rhythm holds. The label wins
+                    the space; the widget name gives way first. */}
+                <div className="flex min-w-0 items-baseline gap-1.5">
+                    <span className="min-w-0 flex-1 truncate font-medium text-ink-gray-8">{label}</span>
+                    {fieldName && fieldName !== label && (
+                        <span className="min-w-0 max-w-[45%] truncate font-mono text-xs text-ink-gray-4">{fieldName}</span>
+                    )}
+                </div>
+            </TableCell>
+            <TableCell className="p-2 text-ink-gray-6">{_("{0}", [fieldType])}</TableCell>
+            <TableCell className="p-2">
+                <Badge variant="subtle" theme={theme}>{_("{0}", [valueType])}</Badge>
+            </TableCell>
+            <TableCell className="overflow-hidden p-2" title={value || undefined}>
+                <div className="flex min-w-0 items-center gap-1.5">
+                    {/* min-w-0 so the flex item may shrink below its text width —
+                        without it `truncate` never kicks in and the row widens. */}
+                    <span className="min-w-0 flex-1 truncate font-mono text-sm text-ink-gray-6">{value}</span>
+                    {formatter && (
+                        <Badge variant="outline" theme="gray" size="sm" className="shrink-0 font-normal">
+                            {_("{0}", [formatter])}
+                        </Badge>
+                    )}
+                    {hasDefault && (
+                        <WithTooltip tip={_("Has a default value")}>
+                            <span className="size-1.5 shrink-0 rounded-full bg-surface-gray-5" aria-label={_("Has a default value")} />
+                        </WithTooltip>
+                    )}
+                </div>
+            </TableCell>
+            <TableCell className="p-2">
+                <div className="flex items-center justify-end gap-1">
+                    <WithTooltip tip={_("Edit")}>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            theme="gray"
+                            size="sm"
+                            isIconButton
+                            aria-label={_("Edit")}
+                            className="group-data-[focused]/row:hover:bg-surface-base/60 group-data-[focused]/row:active:bg-surface-base/80"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                // Editing a row also selects it, so the annotator pans to it.
+                                onEditRow(name, index)
+                            }}
+                        >
+                            <Pencil className="size-3.5" />
+                        </Button>
+                    </WithTooltip>
+                    <WithTooltip tip={_("Delete")}>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            theme="gray"
+                            size="sm"
+                            isIconButton
+                            aria-label={_("Delete")}
+                            className="text-ink-gray-5 hover:text-ink-red-6 hover:bg-surface-red-2 active:bg-surface-red-3 group-data-[focused]/row:hover:bg-surface-base/60 group-data-[focused]/row:active:bg-surface-base/80"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onDeleteRow(name)
+                            }}
+                        >
+                            <Trash2 className="size-3.5" />
+                        </Button>
+                    </WithTooltip>
+                </div>
+            </TableCell>
+        </TableRow>
+    )
+})
 
 interface FieldEditModalProps {
     index: number
@@ -477,20 +727,6 @@ interface FieldEditModalProps {
     totalLength: number
 }
 
-const FieldValueDisplay = ({ index, fieldId }: { index: number; fieldId: string }) => {
-    const fieldValue = useWatch({ name: `fields.${index}.field_value` })
-
-    return (
-        <InputGroup size="md">
-            <InputGroupInput
-                id={`field-value-${fieldId}`}
-                className="min-w-[200px] pointer-events-none"
-                readOnly
-                value={fieldValue ?? ''}
-            />
-        </InputGroup>
-    )
-}
 
 const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: FieldEditModalProps) => {
     const onNextClick = () => {
@@ -508,14 +744,19 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
     return (
         <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { setIndex(null); onClose() } }} modal={true}>
             <DialogContent
-                className="min-w-2xl gap-6"
+                className="sm:max-w-3xl gap-6"
                 showCloseButton={false}
+                tabIndex={-1}
                 onOpenAutoFocus={(e) => {
                     e.preventDefault()
+                        ; (e.target as HTMLElement | null)?.focus?.()
                 }}
             >
                 <DialogHeader>
-                    <div className="flex items-center justify-between px-2">
+                    <DialogDescription className="sr-only">
+                        {_("Edit this mapping field's label, value type, value and style.")}
+                    </DialogDescription>
+                    <div className="flex items-center justify-between">
                         <DialogTitle>{_("Edit field")} {index + 1} {_("of")} {totalLength}</DialogTitle>
                         <div className="flex items-center gap-2">
                             <NextPreviousButtons
@@ -541,7 +782,10 @@ const FieldEditModal = ({ index, isOpen, onClose, setIndex, totalLength }: Field
                         </div>
                     </div>
                 </DialogHeader>
-                <div className="flex flex-col max-h-[60vh] overflow-y-auto px-2">
+                {/* Bleed the scroller into the dialog's p-6 gutter (-mx-6/px-6):
+                    the overlay scrollbar then rides in the margin, 24px clear of
+                    content, instead of overlapping whatever sits at the right edge. */}
+                <div className="-mx-6 flex max-h-[70vh] flex-col overflow-y-auto px-6">
                     <FieldEditForm index={index} />
                 </div>
             </DialogContent>
@@ -597,7 +841,6 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                             size="sm"
                             isIconButton
                             aria-label={_("Previous Field")}
-                            title={_("Previous Field")}
                             onClick={onPreviousClick}
                             disabled={index === 0}
                         >
@@ -619,7 +862,6 @@ const NextPreviousButtons = ({ onNextClick, onPreviousClick, totalLength, index 
                             size="sm"
                             isIconButton
                             aria-label={_("Next Field")}
-                            title={_("Next Field")}
                             onClick={onNextClick}
                             disabled={index === totalLength - 1}
                         >

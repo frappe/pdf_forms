@@ -8,15 +8,15 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { FileDropzone } from '@/components/ui/file-dropzone'
-import { DataField, LinkFormField, SmallTextField } from '@/components/ui/form-elements'
-import { FormField, FormItem, FormControl, FormLabel, FormMessage, FormRequiredIndicator } from '@/components/ui/form'
-import { cn } from '@/lib/utils'
-import ErrorBanner from '@/components/ui/error-banner'
-import FileUploadBanner from '@/components/common/FileUploadBanner'
-import _ from '@/lib/translate'
+} from '@components/ui/dialog'
+import { Button } from '@components/ui/button'
+import { FileDropzone } from '@components/ui/file-dropzone'
+import { DataField, LinkFormField, SmallTextField } from '@components/ui/form-elements'
+import { FormField, FormItem, FormControl, FormLabel, FormMessage, FormRequiredIndicator } from '@components/ui/form'
+import { cn } from '@lib/utils'
+import ErrorBanner from '@components/ui/error-banner'
+import FileUploadBanner from '@components/common/FileUploadBanner'
+import _ from '@lib/translate'
 
 const EMPTY_FILES: File[] = []
 

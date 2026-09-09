@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { ChevronsUpDown, Check } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { FormItem, FormLabel, FormControl, FormRequiredIndicator } from '@/components/ui/form'
-import { cn } from '@/lib/utils'
-import type { SchemaField } from '@/pages/template/Configuration/Configurations'
-import _ from '@/lib/translate'
+import { Button } from '@components/ui/button'
+import { Input } from '@components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@components/ui/command'
+import { FormItem, FormLabel, FormControl, FormRequiredIndicator } from '@components/ui/form'
+import { cn } from '@lib/utils'
+import type { SchemaField } from '@pages/template/Configuration/Configurations'
+import _ from '@lib/translate'
 
 interface FieldMap {
     field: string

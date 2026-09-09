@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
-import ErrorBanner from "@/components/ui/error-banner"
-import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
+import { Button } from "@components/ui/button"
+import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@components/ui/dialog"
+import ErrorBanner from "@components/ui/error-banner"
+import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts"
 import { useFrappePostCall } from "frappe-react-sdk"
 import { toast } from "sonner"
-import _ from "@/lib/translate"
+import _ from "@lib/translate"
 
 export const DeletePromptDialog = ({ isOpen, onClose, prompt, onRefresh, templateID }: { isOpen: boolean, onClose: () => void, prompt: FormTemplatePrompts, onRefresh: () => void, templateID: string }) => {
     const { call, loading, error } = useFrappePostCall('pdf_forms.api.form_template.remove_prompt_from_form_template')

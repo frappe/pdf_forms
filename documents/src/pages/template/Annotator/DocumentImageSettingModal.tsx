@@ -1,26 +1,27 @@
 import { useFrappePostCall } from "frappe-react-sdk"
 import { FormProvider, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
-import type { FormTemplateImage } from "@/types/FormPrinter/FormTemplateImage"
-import { FullPageLoader } from "@/components/common/FullPageLoader/FullPageLoader"
-import ErrorBanner from "@/components/ui/error-banner"
+import type { FormTemplateImage } from "@types/FormPrinter/FormTemplateImage"
+import { FullPageLoader } from "@components/common/FullPageLoader/FullPageLoader"
+import ErrorBanner from "@components/ui/error-banner"
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogFooter,
-} from "@/components/ui/dialog"
+} from "@components/ui/dialog"
 import {
     FormField,
     FormItem,
     FormLabel,
     FormControl,
-} from "@/components/ui/form"
-import { CodeEditorFormField, DataField } from "@/components/ui/form-elements"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import _ from "@/lib/translate"
+} from "@components/ui/form"
+import { CodeEditorFormField, DataField } from "@components/ui/form-elements"
+import { Checkbox } from "@components/ui/checkbox"
+import { Button } from "@components/ui/button"
+import _ from "@lib/translate"
 
 interface Props {
     isOpen: boolean
@@ -106,6 +107,7 @@ export const SettingPageModalContent = ({
             <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <DialogHeader>
                     <DialogTitle>{_("Settings")}</DialogTitle>
+                    <DialogDescription className="sr-only">{_("Configure page repeat settings for this template page.")}</DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-4">
                     {error && <ErrorBanner error={error} />}

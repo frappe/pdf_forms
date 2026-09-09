@@ -4,6 +4,7 @@ app_publisher = "Frappe Technologies Pvt. Ltd."
 app_description = "Frappe app to manage PDF forms"
 app_email = "contact@frappe.io"
 app_license = "gpl-3.0"
+app_logo_url = "/assets/pdf_forms/images/pdf-forms-logo.svg"
 
 # Apps
 # ------------------
@@ -11,15 +12,15 @@ app_license = "gpl-3.0"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "pdf_forms",
-# 		"logo": "/assets/pdf_forms/logo.png",
-# 		"title": "PDF Forms",
-# 		"route": "/pdf_forms",
-# 		"has_permission": "pdf_forms.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "pdf_forms",
+		"logo": "/assets/pdf_forms/images/pdf-forms-logo.svg",
+		"title": "PDF Forms",
+		"route": "/pdf_forms",
+		"has_permission": "pdf_forms.api.permission.has_app_permission",
+	}
+]
 
 # Includes in <head>
 # ------------------

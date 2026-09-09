@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "documents",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["--cwd", "documents", "dev", "--host", "--port", "8083"],
+      "port": 8083,
+      "autoPort": false
+    }
+  ]
+}

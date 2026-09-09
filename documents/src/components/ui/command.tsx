@@ -2,14 +2,14 @@ import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 import { SearchIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@lib/utils"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@components/ui/dialog"
 
 function Command({
   className,
@@ -19,7 +19,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "bg-surface-modal flex h-full w-full flex-col overflow-hidden rounded-md",
+        "bg-surface-elevation-1 flex h-full w-full flex-col overflow-hidden rounded-md",
         className
       )}
       {...props}
@@ -65,13 +65,13 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex items-center gap-2 m-1.5 h-8 rounded px-2.5 py-2 border border-transparent transition-all bg-surface-gray-2 not-focus-within:hover:bg-surface-gray-3 text-ink-gray-7 focus-within:bg-surface-gray-3 focus-within:border-outline-gray-4 focus-within:shadow-focus-gray"
+      className="flex items-center gap-2 m-1.5 h-8 rounded px-2.5 py-2 border border-transparent transition-colors bg-surface-gray-2 not-focus-within:hover:bg-surface-gray-3 text-ink-gray-8 focus-within:bg-surface-base focus-within:border-outline-gray-4 focus-within:shadow-sm focus-within:focus-ring"
     >
       <SearchIcon className="size-4 shrink-0 text-ink-gray-4" />
       <CommandPrimitive.Input
         data-slot="command-input"
         className={cn(
-          "flex w-full bg-transparent outline-hidden text-base placeholder:text-ink-gray-4",
+          "flex w-full bg-transparent outline-hidden text-xl md:text-base placeholder:text-ink-gray-4",
           className
         )}
         {...props}
@@ -102,7 +102,7 @@ function CommandEmpty({
   return (
     <CommandPrimitive.Empty
       data-slot="command-empty"
-      className="py-6 text-center text-sm"
+      className="py-6 text-center text-content"
       {...props}
     />
   )
@@ -116,7 +116,7 @@ function CommandGroup({
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        "text-ink-gray-6 [&_[cmdk-group-heading]]:text-ink-gray-4 overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-sm [&_[cmdk-group-heading]]:font-medium",
+        "text-ink-gray-6 [&_[cmdk-group-heading]]:text-ink-gray-4 overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-base [&_[cmdk-group-heading]]:md:text-sm [&_[cmdk-group-heading]]:font-medium",
         className
       )}
       {...props}
@@ -131,7 +131,7 @@ function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
-      className={cn("bg-outline-gray-modals mx-0.5 h-px my-1", className)}
+      className={cn("bg-outline-elevation-2 mx-0.5 h-px my-1", className)}
       {...props}
     />
   )
@@ -145,8 +145,8 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "py-1.5 px-2 flex cursor-default text-ink-gray-6 items-center gap-2 rounded text-base relative outline-hidden select-none",
-        "data-[selected=true]:bg-surface-gray-2 [&_svg:not([class*='text-'])]:text-ink-gray-6 data-[disabled=true]:pointer-events-none data-[disabled=true]:text-ink-gray-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "py-2.5 md:py-1.5 px-2 flex cursor-pointer text-ink-gray-7 items-center gap-2 rounded text-content relative outline-hidden select-none",
+        "data-[selected=true]:bg-surface-gray-2 [&_svg:not([class*='text-'])]:text-ink-gray-6 data-[disabled=true]:pointer-events-none data-[disabled=true]:cursor-not-allowed data-[disabled=true]:text-ink-gray-4 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

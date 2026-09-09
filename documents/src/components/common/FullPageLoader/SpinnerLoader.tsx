@@ -12,7 +12,7 @@ interface AsyncSpinnerLoaderProps {
 
 export const AsyncSpinnerLoader: React.FC<AsyncSpinnerLoaderProps> = ({
     size = 4,
-    color = 'text-gray-200',
+    color = 'text-ink-gray-4',
     position = 'fixed',
     top = '50%',
     right = '50%',
@@ -36,7 +36,7 @@ export const AsyncSpinnerLoader: React.FC<AsyncSpinnerLoaderProps> = ({
 
     return (
         <div
-            className={`inline-block ${color} mr-2 animate-spin rounded-full border-2 border-solid align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite] dark:text-white`}
+            className={`inline-block ${color} mr-2 animate-spin rounded-full border-2 border-solid align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]`}
             style={{ ...spinnerStyle, ...containerStyle, position }}
             role="status"
         ></div>
@@ -52,7 +52,7 @@ export const SpinnerLoader = ({ className, style }: SpinnerLoaderProps) => {
 
     return (
         <div
-            className={`inline-block h-4 w-4 mr-2 animate-spin rounded-full border-2 border-solid border-current text-gray-200 border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite] dark:text-white ${className}`}
+            className={`inline-block h-4 w-4 mr-2 animate-spin rounded-full border-2 border-solid border-current text-ink-gray-4 border-e-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite] ${className}`}
             role="status"
             style={style}
         >

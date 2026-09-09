@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSWRConfig } from 'frappe-react-sdk'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button } from '@components/ui/button'
 import { motion } from 'framer-motion'
-import { RefreshCw, CheckCircle2 } from 'lucide-react'
-import _ from '@/lib/translate'
+import { RefreshCw } from 'lucide-react'
+import _ from '@lib/translate'
 
 interface Props {
     syncing: boolean,
@@ -62,48 +62,24 @@ export const AnnotationSyncState = ({ forceUpdate, hasUnsavedChanges }: Props) =
                     exit={{ opacity: 0 }}
                     data-testid='sync-button'
                 >
-                    <Button 
-                        className="rounded-none h-full" 
-                        size="sm" 
-                        onClick={update} 
+                    <Button
+                        size="sm"
+                        onClick={update}
                         variant={highlightSyncButton ? 'solid' : 'subtle'}
                         theme="gray"
                         title={_("Force Update")}
                     >
-                        <div className="flex items-center">
-                            <motion.div 
-                                animate={{ rotate: 360 }} 
-                                initial={{ rotate: 0 }} 
-                                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                            >
-                                <RefreshCw className="size-4" />
-                            </motion.div>
-                            <span className="ml-2">{_("Sync")}</span>
-                        </div>
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            initial={{ rotate: 0 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                        >
+                            <RefreshCw className="size-4" />
+                        </motion.div>
+                        {_("Sync")}
                     </Button>
                 </motion.div>
-            ) : (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={{ height: '100%' }}
-                    data-testid='sync-button'
-                >
-                    <Button 
-                        size="sm" 
-                        variant="ghost"
-                        theme="gray"
-                        className="h-full rounded-none"
-                            title={_("Sync")}
-                    >
-                        <div className="flex items-center">
-                            <CheckCircle2 className="size-4" />
-                                <span className="ml-2">{_("Sync")}</span>
-                        </div>
-                    </Button>
-                </motion.div>
-            )}
+            ) : null /* synced state is silent — autosave needs no chip */}
         </div>
     )
 }

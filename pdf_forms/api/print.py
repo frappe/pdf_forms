@@ -1,10 +1,13 @@
 import io
 import json
+import re
 from typing import Any
 
 import fitz
 import frappe
+from frappe import _
 
+from pdf_forms.utils.files import template_file_path
 from pdf_forms.utils.jinja import format_currency, format_date, format_number, format_phone
 
 # Mapping of font names to standard font names
@@ -43,6 +46,10 @@ def print_form_template(
 	    str: A success message indicating that the template has been written successfully.
 	"""
 
+	# Whitelisted means every logged-in user; the template itself is System
+	# Manager only, so ask before rendering it.
+	frappe.get_doc("Form Template", template_id).check_permission("read")
+
 	pdf_bytes = build_form_template_pdf(template_id=template_id, data=data, print_name=print_name)
 	template_name = frappe.db.get_value("Form Template", template_id, "template_name") or template_id
 	frappe.response["filename"] = print_name or f"{template_name}.pdf"
@@ -67,11 +74,8 @@ def build_form_template_pdf(
 	except (TypeError, ValueError):
 		font_size = 12
 
-	# get the file path
-	file = frappe.get_site_path(form_template[1:])
-
-	# open the pdf file
-	doc = fitz.open(file)
+	# the uploaded PDF, confined to the site's files directories
+	doc = fitz.open(template_file_path(form_template))
 
 	# Check the repeated images in the form template
 	repeated_images = fetch_repeated_document_template_images(template_id)
@@ -86,43 +90,43 @@ def build_form_template_pdf(
 	for i in range(len(doc)):
 		page = doc[i]
 
+		# Snapshot a page that will be copied BEFORE it is filled: copies made
+		# from the filled page inherited its values -- widgets and drawn text --
+		# and printed them on top of their own.
+		pristine, original_widgets = None, []
+		if i in page_index_include_in_images:
+			original_widgets = [(w.field_name, w.xref) for w in page.widgets()]
+			# Kept as bytes and reopened per copy: insert_pdf brings a page's
+			# widgets across only the first time from a given source document,
+			# so a second copy taken from the same open snapshot had no fields.
+			snapshot = fitz.open()
+			snapshot.insert_pdf(doc, from_page=i, to_page=i)
+			pristine = snapshot.tobytes()
+			snapshot.close()
+
 		annotate_form_template(page, i, template_id, data, font, font_size)
 
-		if i in page_index_include_in_images:
+		if pristine is not None:
 			image = next(image for image in repeated_images if image["page_index"] == i)
 			repeat_after = int(image["repeat_after"])
-			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - image["copies"] comes from database field, trusted source
-			copies = int(frappe.render_template(image["copies"], data))
+			copies = resolve_copies(image["copies"], data, template_id, i)
 
 			base_index = int(image["base_index"])
 
 			# Loop over the number of copies and apply the template logic
 			for copy_num in range(copies):
-				# Create a temporary PDF document with the page to be copied
-				temp_doc = fitz.open()
-				temp_doc.insert_pdf(doc, from_page=i, to_page=i)
+				# Each copy starts from the pristine page, which already carries
+				# every widget, empty. Rows are stored against the original
+				# page's xrefs, so map those to the copy's by field name.
+				temp_doc = fitz.open(stream=pristine, filetype="pdf")
 				temp_page = temp_doc[0]
 
-				xref_map = {}
-
-				for widget in page.widgets():
-					if widget.field_type == fitz.PDF_WIDGET_TYPE_TEXT:
-						widget.field_value = None
-					if widget.field_type == fitz.PDF_WIDGET_TYPE_CHECKBOX:
-						if widget.field_value == "Yes":
-							widget.field_value = widget.on_state()
-						else:
-							widget.field_value = False
-
-					elif widget.field_type == fitz.PDF_WIDGET_TYPE_RADIOBUTTON:
-						if widget.field_value != "Off":
-							widget.field_value = widget.on_state()
-						else:
-							widget.field_value = False
-
-					new_widget = temp_page.add_widget(widget)
-
-					xref_map[str(widget.xref)] = str(new_widget.xref)
+				copy_xref_by_name = {w.field_name: w.xref for w in temp_page.widgets()}
+				xref_map = {
+					str(xref): str(copy_xref_by_name[name])
+					for name, xref in original_widgets
+					if name in copy_xref_by_name
+				}
 
 				# Apply the data print logic to the copied page
 				annotate_form_template(
@@ -164,6 +168,181 @@ def build_form_template_pdf(
 	return pdf_byte_array.getvalue()
 
 
+@frappe.whitelist()
+def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str, Any]:
+	"""Resolve how each field of a template would PRINT for the given data.
+
+	Powers the live preview drawn over the PDF in the annotator. It mirrors the
+	printer field for field — same resolver, same default fallback, same
+	checkbox truthiness, same font resolution — so the preview cannot promise
+	something the generated PDF won't deliver.
+
+	Returns a map of Form Template Field row name -> one of:
+	    {"kind": "text",  "text": str, "font": str, "font_size_px": float}
+	    {"kind": "check", "checked": bool}
+
+	`font_size_px` is the effective size expressed in *page image pixels*, so
+	the client can scale it with the viewer without knowing about PDF points.
+	Fields that would print nothing are omitted, keeping "empty" and "unmapped"
+	distinguishable.
+	"""
+	if isinstance(data, str):
+		data = json.loads(data or "{}")
+
+	template = frappe.get_doc("Form Template", template_id)
+	template.check_permission("read")
+
+	template_font = template.font or "helvetica"
+	try:
+		template_font_size = float(template.font_size) if template.font_size is not None else 12
+	except (TypeError, ValueError):
+		template_font_size = 12
+
+	# Widget coordinates are stored in page-image pixels while font sizes are in
+	# PDF points; this is the conversion between them, per page.
+	image_width_by_page = {img.page_index: img.width for img in template.form_template_image}
+	page_scale: dict[int, float] = {}
+	try:
+		doc = fitz.open(template_file_path(template.file))
+		for page_index in range(doc.page_count):
+			page_width = doc[page_index].mediabox_size[0]
+			image_width = image_width_by_page.get(page_index)
+			page_scale[page_index] = image_width / page_width if image_width and page_width else 1.0
+		doc.close()
+	except Exception:
+		frappe.log_error(title="Form Template preview scale failed", message=frappe.get_traceback())
+
+	values: dict[str, Any] = {}
+	# Opened once so the "is this font embedded?" check is per distinct name.
+	template_pdf = fitz.open(template_file_path(template.file))
+	embedded_cache: dict[str, bool] = {}
+	# Comb fields print one character per cell; the overlay must lay the
+	# value out the same way or an account number reads as a smudge.
+	comb_cells = {
+		str(widget.xref): int(widget.text_maxlen)
+		for page in template_pdf
+		for widget in page.widgets()
+		if is_comb(widget)
+	}
+
+	for annotation in template.form_template_field:
+		try:
+			value = get_field_value(annotation, data, 0)
+			if isinstance(value, str):
+				value = value.strip()
+
+			# Same fallback the printer applies: an empty value defers to the
+			# field's default, which may itself be a Jinja template.
+			if value is None or value == "" or value == "None":
+				if annotation.is_default_jinja and annotation.default_value:
+					# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - default_value is a trusted database field
+					value = frappe.render_template(annotation.default_value, data)
+				else:
+					value = annotation.default_value
+		except Exception:
+			# One bad expression must not blank the whole preview.
+			frappe.log_error(
+				title="Form Template preview value failed",
+				message=f"{template_id} / {annotation.field_label}: {frappe.get_traceback()}",
+			)
+			continue
+
+		if value is None:
+			continue
+
+		field_type = (annotation.field_type or "Text").replace(" ", "").lower()
+
+		if field_type in ("checkbox", "radiobutton"):
+			# The printer ticks the widget only for these; anything else stays
+			# blank, so "0" must read as unchecked rather than as the text "0".
+			checked = value is True or value in ("True", "1", 1)
+			values[annotation.name] = {"kind": "check", "checked": bool(checked)}
+			continue
+
+		text = str(value).strip()
+		if not text or text == "None":
+			continue
+
+		try:
+			annotation_font_size = float(annotation.font_size) if annotation.font_size is not None else 0
+		except (TypeError, ValueError):
+			annotation_font_size = 0
+
+		# Same precedence as the printer: override, then what the PDF declared,
+		# then the template default -- so the overlay cannot promise a size or
+		# family the generated PDF will not deliver.
+		try:
+			declared_size = float(annotation.get("pdf_font_size") or 0)
+		except (TypeError, ValueError):
+			declared_size = 0
+		if annotation.override_style and annotation_font_size > 0:
+			effective_font_size = annotation_font_size
+		elif declared_size > 0:
+			effective_font_size = declared_size
+		else:
+			effective_font_size = template_font_size
+		declared_font = (annotation.get("pdf_font") or "").strip()
+		if annotation.override_style and annotation.font and annotation.font != "None":
+			effective_font = annotation.font
+		elif declared_font:
+			effective_font = PREVIEW_FAMILY[guess_base14(declared_font)[:2]]
+		else:
+			effective_font = template_font
+		scale = page_scale.get(int(annotation.page_index or 0), 1.0)
+
+		alias = guess_base14(
+			effective_font if annotation.override_style else (declared_font or effective_font)
+		)
+		if declared_font and not annotation.override_style and declared_font not in embedded_cache:
+			embedded_cache[declared_font] = bool(
+				embedded_font_buffer(template_pdf, template_pdf[0], declared_font)
+			)
+		values[annotation.name] = {
+			"kind": "text",
+			"text": text,
+			"font": effective_font,
+			"font_size_px": round(effective_font_size * scale, 2),
+			# The declared /DA font, so the preview can draw with the real thing
+			# when the PDF embeds it; bold/italic hints for base-14 variants.
+			"font_name": declared_font if not annotation.override_style else "",
+			"embedded": bool(embedded_cache.get(declared_font)) if declared_font else False,
+			"bold": alias in ("hebo", "hebi", "tibo", "tibi", "cobo", "cobi"),
+			"italic": alias in ("heit", "hebi", "tiit", "tibi", "coit", "cobi"),
+		}
+		cells = comb_cells.get(str(annotation.xref or ""))
+		if cells:
+			values[annotation.name]["comb"] = cells
+			if declared_size <= 0 and not annotation.override_style:
+				# The printer auto-sizes a comb to its cell; tell the overlay.
+				values[annotation.name]["font_size_px"] = 0
+
+	return values
+
+
+# More copies of one page than any form plausibly needs; a typo in the
+# expression should not print a book.
+MAX_PAGE_COPIES = 200
+
+
+def resolve_copies(expression, data, template_id, page_index) -> int:
+	"""How many extra copies of a repeat page to print: the page's Jinja
+	expression evaluated against the data. Blank means none; a broken
+	expression is logged and means none rather than failing the whole print."""
+	if not (expression or "").strip():
+		return 0
+	try:
+		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - the expression is authored on the template, a trusted database field
+		rendered = frappe.render_template(expression, data)
+		copies = int(float(str(rendered).strip() or 0))
+	except Exception:
+		frappe.log_error(
+			title="Form Template: page copies expression failed",
+			message=f"{template_id} page {page_index}: {expression!r}\n{frappe.get_traceback()}",
+		)
+		return 0
+	return max(0, min(copies, MAX_PAGE_COPIES))
+
+
 def fetch_repeated_document_template_images(template_id):
 	form_template = frappe.get_cached_doc("Form Template", template_id)
 	rows = [row for row in form_template.form_template_image if row.repeat_page]
@@ -181,6 +360,419 @@ def fetch_repeated_document_template_images(template_id):
 		],
 		key=lambda row: row["page_index"],
 	)
+
+
+# PyMuPDF's widget appearance can only carry the five REGULAR base-14 fonts;
+# it silently rewrites anything else -- bold, italic, or an embedded font -- to
+# Helvetica. Those get drawn straight onto the page with the real font instead.
+WIDGET_FONTS = {
+	"helv": "Helv",
+	"helvetica": "Helv",
+	"tiro": "TiRo",
+	"times-roman": "TiRo",
+	"times": "TiRo",
+	"cour": "Cour",
+	"courier": "Cour",
+	"symb": "Symb",
+	"symbol": "Symb",
+	"zadb": "ZaDb",
+	"zapfdingbats": "ZaDb",
+}
+DRAW_FONTS = {
+	"hebo": "hebo",
+	"helvetica-bold": "hebo",
+	"heit": "heit",
+	"helvetica-oblique": "heit",
+	"hebi": "hebi",
+	"helvetica-boldoblique": "hebi",
+	"tibo": "tibo",
+	"times-bold": "tibo",
+	"tiit": "tiit",
+	"times-italic": "tiit",
+	"tibi": "tibi",
+	"times-bolditalic": "tibi",
+	"cobo": "cobo",
+	"courier-bold": "cobo",
+	"coit": "coit",
+	"courier-oblique": "coit",
+	"cobi": "cobi",
+	"courier-boldoblique": "cobi",
+}
+MULTILINE_FLAG = 1 << 12
+COMB_FLAG = 1 << 24
+
+
+def is_comb(widget) -> bool:
+	"""A comb text field: MaxLen cells, one character per cell (account
+	numbers, IFSC, dates on bank forms). PyMuPDF's appearance ignores the
+	flag and writes the value as a plain string, so these are always drawn."""
+	return bool(widget.field_flags & COMB_FLAG) and int(widget.text_maxlen or 0) > 0
+
+
+def _pdf_string(text: str) -> str:
+	return "(" + text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)") + ")"
+
+
+def fill_comb_widget(doc, widget, text: str, alias: str, size: float) -> bool:
+	"""Set a comb field's value and write its appearance one character per
+	cell, the way Acrobat renders comb fields. The widget is kept, so the
+	downloaded PDF stays a fillable form: click the row and the digits are
+	editable, one per box.
+
+	Only for base-14 faces (that is what the field's /DA names); a bold,
+	embedded or non-Latin comb falls back to drawing over the page."""
+	cells = int(widget.text_maxlen)
+	text = text[:cells]
+	metrics = fitz.Font(WIDGET_FONT_FILES.get(alias, "helv"))
+	box = fitz.Rect(widget.rect)
+	cell_w = box.width / cells
+	if not widget.text_fontsize:
+		size = min(box.height * 0.72, cell_w * 1.1)  # Acrobat's auto-size for combs
+	widest = max(metrics.text_length(ch, fontsize=size) for ch in text) or size
+	if widest > cell_w * 0.85:
+		size = size * (cell_w * 0.85) / widest
+
+	widget.text_font = alias
+	widget.field_value = text
+	widget.update()
+
+	kind, ref = doc.xref_get_key(widget.xref, "AP/N")
+	if kind != "xref":
+		return False
+	ap_xref = int(ref.split()[0])
+	font_res = re.search(r"/(\w+)\s+\d+\s+0\s+R", doc.xref_get_key(ap_xref, "Resources/Font")[1] or "")
+	if not font_res:
+		return False
+	bbox = doc.xref_get_key(ap_xref, "BBox")[1]
+	try:
+		_, _, ap_w, ap_h = (float(v) for v in bbox.strip("[]").split())
+	except ValueError:
+		ap_w, ap_h = box.width, box.height
+	cell_w = ap_w / cells
+	glyph_h = (metrics.ascender - metrics.descender) * size
+	baseline = (ap_h - glyph_h) / 2 - metrics.descender * size
+
+	color = widget.text_color or [0]
+	if len(color) == 3:
+		paint = "{:.3f} {:.3f} {:.3f} rg".format(*color)
+	elif len(color) == 4:
+		paint = "{:.3f} {:.3f} {:.3f} {:.3f} k".format(*color)
+	else:
+		paint = f"{color[0]:.3f} g"
+	ops = ["/Tx BMC", "q"]
+	# A form that pre-prints a hint in the cells ("D D M M Y Y Y Y") declares a
+	# background colour on the field; paint each cell with it, inset so the
+	# cell borders stay, so the hint does not show through the value.
+	ops += comb_cell_backgrounds(widget, cells, cell_w, ap_h)
+	ops += ["BT", paint, f"/{font_res.group(1)} {size:.2f} Tf"]
+	x_prev = y_prev = 0.0
+	for i, ch in enumerate(text):
+		if ch.isspace():
+			continue
+		x = i * cell_w + (cell_w - metrics.text_length(ch, fontsize=size)) / 2
+		ops.append(f"{x - x_prev:.2f} {baseline - y_prev:.2f} Td {_pdf_string(ch)} Tj")
+		x_prev, y_prev = x, baseline
+	ops += ["ET", "Q", "EMC"]
+	doc.update_stream(ap_xref, "\n".join(ops).encode("latin-1"))
+	return True
+
+
+COMB_CELL_INSET = 1.2
+
+
+def comb_cell_backgrounds(widget, cells: int, cell_w: float, height: float) -> list[str]:
+	"""Appearance-stream operators that fill every cell of a comb field with
+	the field's own background colour (/MK /BG); nothing when it has none."""
+	color = widget.fill_color
+	if not color:
+		return []
+	if len(color) == 3:
+		paint = "{:.3f} {:.3f} {:.3f} rg".format(*color)
+	elif len(color) == 4:
+		paint = "{:.3f} {:.3f} {:.3f} {:.3f} k".format(*color)
+	else:
+		paint = "{:.3f} g".format(color[0])
+	inset = COMB_CELL_INSET
+	rects = [
+		f"{i * cell_w + inset:.2f} {inset:.2f} {cell_w - 2 * inset:.2f} {height - 2 * inset:.2f} re"
+		for i in range(cells)
+	]
+	return ["q", paint, *rects, "f", "Q"]
+
+
+def draw_comb_text(page, widget, text: str, font, size: float, keep_widget: bool = False) -> bool:
+	"""Centre one character in each cell of a comb field, drawn on the page
+	(the widget is removed: for faces the field's /DA cannot name)."""
+	fontname, fontbuffer = font
+	if not text:
+		return False
+	if fontbuffer:
+		page.insert_font(fontname=fontname, fontbuffer=fontbuffer)
+		metrics = fitz.Font(fontbuffer=fontbuffer)
+	else:
+		metrics = fitz.Font(fontname)
+	cells = int(widget.text_maxlen)
+	box = fitz.Rect(widget.rect)
+	cell_w = box.width / cells
+	if not widget.text_fontsize:
+		# Auto-size, as Acrobat does for comb fields: fit the cell.
+		size = min(box.height * 0.72, cell_w * 1.1)
+	# Fit: a cell must hold its widest character with a little air.
+	widest = max(metrics.text_length(ch, fontsize=size) for ch in text[:cells]) or size
+	if widest > cell_w * 0.85:
+		size = size * (cell_w * 0.85) / widest
+	glyph_h = (metrics.ascender - metrics.descender) * size
+	baseline = box.y0 + (box.height - glyph_h) / 2 + metrics.ascender * size
+	color = widget.text_color if widget.text_color else (0, 0, 0)
+	if widget.fill_color and len(widget.fill_color) == 3:
+		for i in range(cells):
+			cell = fitz.Rect(
+				box.x0 + i * cell_w + COMB_CELL_INSET, box.y0 + COMB_CELL_INSET,
+				box.x0 + (i + 1) * cell_w - COMB_CELL_INSET, box.y1 - COMB_CELL_INSET,
+			)
+			page.draw_rect(cell, color=None, fill=tuple(widget.fill_color), width=0)
+	for i, ch in enumerate(text[:cells]):
+		if ch.isspace():
+			continue
+		w = metrics.text_length(ch, fontsize=size)
+		x = box.x0 + i * cell_w + (cell_w - w) / 2
+		page.insert_text((x, baseline), ch, fontname=fontname, fontsize=size, color=color)
+	if not keep_widget:
+		page.delete_widget(widget)
+	return True
+
+
+# Family buckets the annotator's font stacks understand.
+PREVIEW_FAMILY = {
+	"he": "helvetica",
+	"ti": "times-roman",
+	"co": "courier",
+	"sy": "symbol",
+	"za": "zapfdingbats",
+}
+
+
+def guess_base14(name: str) -> str:
+	"""Nearest base-14 alias for a font we cannot use directly (e.g. ArialMT,
+	HelveticaLTStd-Bold, Georgia-Italic): family from the name, then style."""
+	n = (name or "").lower()
+	# Base-14 aliases (TiRo, HeBo, Cour...) name their family directly.
+	if n in WIDGET_FONTS:
+		return {"Helv": "helv", "TiRo": "tiro", "Cour": "cour", "Symb": "symb", "ZaDb": "zadb"}[
+			WIDGET_FONTS[n]
+		]
+	if n in DRAW_FONTS:
+		return DRAW_FONTS[n]
+	bold = "bold" in n or "black" in n or "heavy" in n or n.endswith(",b") or n.endswith("-b")
+	italic = "italic" in n or "oblique" in n or n.endswith(",i") or n.endswith("-i")
+	if any(k in n for k in ("courier", "mono", "consol")):
+		fam = "co"
+	elif any(k in n for k in ("times", "serif", "georgia", "garamond", "book", "roman", "cambria")):
+		fam = "ti"
+	elif "symbol" in n:
+		return "symb"
+	elif "zapf" in n or "dingbat" in n:
+		return "zadb"
+	else:
+		fam = "he"
+	if fam == "ti":
+		return {(False, False): "tiro", (True, False): "tibo", (False, True): "tiit", (True, True): "tibi"}[
+			(bold, italic)
+		]
+	if fam == "co":
+		return {(False, False): "cour", (True, False): "cobo", (False, True): "coit", (True, True): "cobi"}[
+			(bold, italic)
+		]
+	return {(False, False): "helv", (True, False): "hebo", (False, True): "heit", (True, True): "hebi"}[
+		(bold, italic)
+	]
+
+
+def regular_widget_font(alias: str) -> str:
+	"""The regular base-14 widget font of the same family as a draw alias."""
+	family = (alias or "he")[:2]
+	return {"he": "Helv", "ti": "TiRo", "co": "Cour", "sy": "Symb", "za": "ZaDb"}.get(family, "Helv")
+
+
+def embedded_font_buffer(doc, page, da_name: str):
+	"""The font program the form embeds under this /DA name, if any."""
+	if not da_name:
+		return None
+	try:
+		ref = doc.xref_get_key(doc.pdf_catalog(), f"AcroForm/DR/Font/{da_name}")
+		xref = int(ref[1].split()[0]) if ref[0] == "xref" else None
+		if xref is None:
+			xref = next((f[0] for f in page.get_fonts() if f[4] == da_name), None)
+		if xref is None:
+			return None
+		_name, _ext, _type, buf = doc.extract_font(xref)
+		return buf or None
+	except Exception:
+		return None
+
+
+def resolve_text_style(doc, page, annotation, template_font, template_font_size):
+	"""How this field's text should be set: override, else what the PDF
+	declared, else the template default.
+
+	Returns (mode, font, size): mode "widget" with a base-14 alias the widget
+	can carry, or mode "draw" with a fontname/fontbuffer pair for insert_textbox.
+	"""
+	try:
+		override_size = float(annotation.font_size) if annotation.font_size is not None else 0
+	except (TypeError, ValueError):
+		override_size = 0
+	try:
+		declared_size = float(annotation.get("pdf_font_size") or 0)
+	except (TypeError, ValueError):
+		declared_size = 0
+	try:
+		tpl_size = float(template_font_size) if template_font_size is not None else 12
+	except (TypeError, ValueError):
+		tpl_size = 12
+
+	if annotation.override_style and override_size > 0:
+		size = override_size
+	elif declared_size > 0:
+		size = declared_size
+	else:
+		size = tpl_size
+	if not size or size <= 0:
+		size = 12
+
+	declared_font = (annotation.get("pdf_font") or "").strip()
+	if annotation.override_style and annotation.font and annotation.font != "None":
+		name = annotation.font
+	elif declared_font:
+		name = declared_font
+	else:
+		name = template_font or "helvetica"
+
+	key = name.lower()
+	if key in WIDGET_FONTS:
+		return "widget", WIDGET_FONTS[key], size
+	if key in DRAW_FONTS:
+		return "draw", (DRAW_FONTS[key], None), size
+
+	buf = embedded_font_buffer(doc, page, name) if name == declared_font else None
+	if buf:
+		return "draw", (f"pdfforms_{re.sub(r'[^A-Za-z0-9]', '', name)}", buf), size
+
+	alias = guess_base14(name)
+	if alias in WIDGET_FONTS:
+		return "widget", WIDGET_FONTS[alias], size
+	return "draw", (alias, None), size
+
+
+# Base-14 widget fonts cover WinAnsi only. A value with a glyph outside that --
+# the rupee sign in every INR amount -- makes PyMuPDF build the appearance with
+# a fallback font whose baseline lands outside the clip box, so the amount
+# prints cut in half. Such values are drawn with Noto Sans (bundled with
+# pymupdf-fonts), which has the glyphs.
+WIDGET_FONT_FILES = {"Helv": "helv", "TiRo": "tiro", "Cour": "cour", "Symb": "symb", "ZaDb": "zadb"}
+UNICODE_DRAW_FONT = "notos"
+
+
+def widget_font_can_render(alias: str, text: str) -> bool:
+	try:
+		font = fitz.Font(WIDGET_FONT_FILES.get(alias, "helv"))
+	except Exception:
+		return True
+	return all(font.has_glyph(ord(ch)) for ch in text if not ch.isspace())
+
+
+def draw_field_text(page, widget, text: str, font, size: float, keep_widget: bool = False) -> bool:
+	"""Write the value into the field's box with the real font, then remove the
+	widget: the drawn text is the field now. Returns False (and leaves the
+	widget alone) if nothing could be drawn, so a field is never lost silently.
+	"""
+	fontname, fontbuffer = font
+	if not text:
+		return False
+	if fontbuffer:
+		page.insert_font(fontname=fontname, fontbuffer=fontbuffer)
+		metrics = fitz.Font(fontbuffer=fontbuffer)
+	else:
+		metrics = fitz.Font(fontname)
+
+	box = fitz.Rect(widget.rect)
+	inset = fitz.Rect(box.x0 + 2, box.y0 + 1, box.x1 - 2, box.y1 - 1)
+	color = widget.text_color if widget.text_color else (0, 0, 0)
+	align = {0: fitz.TEXT_ALIGN_LEFT, 1: fitz.TEXT_ALIGN_CENTER, 2: fitz.TEXT_ALIGN_RIGHT}.get(
+		widget.text_format or 0, fitz.TEXT_ALIGN_LEFT
+	)
+
+	if widget.field_flags & MULTILINE_FLAG:
+		# Fixed-size text that does not fit is stepped down rather than dropped:
+		# insert_textbox refuses outright when the block is too tall.
+		fs = size
+		while fs >= 4:
+			if (
+				page.insert_textbox(inset, text, fontname=fontname, fontsize=fs, color=color, align=align)
+				>= 0
+			):
+				if not keep_widget:
+					page.delete_widget(widget)
+				return True
+			fs -= 0.5
+		return False
+
+	if not widget.text_fontsize and size >= box.height:
+		size = box.height * 0.72  # auto-size: fit the box
+	# Single line: centre by the font's own ascent/descent, like a viewer does.
+	# insert_text places a baseline and never refuses, so tall faces (Lora's
+	# ascent is 1.006) cannot make the value disappear.
+	glyph_h = (metrics.ascender - metrics.descender) * size
+	baseline = box.y0 + (box.height - glyph_h) / 2 + metrics.ascender * size
+	width = metrics.text_length(text, fontsize=size)
+	x = inset.x0
+	if align == fitz.TEXT_ALIGN_CENTER:
+		x = inset.x0 + max(0, (inset.width - width) / 2)
+	elif align == fitz.TEXT_ALIGN_RIGHT:
+		x = max(inset.x0, inset.x1 - width)
+	page.insert_text((x, baseline), text, fontname=fontname, fontsize=size, color=color)
+	if not keep_widget:
+		page.delete_widget(widget)
+	return True
+
+
+def draw_into_widget(doc, page, widget, text: str, font, size: float, drawer) -> bool:
+	"""Run a drawer (draw_field_text / draw_comb_text) and move what it drew
+	into the widget's own appearance stream instead of the page, so a value in
+	a font the field's /DA cannot name (bold, embedded, a rupee sign in Noto)
+	still leaves the field in place, with its value, editable.
+
+	The drawer paints on the page as usual; the streams it appended to the
+	page's /Contents are lifted out again and become the appearance, shifted
+	from page space into the widget's box. The fonts it registered stay in the
+	page's resources and are shared with the appearance."""
+	if not text:
+		return False
+	before = page.get_contents()
+	if not drawer(page, widget, text, font, size, keep_widget=True):
+		return False
+	after = page.get_contents()
+	added = [x for x in after if x not in before]
+	if not added:
+		return False
+	drawn = b"\n".join(doc.xref_stream(x) for x in added)
+	# put the page back the way it was; the drawing now lives in the widget
+	doc.xref_set_key(page.xref, "Contents", "[" + " ".join(f"{x} 0 R" for x in before) + "]")
+
+	widget.field_value = text
+	widget.update()
+	kind, ref = doc.xref_get_key(widget.xref, "AP/N")
+	if kind != "xref":
+		return False
+	ap_xref = int(ref.split()[0])
+	box = fitz.Rect(widget.rect)
+	# page space -> appearance space: the box's bottom-left becomes the origin
+	shift = f"1 0 0 1 {-box.x0:.3f} {-(page.rect.height - box.y1):.3f} cm".encode()
+	doc.update_stream(ap_xref, b"/Tx BMC\nq\n" + shift + b"\n" + drawn + b"\nQ\nEMC")
+	fkind, fval = doc.xref_get_key(page.xref, "Resources/Font")
+	if fkind in ("dict", "xref"):
+		doc.xref_set_key(ap_xref, "Resources/Font", fval)
+	return True
 
 
 def annotate_form_template(page, i, template_id, data, font, font_size, base_index=0, xref_map=None):
@@ -209,7 +801,9 @@ def annotate_form_template(page, i, template_id, data, font, font_size, base_ind
 def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_index=0, xref_map=None):
 	if xref_map is None:
 		xref_map = {}
-	fields = page.widgets()
+	# A list, not the generator: the draw path deletes widgets as it goes.
+	fields = list(page.widgets())
+	doc = page.parent
 
 	for field in fields:
 		# get the annotation for the field from the auto_annotations list which matches the field_name and xref
@@ -233,17 +827,33 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 			if value is not None:
 				# update the field value according to the field type
 				if annotation.field_type == "Text":
-					# set the field value, font, font size
-					# if annotation have font or font size set it else set the font and font size from the form template
-					# ensure numeric types for PyMuPDF (it uses format code 'g' internally)
-					anno_fs = float(annotation.font_size) if annotation.font_size is not None else 0
-					tpl_fs = float(font_size) if font_size is not None else 12
-					field.text_fontsize = anno_fs if annotation.override_style and anno_fs > 0 else tpl_fs
-					text_font = annotation.font if annotation.font and annotation.font != "None" else font
-					font_name = fitz.Font(text_font).name
-					field.text_font = get_fontname(font_name)
-					field.field_value = str(value) if value is not None and value != "None" else ""
-					field.update()
+					text = str(value) if value is not None and value != "None" else ""
+					mode, text_font, size = resolve_text_style(doc, page, annotation, font, font_size)
+					if mode == "widget" and text and not widget_font_can_render(text_font, text):
+						mode, text_font = "draw", (UNICODE_DRAW_FONT, None)
+					if is_comb(field) and text:
+						if mode == "widget" and fill_comb_widget(doc, field, text, text_font, size):
+							continue
+						if mode == "widget":
+							text_font = (WIDGET_FONT_FILES.get(text_font, "helv"), None)
+						if draw_into_widget(doc, page, field, text, text_font, size, draw_comb_text):
+							continue
+						if draw_comb_text(page, field, text, text_font, size):
+							continue
+					if mode == "widget":
+						field.text_fontsize = size
+						field.text_font = text_font
+						field.field_value = text
+						field.update()
+					elif draw_into_widget(doc, page, field, text, text_font, size, draw_field_text):
+						continue
+					elif not draw_field_text(page, field, text, text_font, size):
+						# Could not draw (empty value, or a multiline box too small
+						# even at 4pt): keep the field as a widget in its regular face.
+						field.text_fontsize = size
+						field.text_font = regular_widget_font(text_font[0])
+						field.field_value = text
+						field.update()
 				elif annotation.field_type == "CheckBox":
 					if value is True or value == "True" or value == "1" or value == 1:
 						field.field_value = field.on_state()
@@ -286,8 +896,6 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			width = image_width_by_id.get(annotation.form_template_image)
 			ratio = width / page_width if width and width > 0 else 1
 
-			fields = page.widgets()
-
 			x1_point = float(annotation.x_point) / ratio
 			y1_point = float(annotation.y_point) / ratio
 			width = float(annotation.width) / ratio
@@ -299,34 +907,34 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			widget.rect = rect
 			widget.field_name = annotation.field_label
 			widget.field_label = annotation.field_label
-			# ensure numeric types for PyMuPDF (it uses format code 'g' internally)
-			anno_fs = float(annotation.font_size) if annotation.font_size is not None else 0
-			tpl_fs = float(font_size) if font_size is not None else 12
-			widget.text_fontsize = anno_fs if annotation.override_style and anno_fs > 0 else tpl_fs
-			text_font = annotation.font if annotation.font and annotation.font != "None" else font
-			font_name = fitz.Font(text_font).name
-			widget.text_font = get_fontname(font_name)
-			widget.field_type = get_field_type(annotation.field_type)
-			page.draw_rect(rect, color=(0, 0, 0), width=0.5)
+			mode, text_font, size = resolve_text_style(page.parent, page, annotation, font, font_size)
+			widget.text_fontsize = size
+			# A manual box is a fresh widget with nothing declared, so it stays a
+			# widget; a variant the widget cannot carry uses its regular face.
+			widget.text_font = text_font if mode == "widget" else regular_widget_font(text_font[0])
+			# A box drawn in the annotator arrives with no field_type; it is text.
+			manual_type = annotation.field_type or "Text"
+			widget.field_type = get_field_type(manual_type)
+			# No frame: a manual box says where the value goes, not what to draw.
+			# If the form wants a box there, the form already has one.
 
-			# create random and unique xref for the widget
-			widget.xref = max([field.xref for field in fields]) + 1
-
+			# PyMuPDF assigns the xref on add_widget; computing one from the
+			# page's existing widgets crashed on a page that had none.
 			page.add_widget(widget)
 
 			form_fields = page.widgets()
 			# find the widget and update the field value
 			for field in form_fields:
 				if field.field_name == annotation.field_label:
-					if annotation.field_type == "Text":
+					if manual_type == "Text":
 						field.field_value = str(value) if value is not None and value != "None" else ""
 						field.update()
 
-					elif annotation.field_type == "Checkbox":
+					elif manual_type == "Checkbox":
 						if value is True or value == "True" or value == "1" or value == 1:
 							field.field_value = field.on_state()
 							field.update()
-					elif annotation.field_type == "Radio Button":
+					elif manual_type == "Radio Button":
 						if value is True or value == "True" or value == "1" or value == 1:
 							field.field_value = field.on_state()
 							field.update()
@@ -449,3 +1057,23 @@ def get_fontname(font):
 		if value.lower() == font.lower():
 			return key
 	return "Helv"
+
+
+@frappe.whitelist()
+def get_template_font(template_id: str, font_name: str):
+	"""The font program a template's PDF embeds under a /DA name, for the
+	annotator preview to register as a web font. Only fonts the PDF's own
+	AcroForm declares are reachable, and only when a program is embedded.
+	"""
+	template = frappe.get_doc("Form Template", template_id)
+	template.check_permission("read")
+	doc = fitz.open(template_file_path(template.file))
+	buffer = embedded_font_buffer(doc, doc[0], font_name)
+	if not buffer:
+		frappe.throw(
+			_("The PDF does not embed a font named {0}.").format(font_name), frappe.DoesNotExistError
+		)
+
+	frappe.local.response.filename = f"{re.sub(r'[^A-Za-z0-9_-]', '', font_name) or 'font'}.bin"
+	frappe.local.response.filecontent = buffer
+	frappe.local.response.type = "binary"

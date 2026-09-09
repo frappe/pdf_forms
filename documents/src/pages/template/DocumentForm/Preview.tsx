@@ -1,22 +1,23 @@
 import { useFrappeGetCall } from "frappe-react-sdk"
-import { useCallback, useMemo, useState } from "react"
-import LinkFieldCombobox from "@/components/common/LinkField/LinkFieldCombobox"
-import { Editor } from "@/components/common/Editor/Editor"
-import { Button } from "@/components/ui/button"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import LinkFieldCombobox from "@components/common/LinkField/LinkFieldCombobox"
+import { Editor } from "@components/common/Editor/Editor"
+import { Button } from "@components/ui/button"
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@components/ui/accordion"
+import { Label } from "@components/ui/label"
+import { Input } from "@components/ui/input"
+import { Checkbox } from "@components/ui/checkbox"
 import { FileJson, Printer } from "lucide-react"
-import { web_url } from "@/config/socket"
-import ErrorBanner from "@/components/ui/error-banner"
-import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
-import _ from "@/lib/translate"
+import { web_url } from "@config/socket"
+import ErrorBanner from "@components/ui/error-banner"
+import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts"
+import { usePreviewData } from "../PreviewDataContext"
+import _ from "@lib/translate"
 
 export interface PreviewProps {
     templateID: string
@@ -48,6 +49,10 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
 
     const documentData = useMemo(() => docData?.message ?? null, [docData])
 
+    // Publish the resolved document so the annotator can draw the real values
+    // onto the PDF while you work.
+    const { setPreviewDocument } = usePreviewData()
+
     const setPromptValue = useCallback((fieldName: string, value: string | boolean) => {
         setPromptValues((prev) => ({ ...prev, [fieldName]: value }))
     }, [])
@@ -61,15 +66,21 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
         return merged
     }, [documentData, promptValues])
 
+    useEffect(() => {
+        setPreviewDocument(selectedDocument, printData)
+    }, [selectedDocument, printData, setPreviewDocument])
+
     const getPrintUrl = () => {
         if (!printData) return "#"
         return `${web_url}/api/method/pdf_forms.api.print.print_form_template?template_id=${encodeURIComponent(templateID)}&data=${encodeURIComponent(JSON.stringify(printData))}&print_name=${encodeURIComponent(String(selectedDocument ?? "Print"))}.pdf`
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        // min-h-full: stretch to the tab pane so the editor can take what is
+        // left; if a tall prompt list makes it overflow, the PANE scrolls.
+        <div className="flex min-h-full flex-col gap-4">
             {/* Document selection */}
-            <section className="px-2">
+            <section className="shrink-0">
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
                     <div className="flex flex-1 flex-col gap-2 min-w-0 sm:min-w-[240px] sm:max-w-xs">
                         <Label>
@@ -87,7 +98,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                         <Button
                             title={_("Download PDF")}
                             asChild
-                            variant="solid"
+                            variant="outline"
                             size="md"
                             className="shrink-0"
                         >
@@ -105,7 +116,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                     ) : (
                         <Button
                             type="button"
-                            variant="solid"
+                            variant="outline"
                             size="md"
                             disabled
                             className="shrink-0"
@@ -126,9 +137,9 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
 
             {/* Prompt fields used in mapping */}
             {prompts.length > 0 && (
-                <section className="px-2">
-                    <h3 className="text-base font-semibold text-ink-gray-8 mb-2">Prompt fields</h3>
-                    <p className="text-xs text-ink-gray-5 mb-4">
+                <section>
+                    <h3 className="text-lg-semibold text-ink-gray-8 mb-1">{_("Prompt fields")}</h3>
+                    <p className="text-p-sm text-ink-gray-5 mb-4">
                         {_("These prompts are used in this template’s field mapping. Fill them to include in the printed PDF.")}
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,7 +147,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                             <div key={prompt.name ?? prompt.field_name} className="flex flex-col gap-1">
                                 <Label className="text-sm">
                                     {_("{0}", [prompt.label])}
-                                    {prompt.mandatory === 1 && <span className="text-ink-red-2 ms-0.5">*</span>}
+                                    {prompt.mandatory === 1 && <span className="text-ink-red-6 ms-0.5" aria-hidden>*</span>}
                                 </Label>
                                 {prompt.type === "Checkbox" ? (
                                     <div className="flex items-center gap-2">
@@ -169,16 +180,24 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                 </section>
             )}
 
-            {/* Document data / empty state — height comes from Editor; avoid capping shorter than the editor */}
-            <section className="min-h-0 overflow-x-hidden px-2">
+            {/* Document data / empty state — the editor fills whatever height is
+                left in the pane (never less than 240px) and scrolls inside itself. */}
+            <section className="flex min-h-0 flex-1 flex-col overflow-x-hidden">
                 {documentData ? (
-                    <Accordion type="single" collapsible defaultValue="document-data" className="w-full">
-                        <AccordionItem value="document-data" className="border-0">
-                            <AccordionTrigger className="p-2 text-sm font-medium hover:no-underline hover:bg-surface-gray-2 data-[state=open]:border-b data-[state=open]:border-outline-gray-2">
+                    <Accordion type="single" collapsible defaultValue="document-data" className="flex min-h-0 w-full flex-1 flex-col">
+                        <AccordionItem value="document-data" className="flex min-h-0 flex-1 flex-col border-0">
+                            {/* No bottom border here: the editor draws its own frame. */}
+                            <AccordionTrigger className="shrink-0 p-2 text-sm font-medium hover:no-underline hover:bg-surface-gray-2">
                                 {_("Document Data")}
                             </AccordionTrigger>
-                            <AccordionContent className="px-0 pb-0 pt-0">
-                                <div className="min-h-[240px] h-[min(65vh,calc(100vh-12rem))] w-full">
+                            {/* contentClassName reaches the Radix wrapper so the flex chain
+                                survives it; the open animation is off because Radix would
+                                animate to the measured height, then snap to the flexed one. */}
+                            <AccordionContent
+                                contentClassName="flex min-h-0 flex-1 flex-col data-[state=open]:animate-none"
+                                className="flex min-h-0 flex-1 flex-col px-0 pb-0 pt-0"
+                            >
+                                <div className="min-h-[240px] w-full flex-1">
                                     <Editor
                                         jsonValue={documentData as Record<string, unknown>}
                                         templateID={templateID}

@@ -1,12 +1,12 @@
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@lib/utils"
 
 function Table({ className, containerClassName, ...props }: React.ComponentProps<"table"> & { containerClassName?: string }) {
   return (
     <div
       data-slot="table-container"
-      className={cn("relative w-full overflow-x-auto rounded border-outline-gray-1 border", containerClassName)}
+      className={cn("relative w-full overflow-x-auto", containerClassName)}
     >
       <table
         data-slot="table"
@@ -55,7 +55,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-surface-gray-1 data-[state=selected]:bg-surface-gray-2 border-b transition-all",
+        "hover:bg-surface-gray-1 data-[state=selected]:bg-surface-gray-2 border-b transition-colors",
         className
       )}
       {...props}
@@ -68,7 +68,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "bg-surface-gray-2 text-ink-gray-5 text-sm p-2 text-start align-middle whitespace-nowrap [&:has([role=checkbox])]:pe-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "text-ink-gray-5 text-sm-medium p-2 text-start align-middle whitespace-nowrap [&:has([role=checkbox])]:pe-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}

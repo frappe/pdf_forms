@@ -1,48 +1,52 @@
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
-import { useTheme } from "./theme-provider"
-
-const themeMap = {
-    "Automatic": "system",
-    "Dark": "dark",
-    "Light": "light",
-}
+import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon } from "lucide-react"
+import { useTheme } from "@components/ui/theme-provider"
+import { Spinner } from "./spinner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
     const { theme = "Automatic" } = useTheme()
 
+    // Sonner only understands lowercase "light" | "dark" | "system"; the app's
+    // ThemeProvider speaks Frappe's "Light" | "Dark" | "Automatic". An unmatched
+    // value leaves data-sonner-theme unstyled — toasts render transparent.
+    const sonnerTheme: ToasterProps["theme"] =
+        theme === "Dark" ? "dark" : theme === "Light" ? "light" : "system"
+
     return (
         <Sonner
-            theme={themeMap[theme as keyof typeof themeMap] as ToasterProps["theme"]}
+            theme={sonnerTheme}
             className="toaster group"
+            position="bottom-right"
             icons={{
                 success: (
-                    <CircleCheckIcon className="size-4" />
+                    <CircleCheckIcon className="size-4 text-ink-green-5" />
                 ),
                 info: (
-                    <InfoIcon className="size-4" />
+                    <InfoIcon className="size-4 text-ink-blue-5" />
                 ),
                 warning: (
-                    <TriangleAlertIcon className="size-4" />
+                    <TriangleAlertIcon className="size-4 text-ink-amber-5" />
                 ),
                 error: (
-                    <OctagonXIcon className="size-4" />
+                    <OctagonXIcon className="size-4 text-ink-red-5" />
                 ),
                 loading: (
-                    <Loader2Icon className="size-4 animate-spin" />
+                    <Spinner className="size-4" />
                 ),
             }}
             style={
                 {
-                    "--normal-bg": "var(--surface-gray-1)",
-                    "--normal-text": "var(--text-ink-gray-8)",
-                    "--normal-border": "var(--outline-gray-1)",
-                    "--border-radius": "var(--radius)",
+                    "--normal-bg": "var(--surface-gray-9)",
+                    "--normal-text": "var(--ink-base)",
+                    "--normal-border": "var(--surface-gray-9)",
+                    "--border-radius": "var(--radius-md)",
                 } as React.CSSProperties
             }
             toastOptions={{
                 classNames: {
                     toast: "cn-toast",
+                    title: "!break-words !text-p-base !font-medium !text-ink-base",
+                    description: "!text-p-base !break-words !text-ink-base",
                 },
             }}
             {...props}

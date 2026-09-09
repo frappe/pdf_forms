@@ -12,6 +12,8 @@ from frappe.model.document import Document
 from frappe.utils.file_manager import save_file
 from pdf2image import convert_from_path
 
+from pdf_forms.utils.files import template_file_path
+
 
 class FormTemplate(Document):
 	# begin: auto-generated types
@@ -52,6 +54,27 @@ class FormTemplate(Document):
 		"""
 		if self.template_name and frappe.db.exists("Print Format", self.template_name):
 			frappe.throw(_("A Print Format with this name already exists. Please use a different name."))
+
+	def validate(self):
+		self.enforce_single_upload()
+
+	def enforce_single_upload(self):
+		"""The PDF is attached once. Replacing or removing it would orphan every
+		mapping, page image and annotation built on it, so neither is allowed:
+		to use a different PDF, delete the template and create a new one."""
+		old = self.get_doc_before_save()
+		if not old or not old.file:
+			return
+		if not self.file:
+			frappe.throw(
+				_("The PDF cannot be removed from a template. Delete the template instead."),
+				frappe.ValidationError,
+			)
+		if self.file != old.file:
+			frappe.throw(
+				_("The PDF cannot be replaced once uploaded. Delete this template and create a new one."),
+				frappe.ValidationError,
+			)
 
 	def before_save(self):
 		# get filename and extension from the file path
@@ -100,6 +123,19 @@ class FormTemplate(Document):
 				"print_format_name": self.template_name,
 				"print_format_for": "DocType",
 				"standard": "No",
+				# This format is rendered by pdf_forms' own overrides
+				# (api.print_format.download_pdf / get_html_and_style), never by
+				# Frappe's HTML print-format builder. Without this flag Frappe
+				# treats it as a "builder beta" format and forces
+				# pdf_generator="chrome", which fails on sites where that is not
+				# an allowed option — breaking template creation outright.
+				"custom_format": 1,
+				# Mandatory alongside custom_format, but never rendered: both the
+				# PDF and the print preview come from the uploaded template.
+				"html": (
+					"<!-- Rendered by PDF Forms from the uploaded PDF template. -->"
+					'<div class="text-muted">This print format is generated from a PDF form template.</div>'
+				),
 				"doc_type": self.source,
 				"module": module,
 				"form_template": self.name,
@@ -134,20 +170,16 @@ def convert_pdf_to_image(form_template_id):
 		form_template.set("form_template_image", [])
 		form_template.set("form_template_field", [])
 
-		# get the file path from the document
-		file = form_template.file
+		# the uploaded PDF, confined to the site's files directories
+		file_path = template_file_path(form_template.file)
 
 		# convert the pdf to images
 		# create a temporary directory to store the images
 		with tempfile.TemporaryDirectory() as path:
-			images = convert_from_path(
-				frappe.get_site_path(file[1:]),
-				output_folder=path,
-				fmt="jpeg",
-			)
+			images = convert_from_path(file_path, output_folder=path, fmt="jpeg")
 
 		# open the pdf file in fitz
-		pdf_doc = fitz.open(frappe.get_site_path(file[1:]))
+		pdf_doc = fitz.open(file_path)
 
 		# set the font and font size counter to get most common font and font size
 		font_counter = Counter()
@@ -199,7 +231,9 @@ def convert_pdf_to_image(form_template_id):
 
 		# Determine the most common font and font size
 		default_font = font_counter.most_common(1)[0][0] if font_counter else "helvetica"
-		default_font_size = font_size_counter.most_common(1)[0][0] if font_size_counter else 12
+		# 0 is Acrobat's "auto-size"; it must not become the template default.
+		sized = Counter({k: v for k, v in font_size_counter.items() if k and k > 0})
+		default_font_size = sized.most_common(1)[0][0] if sized else 12
 
 		font_names = fitz.Base14_fontdict.keys()
 		if default_font not in font_names:
@@ -241,16 +275,20 @@ def create_form_fields_annotations(page, image_doc, image_url, font_counter, fon
 	# 3. Loop through the widgets and create a Form Template Field for each field
 
 	# 1. Get the Metadata from the page
-	width, height = page.mediabox_size
+	width, _height = page.mediabox_size
 	ratio = image_doc.width / width if image_doc.width and image_doc.width > 0 else 1
 
 	# 2. Get the All Widgets (Mostly Form Fields) from the page
 	fields = page.widgets()
 
 	for field in fields:
-		# Get the font and font size of the field
-		font_counter[field.text_font] += 1
-		font_size_counter[field.text_fontsize] += 1
+		# Get the font and font size of the field. PyMuPDF reports base-14
+		# aliases in mixed case (TiRo, Cour, Helv); return_standard_font matches
+		# lowercase, so without this every form defaulted to Helvetica.
+		declared_font = (field.text_font or "").strip()
+		declared_size = float(field.text_fontsize or 0)
+		font_counter[declared_font.lower()] += 1
+		font_size_counter[declared_size] += 1
 
 		# Get the dimensions of the field
 		rect = field.rect
@@ -276,6 +314,10 @@ def create_form_fields_annotations(page, image_doc, image_url, font_counter, fon
 				"xref": field.xref,
 				"field_value": "",
 				"field_type": field.field_type_string,
+				# What the form itself asked for, kept per field so printing can
+				# honour it. Override Style still wins when the user sets it.
+				"pdf_font": declared_font,
+				"pdf_font_size": declared_size,
 			},
 		)
 
@@ -335,7 +377,8 @@ def get_form_template_prompts(form_template_id):
 	# 5. Return the list of prompts
 
 	# 1. Get the Form Template from the document
-	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template.check_permission("read")
 
 	# 2. Get All Form Template Fields which are prompts from the form template
 	prompts = form_template.prompts
@@ -371,10 +414,15 @@ def get_fields_and_prompts_for_form_template(form_template_id):
 	from pdf_forms.api.adapter import get_json_schema_for_doctype, get_json_schema_from_custom_source
 
 	# 1. Get the Form Template from the document
-	form_template = frappe.get_cached_doc("Form Template", form_template_id)
+	form_template = frappe.get_doc("Form Template", form_template_id)
+	form_template.check_permission("read")
 
 	# 3. Check if data_source is Doctype or Custom Data Source
 	if form_template.data_source == "DocType":
+		# The schema is the source doctype's own metadata: field names, labels
+		# and options. Only hand it to someone who may read that doctype.
+		if not frappe.has_permission(form_template.source, "read"):
+			frappe.throw(_("Not permitted to read {0}").format(form_template.source), frappe.PermissionError)
 		# 4. Get the fields from the doctype
 		fields = get_json_schema_for_doctype(form_template.source)
 	else:

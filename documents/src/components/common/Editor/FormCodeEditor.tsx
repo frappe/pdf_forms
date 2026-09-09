@@ -2,18 +2,22 @@ import * as React from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import AceEditor, { type IAceEditorProps } from 'react-ace'
 import 'ace-builds/src-noconflict/mode-json'
+// django = ace's Jinja-compatible template mode ({{ ... }} / {% ... %}).
+// Modes must be statically imported — otherwise react-ace tries to fetch
+// mode-<name>.js from the page URL at runtime and 404s.
+import 'ace-builds/src-noconflict/mode-django'
 import 'ace-builds/src-noconflict/theme-github'
 import 'ace-builds/src-noconflict/theme-github_dark'
 import 'ace-builds/src-noconflict/ext-language_tools'
-import { useTheme } from '@/components/ui/theme-provider'
-import { aceEditorTheme } from '@/components/common/Editor/ace-theme'
-import _ from '@/lib/translate'
+import { useTheme } from '@components/ui/theme-provider'
+import { aceEditorTheme } from '@components/common/Editor/ace-theme'
+import _ from '@lib/translate'
 
 const defaultEditorProps = {
 	placeholder: _('Enter your sample code here…'),
 	width: '100%',
 	height: '100%',
-	mode: 'python',
+	mode: 'django',
 	fontSize: 14,
 	showPrintMargin: true,
 	showGutter: true,

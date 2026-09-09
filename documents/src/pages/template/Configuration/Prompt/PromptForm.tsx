@@ -1,9 +1,9 @@
-import { Checkbox } from "@/components/ui/checkbox"
-import { FormControl, FormItem, FormLabel } from "@/components/ui/form"
-import { FormField } from "@/components/ui/form"
-import { DataField, SmallTextField } from "@/components/ui/form-elements"
-import _ from "@/lib/translate"
-import type { FormTemplatePrompts } from "@/types/FormPrinter/FormTemplatePrompts"
+import { Checkbox } from "@components/ui/checkbox"
+import { FormControl, FormItem, FormLabel } from "@components/ui/form"
+import { FormField } from "@components/ui/form"
+import { DataField, SmallTextField } from "@components/ui/form-elements"
+import _ from "@lib/translate"
+import type { FormTemplatePrompts } from "@types/FormPrinter/FormTemplatePrompts"
 import { useFormContext } from "react-hook-form"
 
 

@@ -1,31 +1,41 @@
 import { useFormContext } from 'react-hook-form'
 import { useParams } from 'react-router-dom'
 import { useFrappeGetCall } from 'frappe-react-sdk'
-import { Type, Code } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Separator } from '@/components/ui/separator'
-import ErrorBanner from '@/components/ui/error-banner'
+import { TabsButton, TabsButtonItem } from '@components/ui/tab-buttons'
+import { Checkbox } from '@components/ui/checkbox'
+import { Separator } from '@components/ui/separator'
+import ErrorBanner from '@components/ui/error-banner'
 import {
     DataField,
     SelectFormField,
     CodeEditorFormField,
-} from '@/components/ui/form-elements'
-import { FormField, FormItem, FormControl, FormLabel, FormMessage, FormRequiredIndicator } from '@/components/ui/form'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
-import type { ConfigData } from '@/pages/template/Configuration/Configurations'
+} from '@components/ui/form-elements'
+import { FormField, FormItem, FormControl, FormLabel, FormMessage, FormRequiredIndicator } from '@components/ui/form'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select'
+import { InputGroup, InputGroupInput } from '@components/ui/input-group'
+import type { ConfigData } from '@pages/template/Configuration/Configurations'
 import SelectFields from './SelectFields'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { CREATE_DEFAULT_OPTIONS } from '@/hooks/useReactHotKeys'
-import { getKeyboardMetaKeyString } from '@/lib/utils'
-import _ from '@/lib/translate'
+import { CREATE_DEFAULT_OPTIONS } from '@hooks/useReactHotKeys'
+import { getKeyboardMetaKeyString } from '@lib/utils'
+import _ from '@lib/translate'
 
 /** Radix Select forbids `SelectItem value=""`. Map this to `""` in the form. */
 const FORMATTER_CLEAR = '__formatter_clear__'
 
 interface FieldEditFormProps {
     index: number
+}
+
+/** Nearest option in the Font select for a font the PDF declares (e.g. ArialMT, TiRo, Courier-Bold). */
+const familyOf = (name: string): string | undefined => {
+    const n = name.toLowerCase()
+    if (!n) return undefined
+    if (/courier|cour\b|mono/.test(n)) return 'courier'
+    if (/times|tiro|tibo|tiit|tibi|serif|georgia|garamond|roman/.test(n)) return 'times-roman'
+    if (/zapf|zadb|dingbat/.test(n)) return 'zapfdingbats'
+    if (/symbol|symb\b/.test(n)) return 'symbol'
+    return 'helvetica'
 }
 
 export const FieldEditForm = ({ index }: FieldEditFormProps) => {
@@ -37,6 +47,12 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
     const overrideStyle = watch(`fields.${index}.override_style`)
 
     const overrideStyleTrue = overrideStyle === '1' || overrideStyle === true || overrideStyle === 1
+
+    // What the PDF itself asks for. Printing honours it unless Override Style
+    // is on, so the dialog says so instead of leaving the user to guess.
+    const declaredFont = String(watch(`fields.${index}.pdf_font`) ?? '').trim()
+    const declaredSize = Number(watch(`fields.${index}.pdf_font_size`) ?? 0)
+    const declaredFamily = familyOf(declaredFont)
 
     const shouldFetch = (valueType === 'Field' || valueType === 'Prompt') && templateID
 
@@ -182,34 +198,30 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                 name={`fields.${index}.default_value`}
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>{_("Default value")}</FormLabel>
+                        {/* Mode switcher trails the label — one stable spot in both
+                            modes (frappe-ui TabButtons pattern, à la Gameplan/CRM
+                            view switchers). */}
+                        <div className="flex items-center justify-between">
+                            <FormLabel>{_("Default value")}</FormLabel>
+                            <ToggleDefaultValue index={index} />
+                        </div>
                         {isDefaultJinja ? (
-                            <div className="relative min-h-[30vh]">
-                                <CodeEditorFormField
-                                    name={`fields.${index}.default_value`}
-                                    label=""
-                                    hideLabel
-                                    editorProps={{
-                                        placeholder: _("{0}", ["e.g. {{ frappe.format_date('2019-09-08') }}"]),
-                                        height: '30vh',
-                                    }}
-                                />
-                                <div className="absolute top-0 right-0">
-                                    <ToggleDefaultValue index={index} />
-                                </div>
-                            </div>
+                            <CodeEditorFormField
+                                name={`fields.${index}.default_value`}
+                                label=""
+                                hideLabel
+                                editorProps={{
+                                    placeholder: _("{0}", ["e.g. {{ frappe.format_date('2019-09-08') }}"]),
+                                    height: '30vh',
+                                }}
+                            />
                         ) : (
-                            <div className="relative">
-                                <InputGroup>
-                                    <InputGroupInput
-                                        {...field}
-                                            placeholder={_("{0}", ["e.g. 2019-09-08"])}
-                                    />
-                                </InputGroup>
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                                    <ToggleDefaultValue index={index} />
-                                </div>
-                            </div>
+                            <InputGroup>
+                                <InputGroupInput
+                                    {...field}
+                                    placeholder={_("{0}", ["e.g. 2019-09-08"])}
+                                />
+                            </InputGroup>
                         )}
                     </FormItem>
                 )}
@@ -230,14 +242,22 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                         setValue(`fields.${index}.font`, '')
                                         setValue(`fields.${index}.font_size`, '')
                                     } else {
-                                        setValue(`fields.${index}.font`, 'helvetica')
-                                        setValue(`fields.${index}.font_size`, 12)
+                                        // Start from what the form declares, not a blanket 12pt Helvetica.
+                                        setValue(`fields.${index}.font`, declaredFamily ?? 'helvetica')
+                                        setValue(`fields.${index}.font_size`, declaredSize > 0 ? declaredSize : 12)
                                     }
                                 }}
                             />
                         </FormControl>
                         <div className="space-y-1 leading-none">
                             <FormLabel>{_("Override Style")}</FormLabel>
+                            {!overrideStyleTrue && (declaredFont || declaredSize > 0) && (
+                                <p className="text-p-sm text-ink-gray-5">
+                                    {_("Prints as the form declares: {0}", [
+                                        [declaredFont || _("template font"), declaredSize > 0 ? `${declaredSize}pt` : _("auto size")].join(' · '),
+                                    ])}
+                                </p>
+                            )}
                         </div>
                     </FormItem>
                 )}
@@ -272,33 +292,17 @@ const ToggleDefaultValue = ({ index }: { index: number }) => {
     const { setValue, watch } = useFormContext()
     const isDefaultJinja = watch(`fields.${index}.is_default_jinja`)
 
+    // frappe-ui TabButtons (subtle · sm): labeled segments beat cryptic icons,
+    // and the radio-group semantics give arrow-key switching for free.
     return (
-        <div className="flex border border-outline-gray-2 rounded-r-md overflow-hidden bg-surface-white">
-            <Button
-                type="button"
-                variant={!isDefaultJinja ? 'subtle' : 'ghost'}
-                theme="gray"
-                size="sm"
-                isIconButton
-                className="rounded-none border-r border-outline-gray-2"
-                onClick={() => setValue(`fields.${index}.is_default_jinja`, false)}
-                title={_("Toggle Default Value")}
-            >
-                <Type className="size-4" />
-            </Button>
-            <Button
-                type="button"
-                variant={isDefaultJinja ? 'subtle' : 'ghost'}
-                theme="gray"
-                size="sm"
-                isIconButton
-                className="rounded-none"
-                onClick={() => setValue(`fields.${index}.is_default_jinja`, true)}
-                title={_("Toggle Default Value")}
-            >
-                <Code className="size-4" />
-            </Button>
-        </div>
+        <TabsButton
+            value={isDefaultJinja ? 'jinja' : 'text'}
+            onValueChange={(v) => setValue(`fields.${index}.is_default_jinja`, v === 'jinja')}
+            aria-label={_("Default value mode")}
+        >
+            <TabsButtonItem value="text">{_("Text")}</TabsButtonItem>
+            <TabsButtonItem value="jinja">{_("Jinja")}</TabsButtonItem>
+        </TabsButton>
     )
 }
 

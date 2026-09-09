@@ -5,7 +5,7 @@ import advancedFormat from 'dayjs/plugin/advancedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear'
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import _ from '@/lib/translate';
+import _ from '@lib/translate';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

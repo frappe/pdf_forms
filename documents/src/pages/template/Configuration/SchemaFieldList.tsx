@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { web_url } from '@/config/socket';
+import { web_url } from '@config/socket';
 import type { SchemaField } from './Configurations';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Badge } from '@components/ui/badge';
+import { Button } from '@components/ui/button';
+import { cn } from '@lib/utils';
 import { ChevronDown, Download, Copy } from 'lucide-react';
 import { toast } from 'sonner';
-import _ from '@/lib/translate';
+import _ from '@lib/translate';
 
 const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ schema, source }) => {
     const { templateID } = useParams<{ templateID: string }>();
@@ -132,16 +132,26 @@ function CollapsibleSection({
     const [open, setOpen] = useState(false);
     return (
         <div className="border-0">
-            <button
-                type="button"
-                className="flex w-full items-center gap-2 p-0 text-left"
+            {/* Not a <button>: the trigger row contains its own buttons (copy
+                field name), and nested buttons are invalid HTML. */}
+            <div
+                role="button"
+                tabIndex={0}
+                aria-expanded={open}
+                className="flex w-full cursor-pointer items-center gap-2 p-0 text-left"
                 onClick={() => setOpen((o) => !o)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setOpen((o) => !o)
+                    }
+                }}
             >
                 <span className="flex-1">{trigger}</span>
                 <ChevronDown
                     className={cn('size-4 shrink-0 transition-transform', open && 'rotate-180')}
                 />
-            </button>
+            </div>
             {open && <div>{children}</div>}
         </div>
     );
