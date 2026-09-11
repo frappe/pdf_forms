@@ -17,6 +17,7 @@ MODULES = (
 	"pdf_forms.tests.test_template_rules",
 	"pdf_forms.tests.test_printing",
 	"pdf_forms.tests.test_comb_fields",
+	"pdf_forms.tests.test_images",
 	"pdf_forms.tests.test_api_sanity",
 )
 

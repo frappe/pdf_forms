@@ -252,6 +252,13 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 
 		field_type = (annotation.field_type or "Text").replace(" ", "").lower()
 
+		if is_image_value(value):
+			# a signature or an attached picture: the overlay shows the image itself
+			values[annotation.name] = {"kind": "image", "src": str(value).strip()}
+			continue
+		if field_type == "signature":
+			continue
+
 		if field_type in ("checkbox", "radiobutton"):
 			# The printer ticks the widget only for these; anything else stays
 			# blank, so "0" must read as unchecked rather than as the text "0".
@@ -478,6 +485,49 @@ def fill_comb_widget(doc, widget, text: str, alias: str, size: float) -> bool:
 
 
 COMB_CELL_INSET = 1.2
+
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp")
+
+
+def image_bytes_for(value) -> bytes | None:
+	"""The image a value stands for, or None when it is ordinary text.
+
+	A Signature field stores a `data:image/...;base64,` URL; an Attach Image
+	field stores a site file URL. Only those two shapes count: a value is never
+	fetched from anywhere else."""
+	if not isinstance(value, str):
+		return None
+	value = value.strip()
+	if value.startswith("data:image/"):
+		try:
+			import base64
+
+			return base64.b64decode(value.split(",", 1)[1])
+		except (IndexError, ValueError):
+			return None
+	if value.startswith(("/files/", "/private/files/")) and value.lower().endswith(IMAGE_EXTENSIONS):
+		try:
+			with open(template_file_path(value), "rb") as fh:
+				return fh.read()
+		except Exception:
+			return None
+	return None
+
+
+def is_image_value(value) -> bool:
+	return image_bytes_for(value) is not None
+
+
+def place_image(page, rect, image: bytes) -> bool:
+	"""Draw an image inside a field's box, fitted and centred, keeping its
+	proportions. A signature is stamped on the page: a form field cannot hold
+	a picture as its value."""
+	try:
+		page.insert_image(fitz.Rect(rect), stream=image, keep_proportion=True)
+		return True
+	except Exception:
+		frappe.log_error(title="PDF Forms: could not place image", message=frappe.get_traceback())
+		return False
 
 
 def comb_cell_backgrounds(widget, cells: int, cell_w: float, height: float) -> list[str]:
@@ -825,6 +875,13 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 			value = value if (value is not None and value != "" and value != "None") else default_value
 
 			if value is not None:
+				image = image_bytes_for(value)
+				if image is not None or annotation.field_type == "Signature":
+					# A Signature field, or any field given a picture (a Signature
+					# or Attach Image value): the picture is stamped into the box.
+					if image is not None and place_image(page, field.rect, image):
+						page.delete_widget(field)
+					continue
 				# update the field value according to the field type
 				if annotation.field_type == "Text":
 					text = str(value) if value is not None and value != "None" else ""
@@ -903,6 +960,10 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			x2_point = x1_point + width
 			y2_point = y1_point + height
 			rect = fitz.Rect(x1_point, y1_point, x2_point, y2_point)
+			image = image_bytes_for(value)
+			if image is not None:
+				place_image(page, rect, image)
+				continue
 			widget = fitz.Widget()
 			widget.rect = rect
 			widget.field_name = annotation.field_label
