@@ -21,6 +21,8 @@ export type PreviewFieldValue =
         comb?: number
     }
     | { kind: 'check'; checked: boolean }
+    /** A signature or an attached picture, shown as the image itself. */
+    | { kind: 'image'; src: string }
 
 /**
  * Shares "what would this template print for document X" between the Preview

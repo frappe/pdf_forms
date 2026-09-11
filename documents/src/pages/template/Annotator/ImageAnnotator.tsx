@@ -201,6 +201,15 @@ export const ImageAnnotator = ({ customHeader, id, images, onAnnotationClick, se
                     el.className = 'pdf-preview-value pdf-preview-check'
                     el.textContent = '✓'
                     el.title = _("Checked")
+                } else if (preview.kind === 'image') {
+                    // A signature or an attached picture: fitted inside the box,
+                    // proportions kept, exactly as the printer stamps it.
+                    el.className = 'pdf-preview-value pdf-preview-image'
+                    const img = document.createElement('img')
+                    img.src = preview.src
+                    img.alt = _("Signature")
+                    img.draggable = false
+                    el.appendChild(img)
                 } else {
                     el.className = 'pdf-preview-value'
                     const stack = PDF_FONT_STACKS[preview.font] ?? PDF_FONT_STACKS.helvetica

@@ -347,6 +347,18 @@ body {
   line-height: 1;
 }
 
+/* A picture in a field: fitted and centred, like the printed stamp. */
+.pdf-preview-image {
+  padding: 0;
+  justify-content: center;
+}
+
+.pdf-preview-image > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* One character per cell, centred, exactly as the printer lays a comb out. */
 .pdf-preview-comb {
   padding-inline: 0;
