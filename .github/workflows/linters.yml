@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: commitcheck-frappe-${{ github.event_name }}-${{ github.event.number }}
+  group: linters-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,27 +29,57 @@ jobs:
 
       - name: Check commit titles
         run: |
-          npm install @commitlint/cli @commitlint/config-conventional
+          npm install @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
           npx commitlint --verbose --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
 
   linter:
-    name: 'Semgrep Rules'
+    name: 'Frappe Linter'
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           cache: pip
+
+      - name: Install and run pre-commit
+        uses: pre-commit/action@v3.0.1
 
       - name: Download Semgrep rules
         run: git clone --depth 1 https://github.com/frappe/semgrep-rules.git frappe-semgrep-rules
 
+      - name: Install semgrep
+        run: pip install semgrep
+
       - name: Run Semgrep rules
-        run: |
-          pip install semgrep
-          semgrep ci --config ./frappe-semgrep-rules/rules --config r/python.lang.correctness
+        run: semgrep ci --config ./frappe-semgrep-rules/rules --config r/python.lang.correctness
+
+  frontend-lint:
+    name: 'Frontend Lint & Types'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: documents/yarn.lock
+
+      - name: Install
+        working-directory: documents
+        run: yarn install --frozen-lockfile
+
+      - name: Type check
+        working-directory: documents
+        run: npx tsc --noEmit -p .
+
+      - name: ESLint
+        working-directory: documents
+        run: npx eslint src --max-warnings=0
 
   deps-vulnerable-check:
     name: 'Vulnerable Dependency Check'
@@ -58,7 +88,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - uses: actions/checkout@v4
 
@@ -75,4 +105,4 @@ jobs:
         run: |
           pip install pip-audit
           cd ${GITHUB_WORKSPACE}
-          pip-audit --desc on --ignore-vuln GHSA-4xqq-73wg-5mjp --ignore-vuln PYSEC-2023-312 .
+          pip-audit --desc on .
