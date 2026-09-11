@@ -2,7 +2,7 @@
   <img src="pdf_forms/public/images/pdf-forms-logo-large.svg" alt="PDF Forms" height="100">
 </p>
 
-<hr>
+<hr />
 
 <p align="center">
   <strong>Take the PDF you already have. Map it once. Print it from your data.</strong>
@@ -295,13 +295,6 @@ open("request.pdf", "wb").write(resp.content)
 
 Inside the same site, skip HTTP: `pdf_forms.api.print.build_form_template_pdf(template_id, data)` returns the PDF bytes.
 
-## Things to know
-
-- **One PDF per template.** The mappings, page images and boxes are built on the uploaded file, so it cannot be replaced or removed. Delete the template and create a new one for a new PDF.
-- **Fonts.** A field is filled in the font and size its PDF declares. Helvetica, Times and Courier are written into the field itself; bold, italic and embedded faces are drawn with the real font program from the PDF. Characters the form's font cannot show, such as ₹, fall back to Noto Sans.
-- **Jinja is trusted.** Mappings are configuration written by a System Manager, and Jinja runs with the same reach as a Print Format. Treat access to Form Templates accordingly.
-- **Fillable output.** The generated PDF keeps its fields. If you need a flattened file for archiving, flatten it downstream; the printed paper is the same either way.
-- **Scans.** A scanned form has no fields to detect. Manual boxes work, but converting the scan into a real form PDF first (Acrobat's *Prepare Form* does this well) gives you comb cells and a fillable result.
 
 ## Reporting Bugs
 
