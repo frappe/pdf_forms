@@ -116,7 +116,8 @@ The PDF is processed in the background. Each page is rendered to an image and ev
 
 ### 2. The workspace
 
-![The mapping workspace: the PDF on the left, one row per field on the right](docs/images/01-mapping.png)
+<img width="3840" height="2160" alt="image" src="https://github.com/user-attachments/assets/12abc2cd-8948-4514-ac9c-a8ef3d9d6c41" />
+
 
 On the left is the PDF with every detected field outlined. On the right, one row per field with its label, its type and where its value comes from. Click a row and the page scrolls to the field; click a field on the page and the row is highlighted. The search box filters by label or field name, and **Unmapped** shows what is still to do.
 
@@ -124,7 +125,7 @@ On the left is the PDF with every detected field outlined. On the right, one row
 
 ### 3. Mapping a field
 
-![Editing a field: value type, value, default and style](docs/images/02-field-editor.png)
+<img width="3840" height="2160" alt="image" src="https://github.com/user-attachments/assets/2773d5a8-2274-47d1-92ee-718f380c2651" />
 
 Each field has a **value type**:
 
@@ -151,23 +152,23 @@ Not every PDF is a form. For a flat PDF, switch to the annotator, draw a box whe
 
 ### 5. Prompts
 
-![The Prompts tab: what the user is asked at print time](docs/images/03-prompts.png)
+<img width="3840" height="2160" alt="image" src="https://github.com/user-attachments/assets/456bba14-3379-4cf5-843d-85b19783720b" />
 
 Some values are not in the system. A Legal Entity Identifier, a purpose code, a "verified by" name, a reference number the counterparty gave you on the phone. Add them as **Prompts** (label, key, text or checkbox, mandatory or not), map fields to them, and they are asked for at print time, in the Preview tab and in the desk's print view. A prompt field can carry a default, so the form still prints when nobody types anything.
 
 ### 6. Preview
 
-![The Preview tab: pick a document and the form fills itself](docs/images/04-preview.png)
+<img width="3840" height="2160" alt="image" src="https://github.com/user-attachments/assets/a7805e51-2f96-49b3-934c-8c517a907902" />
 
 Pick a record in the **Preview** tab. The values are drawn onto the page exactly as they will print: same font, same size, one digit per comb cell. The record's data is shown alongside so you can see what you are mapping to. **Download PDF** gives you the finished file.
 
 ### 7. Printing
 
-![The desk print view with the form as a print format](docs/images/05-desk-print.png)
+<img width="3840" height="2160" alt="image" src="https://github.com/user-attachments/assets/8fdb1ee6-430e-4758-99c6-a72fef3b82d9" />
 
 Saving a template creates a Print Format of the same name for the source DocType. From then on it is just another print format: open the document, click Print, choose the format, and the form appears as page-shaped sheets. **Print**, **PDF** and **Full Page** all work. If the template has prompts, a small dialog asks for them first.
 
-![Prompts asked for in the desk before rendering](docs/images/06-desk-prompts.png)
+<img width="3840" height="2160" alt="image" src="https://github.com/user-attachments/assets/b8d9bfcf-56fe-4772-8a5c-b7b9ca045b76" />
 
 The printed PDF is still a form. Open it in Acrobat or a browser and every field is editable, so a value can be corrected before the form is signed. On paper only the values print; the field outlines you see in a viewer are the viewer's, not ink.
 
