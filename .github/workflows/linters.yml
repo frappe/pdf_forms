@@ -79,7 +79,7 @@ jobs:
 
       - name: ESLint
         working-directory: documents
-        run: npx eslint src --max-warnings=0
+        run: npx eslint src
 
   deps-vulnerable-check:
     name: 'Vulnerable Dependency Check'

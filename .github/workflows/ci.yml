@@ -102,7 +102,7 @@ jobs:
 
       - name: Run tests
         working-directory: /home/runner/frappe-bench
-        run: bench --site test_site run-tests --app pdf_forms --verbose
+        run: bench --site test_site run-tests --app pdf_forms
         env:
           TYPE: server
 
