@@ -26,11 +26,9 @@
 </p>
 
 <p align="center">
-  <a href="docs/videos/hdfc-rtgs-neft.mp4">
-    <img src="docs/images/04-preview.png" alt="A form PDF being filled from a document, live, in the PDF Forms workspace" width="100%">
-  </a>
-  <br>
-  <sub>Click the picture for a one-minute walkthrough (MP4, 4K).</sub>
+  
+  https://github.com/user-attachments/assets/159dbd87-1e4c-43e1-9523-499a6f4126e1
+  
 </p>
 
 <br>
