@@ -248,9 +248,8 @@ def convert_pdf_to_image(form_template_id):
 		form_template.font = return_standard_font(default_font)
 		# Set the font size to the default font size
 		form_template.font_size = default_font_size
-		# Save the form template
+		# Save the form template; the background job (or the request) commits.
 		form_template.save()
-		frappe.db.commit()
 
 	except Exception:
 		frappe.log_error(
@@ -262,9 +261,11 @@ def convert_pdf_to_image(form_template_id):
 		# Mark the background process as completed for both success and failure paths.
 		frappe.db.set_value("Form Template", form_template_id, "process_completed", 1)
 		# Publish the form_template_converted event
+		# To the user who uploaded the PDF (the job runs as them), not the whole site.
 		frappe.publish_realtime(
 			"form_template_process_completed",
 			{"form_template_id": form_template_id},
+			user=frappe.session.user,
 			after_commit=True,
 		)
 
@@ -322,53 +323,52 @@ def create_form_fields_annotations(page, image_doc, image_url, font_counter, fon
 		)
 
 
-# function to return the standard font
+STANDARD_FONT_FAMILIES = {
+	"courier": (
+		"courier",
+		"courier-bold",
+		"courier-boldoblique",
+		"courier-oblique",
+		"cour",
+		"cobo",
+		"cobi",
+		"coit",
+	),
+	"helvetica": (
+		"helvetica",
+		"helvetica-bold",
+		"helvetica-boldoblique",
+		"helvetica-oblique",
+		"helv",
+		"heit",
+		"hebo",
+		"hebi",
+	),
+	"times-roman": (
+		"times-roman",
+		"times-bold",
+		"times-bolditalic",
+		"times-italic",
+		"tiro",
+		"tibo",
+		"tiit",
+		"tibi",
+	),
+	"symbol": ("symbol", "symb"),
+	"zapfdingbats": ("zapfdingbats", "zadb"),
+}
+
+
 def return_standard_font(font):
-	# 1. Check the font name and return the standard font name
-	match font:
-		case (
-			"courier"
-			| "courier-bold"
-			| "courier-boldoblique"
-			| "courier-oblique"
-			| "cour"
-			| "cobo"
-			| "cobi"
-			| "coit"
-		):
-			return "courier"
-		case (
-			"helvetica"
-			| "helvetica-bold"
-			| "helvetica-boldoblique"
-			| "helvetica-oblique"
-			| "helv"
-			| "heit"
-			| "hebo"
-			| "hebi"
-		):
-			return "helvetica"
-		case (
-			"times-roman"
-			| "times-bold"
-			| "times-bolditalic"
-			| "times-italic"
-			| "tiro"
-			| "tibo"
-			| "tiit"
-			| "tibi"
-		):
-			return "times-roman"
-		case "symbol" | "symb":
-			return "symbol"
-		case "zapfdingbats" | "zadb":
-			return "zapfdingbats"
-		case _:
-			return "helvetica"
+	"""The base-14 family a PDF font name or alias belongs to; Helvetica when unknown."""
+	for family, names in STANDARD_FONT_FAMILIES.items():
+		if font in names:
+			return family
+	return "helvetica"
 
 
 @frappe.whitelist()
-def get_form_template_prompts(form_template_id):
+def get_form_template_prompts(form_template_id: str):
 	# This method will return all those Prompts which get used in mapping with the Form Template Fields
 	# 1. Get the Form Template from the document
 	# 2. Get All Form Template Fields which are prompts from the form template
@@ -401,7 +401,7 @@ def get_form_template_prompts(form_template_id):
 
 
 @frappe.whitelist()
-def get_fields_and_prompts_for_form_template(form_template_id):
+def get_fields_and_prompts_for_form_template(form_template_id: str):
 	# This method will return the fields and prompts metadata from the form template
 	# 1. Get the form template document
 	# 2. Get all the Prompt fields

@@ -1,3 +1,6 @@
+# Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
+# For license information, please see license.txt
+
 from __future__ import annotations
 
 import json
@@ -46,17 +49,21 @@ def _parse_prompt_data(prompt_data):
 	return {}
 
 
-@frappe.whitelist(allow_guest=True)
+# Guest access mirrors frappe.utils.print_format.download_pdf, which this
+# overrides: the document's own print permission is checked below
+# (validate_print_permission) before anything is rendered, so a guest only
+# gets what Frappe itself would give them.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
 def download_pdf(
 	doctype: str,
 	name: str,
 	format: str | None = None,
-	doc=None,
+	doc: str | dict | None = None,
 	no_letterhead: bool | int = 0,
 	language: str | None = None,
 	letterhead: str | None = None,
 	pdf_generator: str | None = None,
-	prompt_data=None,
+	prompt_data: str | dict | None = None,
 ):
 	template_id = _get_form_template_id(format)
 	if not template_id:
@@ -97,7 +104,7 @@ def get_html_and_style(
 	trigger_print: bool = False,
 	style: str | None = None,
 	settings: str | None = None,
-	prompt_data=None,
+	prompt_data: str | dict | None = None,
 ) -> dict[str, str | None]:
 	template_id = _get_form_template_id(print_format)
 	if not template_id:

@@ -1,7 +1,10 @@
+# Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
+# For license information, please see license.txt
+
 app_name = "pdf_forms"
 app_title = "PDF Forms"
 app_publisher = "Frappe Technologies Pvt. Ltd."
-app_description = "Frappe app to manage PDF forms"
+app_description = "Fill any PDF form from your documents: map fields once, print from Frappe"
 app_email = "contact@frappe.io"
 app_license = "gpl-3.0"
 app_logo_url = "/assets/pdf_forms/images/pdf-forms-logo.svg"

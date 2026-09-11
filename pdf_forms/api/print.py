@@ -1,3 +1,6 @@
+# Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
+# For license information, please see license.txt
+
 import io
 import json
 import re
@@ -507,10 +510,13 @@ def image_bytes_for(value) -> bytes | None:
 			return None
 	if value.startswith(("/files/", "/private/files/")) and value.lower().endswith(IMAGE_EXTENSIONS):
 		try:
-			with open(template_file_path(value), "rb") as fh:
+			# resolved and confined to the site's public/private files directories
+			path = template_file_path(value)
+			with open(path, "rb") as fh:  # nosemgrep
 				return fh.read()
 		except Exception:
 			return None
+	return None
 	return None
 
 
@@ -541,7 +547,7 @@ def comb_cell_backgrounds(widget, cells: int, cell_w: float, height: float) -> l
 	elif len(color) == 4:
 		paint = "{:.3f} {:.3f} {:.3f} {:.3f} k".format(*color)
 	else:
-		paint = "{:.3f} g".format(color[0])
+		paint = f"{color[0]:.3f} g"
 	inset = COMB_CELL_INSET
 	rects = [
 		f"{i * cell_w + inset:.2f} {inset:.2f} {cell_w - 2 * inset:.2f} {height - 2 * inset:.2f} re"
@@ -577,8 +583,10 @@ def draw_comb_text(page, widget, text: str, font, size: float, keep_widget: bool
 	if widget.fill_color and len(widget.fill_color) == 3:
 		for i in range(cells):
 			cell = fitz.Rect(
-				box.x0 + i * cell_w + COMB_CELL_INSET, box.y0 + COMB_CELL_INSET,
-				box.x0 + (i + 1) * cell_w - COMB_CELL_INSET, box.y1 - COMB_CELL_INSET,
+				box.x0 + i * cell_w + COMB_CELL_INSET,
+				box.y0 + COMB_CELL_INSET,
+				box.x0 + (i + 1) * cell_w - COMB_CELL_INSET,
+				box.y1 - COMB_CELL_INSET,
 			)
 			page.draw_rect(cell, color=None, fill=tuple(widget.fill_color), width=0)
 	for i, ch in enumerate(text[:cells]):

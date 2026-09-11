@@ -1,3 +1,6 @@
+# Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
+# For license information, please see license.txt
+
 """Run the app's tests on a site where `bench run-tests` cannot bootstrap.
 
 Frappe's runner preloads legacy test records for every doctype the app

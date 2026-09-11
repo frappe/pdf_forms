@@ -32,13 +32,11 @@ class TestFormTemplateField(FrappeTestCase):
 		self.form_template.save()
 		self.form_template.reload()
 		self.form_template_image = self.form_template.form_template_image[0]
-		frappe.db.commit()
 
 	def tearDown(self):
 		"""Clean up test data"""
 		if frappe.db.exists("Form Template", self.form_template.name):
 			frappe.delete_doc("Form Template", self.form_template.name, force=1)
-		frappe.db.commit()
 
 	def test_create_form_template_field(self):
 		"""Test creating a Form Template Field child row"""

@@ -20,13 +20,11 @@ class TestFormTemplateImage(FrappeTestCase):
 			}
 		)
 		self.form_template.insert()
-		frappe.db.commit()
 
 	def tearDown(self):
 		"""Clean up test data"""
 		if frappe.db.exists("Form Template", self.form_template.name):
 			frappe.delete_doc("Form Template", self.form_template.name, force=1)
-			frappe.db.commit()
 
 	def test_create_form_template_image(self):
 		"""Test creating a Form Template Image child row"""

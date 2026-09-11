@@ -59,7 +59,9 @@ class TestImageValues(FrappeTestCase):
 		infos = page.get_image_info()
 		self.assertEqual(len(infos), 1)
 		box = fitz.Rect(infos[0]["bbox"])
-		sign_rect = next(fitz.Rect(w["rect"]) for w in _fixture_widgets(self.pdf_bytes) if w["name"] == "SIGN")
+		sign_rect = next(
+			fitz.Rect(w["rect"]) for w in _fixture_widgets(self.pdf_bytes) if w["name"] == "SIGN"
+		)
 		self.assertTrue(sign_rect.contains(box), f"{box} outside {sign_rect}")
 		# proportions kept: the 200x60 picture is wider than tall
 		self.assertGreater(box.width / box.height, 2.5)

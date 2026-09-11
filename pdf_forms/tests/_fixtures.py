@@ -1,3 +1,6 @@
+# Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
+# For license information, please see license.txt
+
 """Shared fixtures: a tiny AcroForm PDF and a Form Template built from it."""
 
 import fitz

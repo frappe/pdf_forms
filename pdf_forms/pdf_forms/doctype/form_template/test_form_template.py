@@ -24,7 +24,6 @@ class TestFormTemplate(FrappeTestCase):
 
 		# Cleanup
 		frappe.delete_doc("Form Template", form_template.name, force=1)
-		frappe.db.commit()
 
 	def test_form_template_required_fields(self):
 		"""Test that required fields are enforced"""

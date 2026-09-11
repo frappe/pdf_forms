@@ -18,12 +18,6 @@
   <a href="https://github.com/sumitjain236/pdf_forms/issues">Issues</a>
 </p>
 
-<p align="center">
-  <a href="license.txt"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0"></a>
-  <a href="https://github.com/sumitjain236/pdf_forms/stargazers"><img src="https://img.shields.io/github/stars/sumitjain236/pdf_forms?style=flat" alt="GitHub stars"></a>
-  <a href="https://github.com/sumitjain236/pdf_forms/commits"><img src="https://img.shields.io/github/last-commit/sumitjain236/pdf_forms" alt="Last commit"></a>
-  <img src="https://img.shields.io/badge/Frappe-v15-lightgrey" alt="Frappe">
-</p>
 
 <p align="center">
   
@@ -35,7 +29,7 @@
 
 PDF Forms is an open-source app that turns any fillable PDF into a data-driven print template. Upload a form PDF, map each of its fields to a field of your data source, a fixed value, a Jinja expression or a question asked at print time, and from then on the form fills itself from the record you are looking at. It prints through the normal Print button, downloads as a PDF that is still a fillable form, and any application can generate the same PDF from its own data through the API.
 
-It was built for the paper a business does not get to design: bank forms, government applications, insurance proposals, customs declarations, KYC and vendor-onboarding packs, agreements with a fixed layout. It is just as useful for your own documents when the layout is too intricate for the Print Designer. Draw the layout as a form in Acrobat, LibreOffice or any PDF editor, and map it here instead of writing HTML.
+It is built for complex PDFs whose fixed layout is difficult to reproduce in the Print Designer: bank forms, government applications, insurance proposals, customs declarations, KYC and vendor-onboarding packs, agreements, and your own intricate documents. Draw the layout as a form in Acrobat, LibreOffice or any PDF editor, and map it here instead of writing HTML.
 
 ## Key Features
 

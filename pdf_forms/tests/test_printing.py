@@ -165,7 +165,7 @@ class TestPrinting(FrappeTestCase):
 		# Sans, but inside the field's own appearance, so the field survives
 		self.assertIn("T_CURRENCY", widgets)
 		self.assertTrue(widgets["T_CURRENCY"].field_value.startswith("₹"))
-		kind, ref = self.out.xref_get_key(widgets["T_CURRENCY"].xref, "AP/N")
+		_kind, ref = self.out.xref_get_key(widgets["T_CURRENCY"].xref, "AP/N")
 		ap = int(ref.split()[0])
 		self.assertIn("cm", self.out.xref_stream(ap).decode("latin-1"))
 		self.assertEqual(self.out.xref_get_key(ap, "Resources/Font")[0] in ("dict", "xref"), True)

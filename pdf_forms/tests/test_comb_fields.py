@@ -29,7 +29,9 @@ def make_comb_pdf():
 			c = fitz.Rect(rect.x0 + i * cell, rect.y0, rect.x0 + (i + 1) * cell, rect.y1)
 			page.draw_rect(c, color=(0, 0, 0), width=0.6)
 			if hint:
-				page.insert_text((c.x0 + 4, c.y1 - 4), hint[i], fontname="helv", fontsize=8, color=(0.6, 0.6, 0.6))
+				page.insert_text(
+					(c.x0 + 4, c.y1 - 4), hint[i], fontname="helv", fontsize=8, color=(0.6, 0.6, 0.6)
+				)
 	buf = doc.tobytes()
 	doc = fitz.open(stream=buf, filetype="pdf")
 	page = doc[0]
@@ -58,7 +60,7 @@ class TestCombFields(FrappeTestCase):
 		cls.widgets = {w.field_name: w for w in cls.out[0].widgets()}
 
 	def appearance(self, name):
-		kind, ref = self.out.xref_get_key(self.widgets[name].xref, "AP/N")
+		_kind, ref = self.out.xref_get_key(self.widgets[name].xref, "AP/N")
 		return self.out.xref_stream(int(ref.split()[0])).decode("latin-1")
 
 	def test_value_lands_one_character_per_cell(self):
@@ -79,7 +81,10 @@ class TestCombFields(FrappeTestCase):
 
 	def test_patches_stay_inside_the_cell_borders(self):
 		cell = HINTED.width / CELLS
-		for x, y, w, h in (map(float, m) for m in re.findall(r"([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+) re", self.appearance("HINTED"))):
+		for x, y, w, h in (
+			map(float, m)
+			for m in re.findall(r"([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+) re", self.appearance("HINTED"))
+		):
 			self.assertGreater(x % cell, 0.5, "patch starts after the cell's left border")
 			self.assertLess(w, cell - 1, "and ends before the right one")
 			self.assertGreater(y, 0.5)
