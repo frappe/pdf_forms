@@ -18,6 +18,7 @@ WIDGETS = [
 	("T_DEFAULT", "Missing With Default", "text", 0, "Helv", 9),
 	("T_DEFJINJA", "Missing With Jinja Default", "text", 0, "Helv", 9),
 	("T_CURRENCY", "Amount", "text", 0, "Helv", 9),
+	("T_RUPEE", "Rupee Literal", "text", 0, "Helv", 9),
 	("T_TIMES", "Times Field", "text", 0, "TiRo", 11),
 	("T_OVERRIDE", "Overridden", "text", 0, "Helv", 9),
 	("C_ON", "Checked", "check", 0, "ZaDb", 0),
@@ -47,6 +48,8 @@ class TestPrinting(FrappeTestCase):
 				is_default_jinja=1,
 			),
 			"T_CURRENCY": dict(value_type="Field", field_value="amount", formatter="Currency"),
+			# A glyph Helvetica does not have, whatever the site's currency is.
+			"T_RUPEE": dict(value_type="Text", field_value="₹ 1,00,000.00"),
 			"T_TIMES": dict(value_type="Field", field_value="description"),
 			"T_OVERRIDE": dict(
 				value_type="Field", field_value="description", override_style=1, font="courier", font_size=13
@@ -161,11 +164,12 @@ class TestPrinting(FrappeTestCase):
 	def test_output_stays_fillable_even_in_fonts_the_field_cannot_name(self):
 		widgets = {w.field_name: w for w in self.out[0].widgets()}
 		self.assertIn("T_FIELD", widgets)
+		self.assertIn("T_CURRENCY", widgets)
 		# the rupee sign is outside the field's Helvetica; it is drawn in Noto
 		# Sans, but inside the field's own appearance, so the field survives
-		self.assertIn("T_CURRENCY", widgets)
-		self.assertTrue(widgets["T_CURRENCY"].field_value.startswith("₹"))
-		_kind, ref = self.out.xref_get_key(widgets["T_CURRENCY"].xref, "AP/N")
+		self.assertIn("T_RUPEE", widgets)
+		self.assertEqual(widgets["T_RUPEE"].field_value, "₹ 1,00,000.00")
+		_kind, ref = self.out.xref_get_key(widgets["T_RUPEE"].xref, "AP/N")
 		ap = int(ref.split()[0])
 		self.assertIn("cm", self.out.xref_stream(ap).decode("latin-1"))
 		self.assertEqual(self.out.xref_get_key(ap, "Resources/Font")[0] in ("dict", "xref"), True)
