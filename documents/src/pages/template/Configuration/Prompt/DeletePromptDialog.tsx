@@ -32,7 +32,7 @@ export const DeletePromptDialog = ({ isOpen, onClose, prompt, onRefresh, templat
                 <div className="flex flex-col gap-4">
                     {error && <ErrorBanner error={error} />}
                     <DialogDescription>
-                        <p>{_("Are you sure you want to delete the prompt {0}?", [_("{0}", [prompt.label])])}</p>
+                        <p>{_("Are you sure you want to delete the prompt {0}?", [prompt.label])}</p>
                     </DialogDescription>
                 </div>
                 <DialogFooter>

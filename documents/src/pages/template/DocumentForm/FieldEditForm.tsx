@@ -85,7 +85,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                     label={_("Label")}
                     isRequired
                     readOnly
-                    inputProps={{ placeholder: _("{0}", ["Label"]) }}
+                    inputProps={{ placeholder: _("Label") }}
                 />
 
                 <DataField
@@ -93,7 +93,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                     label={_("Field Type")}
                     isRequired
                     readOnly
-                    inputProps={{ placeholder: _("{0}", ["Field Type"]) }}
+                    inputProps={{ placeholder: _("Field Type") }}
                 />
 
                 <ValueTypeField index={index} resetMetaField={resetMetaField} />
@@ -122,10 +122,10 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                         </FormControl>
                                         <SelectContent>
                                             <SelectItem value={FORMATTER_CLEAR}>{_("No formatter")}</SelectItem>
-                                            <SelectItem value="Date">{_("{0}", ["Date"])}</SelectItem>
-                                            <SelectItem value="Currency">{_("{0}", ["Currency"])}</SelectItem>
-                                            <SelectItem value="Phone">{_("{0}", ["Phone"])}</SelectItem>
-                                            <SelectItem value="Number">{_("{0}", ["Number"])}</SelectItem>
+                                            <SelectItem value="Date">{_("Date")}</SelectItem>
+                                            <SelectItem value="Currency">{_("Currency")}</SelectItem>
+                                            <SelectItem value="Phone">{_("Phone")}</SelectItem>
+                                            <SelectItem value="Number">{_("Number")}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -140,11 +140,11 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                         name={`fields.${index}.field_value`}
                         label={_("Select Prompt")}
                         isRequired
-                        rules={{ required: _("{0}", ["Prompt is required"]) }}
+                        rules={{ required: _("Prompt is required") }}
                     >
                         {data.message.prompts.map((prompt) => (
                             <SelectItem key={prompt.name} value={prompt.field_name}>
-                                {_("{0}", [prompt.label ?? ''])}
+                                {(prompt.label ?? '')}
                             </SelectItem>
                         ))}
                     </SelectFormField>
@@ -158,7 +158,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                         name={`fields.${index}.field_value`}
                         label={_("Value")}
                         readOnly
-                        inputProps={{ placeholder: _("{0}", ["Selected field path will appear here"]) }}
+                        inputProps={{ placeholder: _("Selected field path will appear here") }}
                     />
                 </>
             )}
@@ -168,7 +168,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                     name={`fields.${index}.field_value`}
                     label={_("Value")}
                     readOnly
-                    inputProps={{ placeholder: _("{0}", ["Selected prompt field name will appear here"]) }}
+                    inputProps={{ placeholder: _("Selected prompt field name will appear here") }}
                 />
             )}
 
@@ -178,7 +178,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                     label={_("Value")}
                     isRequired
                     editorProps={{
-                        placeholder: _("{0}", ["e.g. {{ frappe.format_date('2019-09-08') }}"]),
+                        placeholder: _("e.g. {{ frappe.format_date('2019-09-08') }}"),
                         height: '30vh',
                     }}
                 />
@@ -190,7 +190,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                     label={_("Value")}
                     isRequired
                     readOnly={valueType === 'Field'}
-                    inputProps={{ placeholder: _("{0}", ["Value"]) }}
+                    inputProps={{ placeholder: _("Value") }}
                 />
             )}
 
@@ -211,7 +211,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                                 label=""
                                 hideLabel
                                 editorProps={{
-                                    placeholder: _("{0}", ["e.g. {{ frappe.format_date('2019-09-08') }}"]),
+                                    placeholder: _("e.g. {{ frappe.format_date('2019-09-08') }}"),
                                     height: '30vh',
                                 }}
                             />
@@ -219,7 +219,7 @@ export const FieldEditForm = ({ index }: FieldEditFormProps) => {
                             <InputGroup>
                                 <InputGroupInput
                                     {...field}
-                                    placeholder={_("{0}", ["e.g. 2019-09-08"])}
+                                    placeholder={_("e.g. 2019-09-08")}
                                 />
                             </InputGroup>
                         )}
@@ -357,7 +357,7 @@ const ValueTypeField = ({
         <FormField
             control={control}
             name={`fields.${index}.value_type`}
-            rules={{ required: _("{0}", ["Value Type is required"]) }}
+            rules={{ required: _("Value Type is required") }}
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>
@@ -372,7 +372,7 @@ const ValueTypeField = ({
                             value={field.value}
                         >
                             <SelectTrigger className="w-full">
-                                <SelectValue placeholder={_("{0}", ["Select Value Type"])} />
+                                <SelectValue placeholder={_("Select Value Type")} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Text">

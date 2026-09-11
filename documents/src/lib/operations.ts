@@ -127,7 +127,7 @@ export const lstrip = (s: string, chars?: string[]) => {
     if (!chars) chars = ["\n", "\t", " "];
     // strip left
     let first_char = s.substring(0, 1);
-    while (in_list(chars, first_char)) {
+    while (first_char !== undefined && chars.includes(first_char)) {
         s = s.substring(1);
         first_char = s.substring(0, 1);
     }
@@ -140,11 +140,6 @@ export const lstrip = (s: string, chars?: string[]) => {
  * @param item 
  * @returns 
  */
-export const in_list = (list: string[], item?: string): boolean => {
-    if (item === undefined) return false
-
-    return list.includes(item)
-}
 export const formatCurrency = (value?: number, currency: string = 'USD', returnPlaceholder = false) => {
     const CurrencyFormat = new Intl.NumberFormat('en-US', {
         style: 'currency',

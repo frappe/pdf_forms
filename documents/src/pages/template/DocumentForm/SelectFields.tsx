@@ -28,7 +28,7 @@ interface SearchableSelectProps {
 const SearchableSelect = ({
     value,
     onChange,
-    placeholder = _("{0}", ["Select an option"]),
+    placeholder = _("Select an option"),
     isDisabled = false,
     isSearchable = true,
     options,
@@ -76,7 +76,7 @@ const SearchableSelect = ({
                 <Command shouldFilter={false} className="w-full">
                     {isSearchable && (
                         <CommandInput
-                            placeholder={_("{0}", ["Search..."])}
+                            placeholder={_("Search...")}
                             value={searchQuery}
                             onValueChange={setSearchQuery}
                         />
@@ -136,7 +136,7 @@ const IndexField = ({
         <FormControl>
             <Input
                 type="number"
-                placeholder={_("{0}", ["Index"])}
+                placeholder={_("Index")}
                 value={index || ''}
                 onChange={(e) => onIndexChange(e.target.value)}
             />
@@ -188,7 +188,7 @@ const FieldSelector = ({
         <>
             <FormItem>
                 <FormLabel>
-                    {_("{0}", [schema.description ?? 'Select Field'])}{' '}
+                    {(schema.description ?? 'Select Field')}{' '}
                     <FormRequiredIndicator className="ms-0.5" />
                 </FormLabel>
                 <FormControl>
@@ -351,14 +351,14 @@ const SelectFields = ({
             ) : (
                 <FormItem>
                     <FormLabel>
-                            {_("{0}", [schemaField.description || 'Fields'])}{' '}
+                            {(schemaField.description || 'Fields')}{' '}
                         <FormRequiredIndicator className="ms-0.5" />
                     </FormLabel>
                     <FormControl>
                         <SearchableSelect
                             value=""
                             onChange={(value) => setFieldMap({ field: value })}
-                                placeholder={_("Select {0}", [_("{0}", [schemaField.description ?? 'field'])])}
+                                placeholder={_("Select {0}", [(schemaField.description ?? 'field')])}
                             isSearchable
                                 options={fieldOptions}
                         />

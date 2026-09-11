@@ -81,7 +81,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
                         </CollapsibleSection>
                     )
                 ) : field.items ? (
-                        <p className="text-sm text-ink-gray-5">{_("Item type: {0}", [_("{0}", [field.items.schema_type])])}</p>
+                        <p className="text-sm text-ink-gray-5">{_("Item type: {0}", [field.items.schema_type])}</p>
                 ) : (
                     !isRoot && field.schema_type !== 'object' && <FieldRow field={field} fieldKey={fieldKey} />
                 )}
@@ -93,7 +93,7 @@ const SchemaFieldList: React.FC<{ schema: SchemaField, source: string }> = ({ sc
         <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
                 <h2 className="text-xl font-semibold tracking-tight text-ink-gray-8">
-                    {_("{0}", [source])}
+                    {source}
                 </h2>
                 <Button
                     size="sm"
@@ -173,7 +173,7 @@ const FieldRow: React.FC<{ field: SchemaField; fieldKey?: string }> = ({ field, 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">
-                        {fieldKey ? `${_("{0}", [field.description ?? ''])} (${_("{0}", [fieldKey])})` : _("{0}", [field.description ?? ''])}
+                        {fieldKey ? `${(field.description ?? '')} (${fieldKey})` : (field.description ?? '')}
                     </span>
                     {fieldKey && (
                         <Button
@@ -193,11 +193,11 @@ const FieldRow: React.FC<{ field: SchemaField; fieldKey?: string }> = ({ field, 
                         </Button>
                     )}
                 </div>
-                {field.fieldtype && <Badge variant="subtle" theme="gray">{_("{0}", [field.fieldtype])}</Badge>}
+                {field.fieldtype && <Badge variant="subtle" theme="gray">{field.fieldtype}</Badge>}
             </div>
             {field.enum && (
                 <p className="text-sm text-ink-gray-5">
-                    {_("Option(s): {0}", [_("{0}", [field.enum.join(', ')])])}
+                    {_("Option(s): {0}", [(field.enum.join(', '))])}
                 </p>
             )}
         </div>

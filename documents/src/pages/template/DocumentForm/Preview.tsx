@@ -146,7 +146,7 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                         {prompts.map((prompt) => (
                             <div key={prompt.name ?? prompt.field_name} className="flex flex-col gap-1">
                                 <Label className="text-sm">
-                                    {_("{0}", [prompt.label])}
+                                    {prompt.label}
                                     {prompt.mandatory === 1 && <span className="text-ink-red-6 ms-0.5" aria-hidden>*</span>}
                                 </Label>
                                 {prompt.type === "Checkbox" ? (
@@ -162,14 +162,14 @@ export const Preview = ({ templateID, source }: PreviewProps) => {
                                             htmlFor={`prompt-${prompt.field_name}`}
                                             className="text-sm text-ink-gray-5 cursor-pointer"
                                         >
-                                            {_("{0}", [prompt.description ?? _("{0} / {1}", [_("Yes"), _("No")])])}
+                                            {(prompt.description ?? _("{0} / {1}", [_("Yes"), _("No")]))}
                                         </label>
                                     </div>
                                 ) : (
                                     <Input
                                         id={`prompt-${prompt.field_name}`}
                                         type="text"
-                                            placeholder={_("{0}", [prompt.description ?? prompt.field_name])}
+                                            placeholder={(prompt.description ?? prompt.field_name)}
                                         value={String(promptValues[prompt.field_name] ?? "")}
                                         onChange={(e) => setPromptValue(prompt.field_name, e.target.value)}
                                     />

@@ -252,7 +252,7 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, templateID, save
             const text = await navigator.clipboard.readText()
             if (!text.trim()) {
                 toast.error(_("Clipboard is empty"), {
-                    description: _("{0}", ["Copy field mapping JSON and try importing again."]),
+                    description: _("Copy field mapping JSON and try importing again."),
                 })
                 return
             }
@@ -262,8 +262,8 @@ export const FieldsTable = ({ data, focusedAnnotation, onClick, templateID, save
             toast.success(_("Field data pasted from clipboard"))
         } catch (error) {
             const description = error instanceof Error
-                ? `${_("{0}", [error.message])} ${_("Please copy a valid exported mapping and retry.")}`
-                : _("{0}", ["Please copy a valid exported mapping and retry."])
+                ? `${error.message} ${_("Please copy a valid exported mapping and retry.")}`
+                : _("Please copy a valid exported mapping and retry.")
             toast.error(_("Could not import field data"), { description })
         }
     }
@@ -655,9 +655,9 @@ const MappingRow = memo(function MappingRow({
                     )}
                 </div>
             </TableCell>
-            <TableCell className="p-2 text-ink-gray-6">{_("{0}", [fieldType])}</TableCell>
+            <TableCell className="p-2 text-ink-gray-6">{fieldType}</TableCell>
             <TableCell className="p-2">
-                <Badge variant="subtle" theme={theme}>{_("{0}", [valueType])}</Badge>
+                <Badge variant="subtle" theme={theme}>{valueType}</Badge>
             </TableCell>
             <TableCell className="overflow-hidden p-2" title={value || undefined}>
                 <div className="flex min-w-0 items-center gap-1.5">
@@ -666,7 +666,7 @@ const MappingRow = memo(function MappingRow({
                     <span className="min-w-0 flex-1 truncate font-mono text-sm text-ink-gray-6">{value}</span>
                     {formatter && (
                         <Badge variant="outline" theme="gray" size="sm" className="shrink-0 font-normal">
-                            {_("{0}", [formatter])}
+                            {formatter}
                         </Badge>
                     )}
                     {hasDefault && (

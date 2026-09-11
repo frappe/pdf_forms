@@ -105,7 +105,7 @@ export const DocumentForm = ({ templateID }: DocumentFormProps) => {
             mutate()
         }).catch((err: { message?: string }) => {
             toast.error(_("Error updating custom fields"), {
-                description: _("{0}", [err.message ?? '']),
+                description: (err.message ?? ''),
             })
         })
     }, [call, templateID, mutate])

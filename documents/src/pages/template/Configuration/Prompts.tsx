@@ -87,7 +87,7 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                             <div className="flex items-center gap-1.5 flex-wrap">
                                 <h4 className="font-medium text-sm">{prompt.label}</h4>
                                 <Badge variant="subtle" theme="gray" size="sm">
-                                    {_("{0}", [prompt.type || _("Text")])}
+                                    {(prompt.type || _("Text"))}
                                 </Badge>
                                 {prompt.mandatory === 1 && (
                                     <Badge variant="subtle" theme="red" size="sm">
@@ -157,7 +157,7 @@ export const Prompts = ({ prompts, templateID, onRefresh }: {
                                     {_("Description")}
                                 </p>
                                 <p className="text-xs text-ink-gray-8 whitespace-pre-wrap leading-tight">
-                                    {_("{0}", [prompt.description])}
+                                    {prompt.description}
                                 </p>
                             </div>
                         )}
