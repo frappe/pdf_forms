@@ -1,0 +1,73 @@
+---
+name: Bug Report
+description: Report a bug encountered while using PDF Forms
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Before creating an issue, please consider the following:
+
+        1. This tracker is for bugs and feature requests for PDF Forms.
+            - For questions and general support, use the [forum](https://discuss.frappe.io) to get inputs from the community.
+        2. Give the maintainers what they need to reproduce it: the PDF (or a redacted copy of it), the DocType, the mapping, and what you expected to print. The easier it is to reproduce, the faster it gets fixed.
+        3. If you think you know the reason for the bug, share it. Maybe put in a PR 😉
+
+  - type: textarea
+    id: bug-info
+    attributes:
+      label: Information about bug
+      description: What happened, and what did you expect to happen? Screenshots of the mapping and of the printed PDF help a lot.
+      placeholder: Please provide as much information as possible.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where does the problem show up?
+      multiple: true
+      options:
+        - Template creation / PDF processing
+        - Mapping workspace (annotator, fields table, auto-map)
+        - Prompts
+        - Preview
+        - Printing / Print Format / PDF output
+        - API
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: exact-version
+    attributes:
+      label: Version
+      description: Share the exact versions of Frappe, ERPNext (if installed) and PDF Forms you are using.
+      placeholder: |
+        Frappe version -
+        ERPNext version -
+        PDF Forms version -
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Installation method
+      options:
+        - docker
+        - easy-install
+        - manual install
+        - FrappeCloud
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output / Stack trace / Full Error Message.
+      description: Please copy and paste any relevant log output. This will be automatically formatted.
+      render: shell
+...
