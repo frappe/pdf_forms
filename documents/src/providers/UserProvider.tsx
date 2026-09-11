@@ -21,7 +21,7 @@ const getErrorMessages = (error?: FrappeError | null): ParsedErrorMessage[] => {
     eMessages = eMessages.map((m: any) => {
         try {
             return JSON.parse(m)
-        } catch (e) {
+        } catch {
             return m
         }
     })

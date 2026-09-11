@@ -57,7 +57,7 @@ export interface PaginationHookReturnType {
 }
 export const usePagination = (initPageLength: number, totalRows: number = 0) => {
 
-    let [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const selectedPageLength = searchParams.get('count') ? parseInt(searchParams.get('count') as string) : initPageLength
     const start = Math.min(searchParams.get('start') ? parseInt(searchParams.get('start') as string) > 0 ? parseInt(searchParams.get('start') as string) : 1 : 1, totalRows)

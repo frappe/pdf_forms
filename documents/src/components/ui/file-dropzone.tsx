@@ -97,7 +97,9 @@ export const FileTypeIcon = ({
 
     const containerClass = cn(sizeClasses[size], className)
 
-    const RenderIcon = ({ className }: { className?: string }) => {
+    // A plain render helper, not a component: a component created inside
+    // render would be a new type on every pass and remount each time.
+    const renderIcon = ({ className }: { className?: string }) => {
         switch (fileType.toLowerCase()) {
             case 'pdf':
                 return (
@@ -276,14 +278,14 @@ export const FileTypeIcon = ({
     if (showBackground) {
         return (
             <div className={cn("rounded-md flex items-center justify-center", getBackgroundColor(), containerClass)}>
-                <RenderIcon />
+                {renderIcon({})}
             </div>
         )
     }
 
     return (
         <div className={cn("flex items-center justify-center")}>
-            <RenderIcon className={getTextColor()} />
+            {renderIcon({ className: getTextColor() })}
         </div>
     )
 }
