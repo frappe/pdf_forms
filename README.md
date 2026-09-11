@@ -15,7 +15,7 @@
   ·
   <a href="#printing-from-outside-the-desk-the-api">API</a>
   ·
-  <a href="https://github.com/sumitjain236/pdf_forms/issues">Issues</a>
+  <a href="https://github.com/frappe/pdf_forms/issues">Issues</a>
 </p>
 
 
@@ -58,7 +58,7 @@ It is built for complex PDFs whose fixed layout is difficult to reproduce in the
 **Self hosting.** From your bench:
 
 ```bash
-bench get-app https://github.com/sumitjain236/pdf_forms
+bench get-app https://github.com/frappe/pdf_forms
 bench --site <site> install-app pdf_forms
 ```
 
@@ -76,7 +76,7 @@ Templates are created from **Form Template** in the desk; the mapping workspace 
 1. Install Poppler (above) and set up a bench with a site.
 2. Get the app and install it:
    ```bash
-   bench get-app https://github.com/sumitjain236/pdf_forms
+   bench get-app https://github.com/frappe/pdf_forms
    bench --site <site> install-app pdf_forms
    ```
 3. Enable developer mode and start the bench:
@@ -305,7 +305,7 @@ Inside the same site, skip HTTP: `pdf_forms.api.print.build_form_template_pdf(te
 
 ## Reporting Bugs
 
-Open an issue on [GitHub Issues](https://github.com/sumitjain236/pdf_forms/issues) with the PDF (or a redacted copy), the data source, and what you expected to print.
+Open an issue on [GitHub Issues](https://github.com/frappe/pdf_forms/issues) with the PDF (or a redacted copy), the data source, and what you expected to print.
 
 ## Contributing
 
