@@ -241,14 +241,43 @@ curl -G "https://erp.example.com/api/method/frappe.utils.print_format.download_p
 
 ### Ask what a template needs
 
-Building a form in another application? These tell you what to collect. All of them live under `/api/method/`.
+Building a form in another application? These tell you what to collect.
 
-| Method | Returns |
-|---|---|
-| `GET pdf_forms.pdf_forms.doctype.form_template.form_template.get_form_template_prompts?form_template_id=…` | The prompts actually used by a mapping: label, key, type, mandatory. |
-| `GET pdf_forms.pdf_forms.doctype.form_template.form_template.get_fields_and_prompts_for_form_template?form_template_id=…` | The source fields the template reads plus its prompts, so a client can show exactly the inputs a template depends on. |
-| `POST pdf_forms.api.print.get_preview_values` with `template_id`, `data` | Field by field, what would print (text, font, size, tick state) without producing a PDF. This is what the Preview tab uses. |
-| `POST pdf_forms.api.automap.suggest_mappings` with `form_template_id` | Auto-map's suggestions, without applying them. |
+**Prompts a template asks for**
+
+```
+GET /api/method/pdf_forms.pdf_forms.doctype.form_template.form_template.get_form_template_prompts
+    ?form_template_id=<template>
+```
+
+Returns only the prompts a mapping actually uses: label, key, type, mandatory. Enough to build the input form on your side.
+
+**Source fields and prompts a template depends on**
+
+```
+GET /api/method/pdf_forms.pdf_forms.doctype.form_template.form_template.get_fields_and_prompts_for_form_template
+    ?form_template_id=<template>
+```
+
+Returns the fields of the source the template reads, plus its prompts, so a client can show exactly the inputs a template needs and nothing else.
+
+**What would print, without printing**
+
+```
+POST /api/method/pdf_forms.api.print.get_preview_values
+     template_id=<template>  data=<object or JSON string>
+```
+
+Returns, field by field, the resolved value with its font, size and tick state. This is what the Preview tab uses to draw the overlay.
+
+**Auto-map suggestions**
+
+```
+POST /api/method/pdf_forms.api.automap.suggest_mappings
+     form_template_id=<template>
+```
+
+Returns Auto-map's proposed source field for every unmapped field, without applying anything.
 
 ### From Python
 
