@@ -6,6 +6,82 @@ from typing import Any
 import frappe
 from frappe import _
 
+from pdf_forms.pdf_forms.doctype.form_template.form_template import convert_pdf_to_image
+from pdf_forms.pdf_forms.doctype.form_template_field.form_template_field import (
+	get_annotations,
+	get_for_template_images,
+)
+from pdf_forms.utils.files import template_file_path
+
+
+@frappe.whitelist(methods=["POST"])
+def create_form_template(
+	template_name: str, source: str, file_url: str, data_source: str = "DocType"
+) -> dict[str, Any]:
+	"""Create a template from an already uploaded PDF and detect its fields, in
+	one call and synchronously, so a client without a browser (an MCP tool, a
+	script) gets back a template that is ready to map.
+
+	`file_url` is the URL `upload_file` returned; the PDF must be an uploaded
+	site file. The File record is attached to the new template so that it is
+	removed with it. Returns the template name, its Print Format, the detected
+	fields in the shape of get_annotations, and the page images.
+	"""
+	path = template_file_path(file_url)
+	if not path.lower().endswith(".pdf"):
+		frappe.throw(_("The uploaded file must be a PDF."), frappe.ValidationError)
+
+	# insert() checks the caller's create permission on Form Template.
+	template = frappe.get_doc(
+		{
+			"doctype": "Form Template",
+			"template_name": template_name,
+			"data_source": data_source,
+			"source": source,
+			"file": file_url,
+		}
+	).insert()
+
+	# A file uploaded without a docname floats free; own it so it goes when
+	# the template goes.
+	file_name = frappe.db.get_value(
+		"File", {"file_url": file_url, "attached_to_name": ("in", ("", None))}, "name"
+	)
+	if file_name:
+		frappe.db.set_value(
+			"File",
+			file_name,
+			{
+				"attached_to_doctype": "Form Template",
+				"attached_to_name": template.name,
+				"attached_to_field": "file",
+			},
+			update_modified=False,
+		)
+
+	# Inserting does not enqueue the conversion (that is for a later change of
+	# file); run it here so the caller gets the fields back.
+	convert_pdf_to_image(template.name)
+	template.reload()
+
+	return {
+		"name": template.name,
+		"print_format": template.print_format,
+		"font": template.font,
+		"font_size": template.font_size,
+		"fields": get_annotations(template.name),
+		"images": [
+			{
+				"id": row.id,
+				"page_index": row.page_index,
+				"width": row.width,
+				"height": row.height,
+				"image_file": row.image_file,
+			}
+			for row in get_for_template_images(template.name)
+		],
+	}
+
 
 @frappe.whitelist()
 def add_prompt_to_form_template(form_template_id: str, prompt: dict[str, Any] | str) -> Any:

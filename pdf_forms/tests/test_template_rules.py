@@ -24,6 +24,45 @@ class TestTemplateRules(FrappeTestCase):
 		frappe.delete_doc("Form Template", cls.tpl.name, force=1, ignore_permissions=True)
 		super().tearDownClass()
 
+	def test_create_form_template_in_one_call(self):
+		from frappe.utils.file_manager import save_file
+
+		from pdf_forms.api.form_template import create_form_template
+
+		name = "_Test One Call Template"
+		if frappe.db.exists("Form Template", name):
+			frappe.delete_doc("Form Template", name, force=1, ignore_permissions=True)
+		pdf = make_form_pdf(
+			[("A", "Alpha", "text", 0, "Helv", 9), ("B", "Beta", "check", 0, "ZaDb", 0)], title="one call"
+		)
+		# uploaded with no docname, as a client does before the template exists
+		f = save_file("one_call.pdf", pdf, None, None, is_private=1)
+		try:
+			out = create_form_template(name, "ToDo", f.file_url)
+			self.assertEqual(out["name"], name)
+			self.assertTrue(frappe.db.exists("Print Format", out["print_format"]))
+			self.assertEqual(sorted(r["field_name"] for r in out["fields"]), ["A", "B"])
+			self.assertEqual(len(out["images"]), 1)
+			self.assertTrue(frappe.db.get_value("Form Template", name, "process_completed"))
+			attached = frappe.db.get_value("File", f.name, ["attached_to_doctype", "attached_to_name"])
+			self.assertEqual(tuple(attached), ("Form Template", name))
+		finally:
+			frappe.delete_doc("Form Template", name, force=1, ignore_permissions=True)
+
+	def test_create_form_template_refuses_a_file_outside_the_site(self):
+		from pdf_forms.api.form_template import create_form_template
+
+		self.assertRaises(
+			frappe.PermissionError, create_form_template, "_Test Bad Path", "ToDo", "/etc/passwd"
+		)
+		self.assertRaises(
+			frappe.ValidationError,
+			create_form_template,
+			"_Test Not A Pdf",
+			"ToDo",
+			"/private/files/notes.txt",
+		)
+
 	def test_pdf_can_be_attached_after_the_template_is_created(self):
 		tpl = frappe.get_doc(
 			{

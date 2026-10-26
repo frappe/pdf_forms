@@ -72,6 +72,14 @@ class TestPermissions(FrappeTestCase):
 			with self.subTest(endpoint=fn.__name__):
 				self.assertRaises(frappe.PermissionError, fn, *args)
 
+	def test_create_endpoint_refuses(self):
+		from pdf_forms.api.form_template import create_form_template
+
+		self.assertRaises(
+			frappe.PermissionError, create_form_template, "_Test Perm Create", "ToDo", self.tpl.file
+		)
+		self.assertFalse(frappe.db.exists("Form Template", "_Test Perm Create"))
+
 	def test_write_endpoints_refuse_and_change_nothing(self):
 		from pdf_forms.api.form_template import add_prompt_to_form_template
 		from pdf_forms.pdf_forms.doctype.form_template_field.form_template_field import (

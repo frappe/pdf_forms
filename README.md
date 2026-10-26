@@ -184,6 +184,32 @@ Mappings on a repeated page use an indexed path, `items[0].item_name`, `items[0]
 
 Everything the desk does goes through whitelisted methods, so the same PDF can be generated from a portal, a script or another application, with data that never lived in a DocType. Authenticate with an API key (`Authorization: token <key>:<secret>`) or a session. The caller needs read access to the Form Template and to the record.
 
+### Create a template from an uploaded PDF
+
+`POST /api/method/pdf_forms.api.form_template.create_form_template`
+
+Upload the PDF first with Frappe's `upload_file` (no `docname` needed), then pass the URL it returns. The template is created, the PDF is processed on the spot, and the detected fields come back in the same call, ready to map with `update_form_template_fields`.
+
+| Parameter | Required | Meaning |
+|---|---|---|
+| `template_name` | yes | Name of the new template (and of its Print Format) |
+| `source` | yes | The DocType whose records fill the form |
+| `file_url` | yes | URL of the uploaded PDF, from `upload_file` |
+| `data_source` | no | `DocType` (default) |
+
+```bash
+FILE_URL=$(curl -s -X POST "https://erp.example.com/api/method/upload_file" \
+  -H "Authorization: token $API_KEY:$API_SECRET" \
+  -F "file=@bank-form.pdf" -F "is_private=1" | jq -r .message.file_url)
+
+curl -X POST "https://erp.example.com/api/method/pdf_forms.api.form_template.create_form_template" \
+  -H "Authorization: token $API_KEY:$API_SECRET" \
+  -H "Content-Type: application/json" \
+  -d "{\"template_name\": \"Bank Form\", \"source\": \"Payment Entry\", \"file_url\": \"$FILE_URL\"}"
+```
+
+Returns the template name, its Print Format, the detected fields (name, label, type, page) and the page images with their pixel sizes.
+
 ### Render a PDF from a payload
 
 `POST /api/method/pdf_forms.api.print.print_form_template`
