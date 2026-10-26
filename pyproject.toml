@@ -10,7 +10,9 @@ dynamic = ["version"]
 dependencies = [
     # "frappe~=15.0.0" # Installed and managed by bench.
     "pdf2image",
-    "pymupdf",
+    # PyMuPDF 2.0 stops writing a field's /DA on Widget.update(), so overridden
+    # fonts and sizes print in the original face; pinned until print.py sets /DA itself.
+    "pymupdf>=1.27,<2",
     "pymupdf-fonts"
 ]
 
