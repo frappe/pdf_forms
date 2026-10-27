@@ -51,7 +51,7 @@ function App() {
 	return (
 		<FrappeProvider
 			url={import.meta.env.VITE_FRAPPE_PATH ?? ''}
-			socketPort={import.meta.env.VITE_SOCKET_PORT ? import.meta.env.VITE_SOCKET_PORT : undefined}
+			socketPort={import.meta.env.VITE_SOCKET_PORT || window.frappe?.boot?.socketio_port?.toString()}
 			siteName={getSiteName()}
 		>
 			<ThemeProvider defaultTheme={window.frappe?.boot?.desk_theme ?? 'Automatic'}>

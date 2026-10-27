@@ -6,6 +6,7 @@ export {}
 interface FrappeBoot {
   /** User Desk Theme: Light | Dark | Automatic (see frappe.sessions) */
   desk_theme?: 'Light' | 'Dark' | 'Automatic'
+  socketio_port?: number
   docs?: unknown[]
   __messages?: Record<string, unknown>
   time_zone?: {
