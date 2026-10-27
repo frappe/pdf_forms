@@ -96,14 +96,14 @@ def download_pdf(
 
 @frappe.whitelist()
 def get_html_and_style(
-	doc: str,
+	doc: str | dict,
 	name: str | None = None,
 	print_format: str | None = None,
 	no_letterhead: bool | None = None,
 	letterhead: str | None = None,
 	trigger_print: bool = False,
 	style: str | None = None,
-	settings: str | None = None,
+	settings: str | dict | None = None,
 	prompt_data: str | dict | None = None,
 ) -> dict[str, str | None]:
 	template_id = _get_form_template_id(print_format)
