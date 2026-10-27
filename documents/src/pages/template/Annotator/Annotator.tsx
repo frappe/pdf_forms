@@ -115,16 +115,13 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
             })
 
         }
-        // @ts-expect-error NodeJS.Timer is not defined in the browser
-        let timeout: null | NodeJS.Timer = null;
+        let timeout: ReturnType<typeof setTimeout> | null = null
         if (unsavedAnnotations.length > 0) {
-            // console.log("Pushing updates to the server after 10 seconds of inactivity")
-            timeout = setInterval(uploadToDatabase, 10000)
+            timeout = setTimeout(uploadToDatabase, 1000)
         }
 
         return () => {
-            // console.log("Clearing timeout")
-            if (timeout) clearInterval(timeout)
+            if (timeout) clearTimeout(timeout)
         }
     }, [unsavedAnnotations, templateID, call, mutate])
 
