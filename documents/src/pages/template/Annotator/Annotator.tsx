@@ -99,7 +99,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
         return call({
             'form_template_id': templateID,
             'annotations': unsavedAnnotations
-        }).then(() => {
+        }).then(() => mutate()).then(() => {
             setUnsavedAnnotations([])
         })
     }
@@ -110,7 +110,7 @@ export const Annotator = ({ templateID }: AnnotatorProps) => {
             return call({
                 'form_template_id': templateID,
                 'annotations': unsavedAnnotations
-            }).then(() => {
+            }).then(() => mutate()).then(() => {
                 setUnsavedAnnotations([])
             })
 
