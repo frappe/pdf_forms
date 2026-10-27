@@ -327,7 +327,9 @@
 				method = "/api/method/frappe.utils.print_format.download_pdf?";
 			}
 
-			pdf_generator = this.get_pdf_generator(pdf_generator);
+			if (this.get_pdf_generator) {
+				pdf_generator = this.get_pdf_generator(pdf_generator);
+			}
 			const w = window.open(
 				frappe.urllib.get_full_url(
 					method +
@@ -345,8 +347,9 @@
 						"&settings=" +
 						encodeURIComponent(JSON.stringify(this.additional_settings)) +
 						(this.lang_code ? "&_lang=" + this.lang_code : "") +
-						"&pdf_generator=" +
-						encodeURIComponent(pdf_generator) +
+						(pdf_generator
+							? "&pdf_generator=" + encodeURIComponent(pdf_generator)
+							: "") +
 						getPromptDataQuery(this)
 				)
 			);
