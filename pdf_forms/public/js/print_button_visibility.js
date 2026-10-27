@@ -49,8 +49,8 @@
 				primary_action: () => {
 					const values = dialog.get_values();
 					if (!values) return;
-					dialog.hide();
 					resolve(values);
+					dialog.hide();
 				},
 				secondary_action_label: __("Cancel"),
 				secondary_action: () => {
@@ -59,15 +59,22 @@
 				},
 			});
 
-			dialog.onhide = () => {
-				if (!dialog.get_values()) {
-					resolve(null);
-				}
-			};
+			dialog.onhide = () => resolve(null);
 			dialog.show();
 		});
 
-	const ensurePromptData = async (view, force = false) => {
+	// The print view can ask for a preview again while the dialog is still
+	// open; every caller waits on the same dialog.
+	const ensurePromptData = (view, force = false) => {
+		if (!view.__pdf_forms_prompt_pending) {
+			view.__pdf_forms_prompt_pending = askPromptData(view, force).finally(() => {
+				view.__pdf_forms_prompt_pending = null;
+			});
+		}
+		return view.__pdf_forms_prompt_pending;
+	};
+
+	const askPromptData = async (view, force) => {
 		const printFormat = view.get_print_format ? view.get_print_format() : null;
 		if (!isFormTemplateFormat(printFormat)) {
 			view.__pdf_forms_prompt_data = null;
