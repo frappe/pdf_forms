@@ -24,6 +24,13 @@ build-backend = "flit_core.buildapi"
 [tool.bench.dev-dependencies]
 # package_name = "~=1.1.0"
 
+# The React workspace in documents/, for Pilot's prebuilt-assets build
+# (.github/workflows/app-assets.yml) and Frappe Cloud.
+[tool.bench.assets]
+build_dir = "./documents"
+out_dir = "../pdf_forms/public/documents"
+index_html_path = "../pdf_forms/www/pdf_forms.html"
+
 [tool.bench.frappe-dependencies]
 frappe = ">=16.0.0,<18.0.0"
 
