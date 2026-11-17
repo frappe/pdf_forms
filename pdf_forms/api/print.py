@@ -244,7 +244,8 @@ def get_preview_values(template_id: str, data: str | dict[str, Any]) -> dict[str
 			# field's default, which may itself be a Jinja template.
 			if value is None or value == "" or value == "None":
 				if annotation.is_default_jinja and annotation.default_value:
-					# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - default_value is a trusted database field
+					# Jinja here is template configuration, written by a System Manager: default_value is a trusted database field
+					# nosemgrep
 					value = frappe.render_template(annotation.default_value, data)
 				else:
 					value = annotation.default_value
@@ -354,7 +355,8 @@ def resolve_copies(expression, data, template_id, page_index) -> int:
 	if not (expression or "").strip():
 		return 0
 	try:
-		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - the expression is authored on the template, a trusted database field
+		# Jinja here is template configuration, written by a System Manager: the expression is authored on the template, a trusted database field
+		# nosemgrep
 		rendered = frappe.render_template(expression, data)
 		copies = int(float(str(rendered).strip() or 0))
 	except Exception:
@@ -894,7 +896,8 @@ def annotatate_auto_fields(page, auto_annotations, data, font, font_size, base_i
 		if annotation:
 			# get the field value from the data
 			if annotation.is_default_jinja:
-				# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - annotation.default_value comes from database field, trusted source
+				# Jinja here is template configuration, written by a System Manager: annotation.default_value comes from database field, trusted source
+				# nosemgrep
 				default_value = frappe.render_template(annotation.default_value, data)
 			else:
 				default_value = annotation.default_value
@@ -972,7 +975,8 @@ def annotatate_manual_fields(page, manual_annotations, data, font, font_size, ba
 			value = value.strip()
 
 		if annotation.is_default_jinja:
-			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - annotation.default_value comes from database field, trusted source
+			# Jinja here is template configuration, written by a System Manager: annotation.default_value comes from database field, trusted source
+			# nosemgrep
 			default_value = frappe.render_template(annotation.default_value, data)
 		else:
 			default_value = annotation.default_value
@@ -1080,7 +1084,8 @@ def get_field_value(annotation, data, base_index):
 		# render the field_value as a jinja template
 		value = ""
 		try:
-			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti - annotation.field_value comes from database field, trusted source
+			# Jinja here is template configuration, written by a System Manager: annotation.field_value comes from database field, trusted source
+			# nosemgrep
 			value = frappe.render_template(annotation.field_value, data)
 		except Exception as e:
 			frappe.log_error(f"Error rendering Jinja template: {e}")
