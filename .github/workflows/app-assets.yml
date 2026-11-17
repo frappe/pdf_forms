@@ -1,0 +1,28 @@
+# Prebuilt assets for Pilot and the Frappe marketplace.
+#
+# The workspace's Vite build needs more than the 1 GiB the marketplace check
+# (and a small server) allows, so every push to develop builds the assets here
+# and publishes them to the `assets-develop` release as
+# `pdf_forms-<commit>.tar.gz` plus its `.sha256`. Pilot downloads them instead
+# of building. Run it by hand with a `ref` to build an older commit.
+name: App assets
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit to build (defaults to the branch head)
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  assets:
+    uses: frappe/pilot/.github/workflows/app-assets.yml@develop
+    with:
+      ref: ${{ github.event.inputs.ref }}
