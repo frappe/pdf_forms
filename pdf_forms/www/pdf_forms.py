@@ -16,8 +16,8 @@ CLOSING_SCRIPT_TAG_PATTERN = re.compile(r"</script\>")
 
 def get_context(context):
 	csrf_token = frappe.sessions.get_csrf_token()
-	# nosemgrep: frappe-semgrep-rules.rules.frappe-manual-commit - Required to commit CSRF token before rendering page context
-	frappe.db.commit()
+	# Required to commit the CSRF token before the page context renders.
+	frappe.db.commit()  # nosemgrep
 
 	context = frappe._dict()
 	context.boot = get_boot()
